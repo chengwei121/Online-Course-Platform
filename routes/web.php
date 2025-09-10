@@ -84,6 +84,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Teacher Management
     Route::resource('teachers', App\Http\Controllers\Admin\TeacherController::class);
     Route::patch('teachers/{teacher}/toggle-status', [App\Http\Controllers\Admin\TeacherController::class, 'toggleStatus'])->name('teachers.toggle-status');
+    
+    // Course Management
+    Route::resource('courses', App\Http\Controllers\Admin\CourseController::class);
+    Route::patch('courses/{course}/toggle-status', [App\Http\Controllers\Admin\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
+    
+    // Client Management
+    Route::resource('clients', App\Http\Controllers\Admin\ClientController::class);
+    Route::get('clients/{client}/enrollments', [App\Http\Controllers\Admin\ClientController::class, 'enrollments'])->name('clients.enrollments');
 });
 
 // Teacher Routes (Authentication handled by admin)
