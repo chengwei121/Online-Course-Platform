@@ -56,7 +56,7 @@ class TeacherController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => 'teacher'
+            'role' => 'instructor'
         ]);
 
         // Handle profile picture upload
