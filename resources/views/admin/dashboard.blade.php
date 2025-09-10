@@ -148,7 +148,7 @@
                     <i class="fas fa-book me-2"></i>
                     Recent Courses
                 </h6>
-                <a href="#" class="btn btn-sm btn-primary">
+                <a href="{{ route('admin.courses.index') }}" class="btn btn-sm btn-primary">
                     View All
                 </a>
             </div>
@@ -160,8 +160,9 @@
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
                                         @if($course->thumbnail)
-                                            <img src="{{ Storage::url($course->thumbnail) }}" 
-                                                 class="rounded" width="50" height="40" alt="Course thumbnail">
+                                            <img src="{{ $course->thumbnail }}" 
+                                                 class="rounded" width="50" height="40" alt="Course thumbnail"
+                                                 style="object-fit: cover;">
                                         @else
                                             <div class="bg-primary rounded d-flex align-items-center justify-content-center" 
                                                  style="width: 50px; height: 40px;">
@@ -204,9 +205,9 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <a href="{{ route('admin.teachers.create') }}" class="btn btn-success w-100 py-3">
-                            <i class="fas fa-user-plus fa-2x mb-2 d-block"></i>
-                            Add New Teacher
+                        <a href="{{ route('admin.courses.create') }}" class="btn btn-success w-100 py-3">
+                            <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                            Add New Course
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
@@ -216,15 +217,15 @@
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-warning w-100 py-3">
+                        <a href="{{ route('admin.courses.index') }}" class="btn btn-warning w-100 py-3">
                             <i class="fas fa-book fa-2x mb-2 d-block"></i>
                             Manage Courses
                         </a>
                     </div>
                     <div class="col-md-3 mb-3">
-                        <a href="#" class="btn btn-info w-100 py-3">
-                            <i class="fas fa-chart-bar fa-2x mb-2 d-block"></i>
-                            View Reports
+                        <a href="{{ route('admin.clients.index') }}" class="btn btn-info w-100 py-3">
+                            <i class="fas fa-users fa-2x mb-2 d-block"></i>
+                            Manage Students
                         </a>
                     </div>
                 </div>
