@@ -77,6 +77,27 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->post('logout', [AuthenticatedSessionController::class, 'destroy'])
     ->name('logout');
 
+// Admin Routes
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
+    Route::get('dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    
+    // Teacher Management
+    Route::resource('teachers', App\Http\Controllers\Admin\TeacherController::class);
+    Route::patch('teachers/{teacher}/toggle-status', [App\Http\Controllers\Admin\TeacherController::class, 'toggleStatus'])->name('teachers.toggle-status');
+});
+
+// Teacher Routes (Authentication handled by admin)
+Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middleware\TeacherMiddleware::class])->group(function () {
+    Route::get('dashboard', [App\Http\Controllers\Teacher\DashboardController::class, 'index'])->name('dashboard');
+    
+    // Course management
+    Route::resource('courses', App\Http\Controllers\Teacher\CourseController::class);
+    Route::post('courses/{course}/toggle-status', [App\Http\Controllers\Teacher\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
+    
+    // Teacher logout
+    Route::post('logout', [App\Http\Controllers\Teacher\AuthController::class, 'logout'])->name('logout');
+});
+
 // Client Routes
 Route::prefix('client')->name('client.')->group(function () {
     // Public Routes
@@ -98,7 +119,7 @@ Route::prefix('client')->name('client.')->group(function () {
         // Course Learning Routes
         Route::get('courses/{course:slug}/learn/{lesson?}', [CourseController::class, 'learn'])->name('courses.learn');
         Route::post('courses/{course:slug}/lessons/{lesson}/progress', [CourseController::class, 'updateProgress'])->name('lessons.progress');
-        Route::post('courses/{course:slug}/lessons/{lesson}/upload-video', [CourseController::class, 'uploadVideo'])->name('lessons.upload-video');
+        Route::post('courses/{course:slug}/lessons/{lesson}/upload-video', [CourseController::class, 'uploadVideo'])->name('courses.upload-video');
 
         // Assignment Routes
         Route::get('assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');

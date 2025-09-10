@@ -18,7 +18,17 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
-        return redirect()->route('welcome');
+        
+        // Check user role and redirect accordingly
+        $user = Auth::user();
+        
+        if ($user->role === 'admin') {
+            return redirect()->route('admin.dashboard');
+        } elseif ($user->role === 'teacher') {
+            return redirect()->route('teacher.dashboard');
+        } else {
+            return redirect()->route('client.courses.index');
+        }
     }
 
     public function destroy(Request $request)

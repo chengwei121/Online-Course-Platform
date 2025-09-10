@@ -13,6 +13,7 @@ use App\Models\Enrollment;
 use App\Models\LessonProgress;
 use App\Models\AssignmentSubmission;
 use App\Models\Student;
+use App\Models\Teacher;
 
 class User extends Authenticatable
 {
@@ -71,13 +72,28 @@ class User extends Authenticatable
         return $this->hasOne(Student::class);
     }
 
+    public function teacher()
+    {
+        return $this->hasOne(Teacher::class);
+    }
+
     public function isInstructor(): bool
     {
-        return $this->role === 'instructor';
+        return $this->role === 'instructor' || $this->role === 'teacher';
     }
 
     public function isStudent(): bool
     {
         return $this->role === 'student';
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === 'teacher';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

@@ -947,6 +947,14 @@
                                         </div>
 
                                         <div class="space-y-1">
+                                            @if(auth()->user()->isAdmin())
+                                                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-purple-50 transition-colors">
+                                                    <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                                                        <i class="fas fa-shield-alt text-sm"></i>
+                                                    </div>
+                                                    <span class="text-sm font-medium text-purple-700">Admin Panel</span>
+                                                </a>
+                                            @endif
                                             <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                                                     <i class="fas fa-user-circle text-sm"></i>
@@ -1049,6 +1057,13 @@
                         </button>
                     </div>
                     <div class="mt-3 space-y-1 px-4 sm:px-6">
+                        @if(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}"
+                               class="block py-2 px-3 text-base font-medium text-purple-700 hover:bg-purple-50 rounded-lg transition">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                Admin Panel
+                            </a>
+                        @endif
                         <a href="#"
                            class="block py-2 px-3 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition">
                             <i class="fas fa-cog mr-2"></i>
