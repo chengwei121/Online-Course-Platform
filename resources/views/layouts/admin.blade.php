@@ -96,13 +96,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.courses.index') }}">
                                 <i class="fas fa-book me-2"></i>
                                 Courses
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {{ request()->routeIs('admin.clients.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.clients.index') }}">
                                 <i class="fas fa-users me-2"></i>
                                 Students
                             </a>
