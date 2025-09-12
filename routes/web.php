@@ -37,6 +37,19 @@ Route::get('/clear-cache', function() {
     return "All caches cleared successfully! <br><a href='/client/courses'>Go to courses</a>";
 })->name('clear-cache');
 
+// Debug routes
+Route::get('/test-admin-chart', function () {
+    return response()->json([
+        'test' => 'Admin chart endpoint working',
+        'user' => auth()->check() ? auth()->user()->name : 'Not authenticated',
+        'period' => request('period', 'month'),
+        'labels' => ['Jan', 'Feb', 'Mar'],
+        'enrollments' => [1, 2, 3],
+        'courses' => [0, 1, 1],
+        'teachers' => [0, 0, 1]
+    ]);
+})->middleware(['auth', 'admin'])->name('test-admin-chart');
+
 // Home Route (Welcome Page)
 Route::get('/', function () {
     $featuredCourses = Course::with(['instructor', 'category'])
@@ -86,13 +99,38 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('teachers/{teacher}/toggle-status', [App\Http\Controllers\Admin\TeacherController::class, 'toggleStatus'])->name('teachers.toggle-status');
     
     // Course Management
-    Route::resource('courses', App\Http\Controllers\Admin\CourseController::class);
+    Route::resource('courses', App\Http\Controllers\Admin\CourseController::class)->except(['create', 'store']);
     Route::patch('courses/{course}/toggle-status', [App\Http\Controllers\Admin\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
     
-    // Client Management
-    Route::resource('clients', App\Http\Controllers\Admin\ClientController::class);
+    // Client Management - Admin can only view, edit, and see enrollments (no create/delete)
+    Route::get('clients', [App\Http\Controllers\Admin\ClientController::class, 'index'])->name('clients.index');
+    Route::get('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'show'])->name('clients.show');
+    Route::get('clients/{client}/edit', [App\Http\Controllers\Admin\ClientController::class, 'edit'])->name('clients.edit');
+    Route::put('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
+    Route::patch('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
     Route::get('clients/{client}/enrollments', [App\Http\Controllers\Admin\ClientController::class, 'enrollments'])->name('clients.enrollments');
+    Route::get('clients/{client}/activities', [App\Http\Controllers\Admin\ClientController::class, 'activities'])->name('clients.activities');
 });
+
+// Temporary chart data route outside middleware for debugging
+Route::get('admin/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartDataAjax'])
+    ->middleware(['auth', 'admin'])
+    ->name('admin.dashboard.chart-data');
+
+// Real-time stats route
+Route::get('admin/dashboard/realtime-stats', [App\Http\Controllers\Admin\DashboardController::class, 'getRealtimeStats'])
+    ->middleware(['auth', 'admin'])
+    ->name('admin.dashboard.realtime-stats');
+
+// Performance metrics route
+Route::get('admin/dashboard/performance-metrics', [App\Http\Controllers\Admin\DashboardController::class, 'getPerformanceMetricsAjax'])
+    ->middleware(['auth', 'admin'])
+    ->name('admin.dashboard.performance-metrics');
+
+// Test loading screen route
+Route::get('admin/dashboard/test-loading', [App\Http\Controllers\Admin\DashboardController::class, 'testLoading'])
+    ->middleware(['auth', 'admin'])
+    ->name('admin.dashboard.test-loading');
 
 // Teacher Routes (Authentication handled by admin)
 Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middleware\TeacherMiddleware::class])->group(function () {

@@ -79,7 +79,7 @@ class User extends Authenticatable
 
     public function isInstructor(): bool
     {
-        return $this->role === 'instructor' || $this->role === 'teacher';
+        return $this->role === 'instructor';
     }
 
     public function isStudent(): bool
@@ -89,7 +89,7 @@ class User extends Authenticatable
 
     public function isTeacher(): bool
     {
-        return $this->role === 'teacher';
+        return $this->role === 'instructor';
     }
 
     public function isAdmin(): bool
