@@ -17,6 +17,7 @@
 @endsection
 
 @section('content')
+<div data-page-loaded="true">
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card shadow">
@@ -175,6 +176,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection
 

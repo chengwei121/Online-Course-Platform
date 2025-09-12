@@ -20,6 +20,7 @@
 @endsection
 
 @section('content')
+<div data-page-loaded="true">
 @php
     use Illuminate\Support\Facades\Storage;
 @endphp
@@ -163,5 +164,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection

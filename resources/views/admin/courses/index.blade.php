@@ -3,6 +3,7 @@
 @section('title', 'Courses Management')
 
 @section('content')
+<div data-page-loaded="true">
 <div class="container-fluid">
     <!-- Page Header -->
     <div class="row mb-4">
@@ -17,9 +18,9 @@
                             </h1>
                             <p class="card-text mb-0">Manage all courses, instructors, and content</p>
                         </div>
-                        <a href="{{ route('admin.courses.create') }}" class="btn btn-light btn-lg">
-                            <i class="fas fa-plus me-2"></i>Create Course
-                        </a>
+                        <span class="btn btn-light btn-lg disabled">
+                            <i class="fas fa-info-circle me-2"></i>Course Creation Restricted
+                        </span>
                     </div>
                 </div>
             </div>
@@ -405,9 +406,9 @@
                                 <h4 class="text-muted">No courses found</h4>
                                 <p class="text-muted">Start by creating your first course or adjust your filters.</p>
                             </div>
-                            <a href="{{ route('admin.courses.create') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>Create Your First Course
-                            </a>
+                            <span class="btn btn-secondary btn-lg disabled">
+                                <i class="fas fa-info-circle me-2"></i>Course Creation is Restricted
+                            </span>
                         </div>
                     @endif
                 </div>
@@ -499,4 +500,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+</div>
 @endsection

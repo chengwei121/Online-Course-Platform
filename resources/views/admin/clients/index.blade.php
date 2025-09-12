@@ -3,12 +3,14 @@
 @section('title', 'Students Management')
 
 @section('content')
+<div data-page-loaded="true">
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Students Management</h1>
-        <a href="{{ route('admin.clients.create') }}" class="btn btn-primary">
-            <i class="fas fa-plus"></i> Add New Student
-        </a>
+        <div class="text-muted">
+            <i class="fas fa-info-circle me-2"></i>
+            View and edit student information
+        </div>
     </div>
 
     <!-- Filters -->
@@ -90,21 +92,17 @@
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ route('admin.clients.show', $client) }}" 
-                                               class="btn btn-info btn-sm" title="View">
+                                               class="btn btn-info btn-sm" title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{{ route('admin.clients.edit', $client) }}" 
                                                class="btn btn-warning btn-sm" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            @if($client->enrollments->count() == 0)
-                                                <button type="button" 
-                                                        class="btn btn-danger btn-sm" 
-                                                        onclick="confirmDelete('{{ $client->id }}', '{{ $client->name }}')"
-                                                        title="Delete">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            @endif
+                                            <a href="{{ route('admin.clients.activities', $client) }}" 
+                                               class="btn btn-success btn-sm" title="View Activities">
+                                                <i class="fas fa-history"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -122,44 +120,11 @@
                     <i class="fas fa-users fa-3x text-muted mb-3"></i>
                     <h5>No students found</h5>
                     <p class="text-muted">No students match your current filters.</p>
-                    <a href="{{ route('admin.clients.create') }}" class="btn btn-primary">Add First Student</a>
+                    <p class="text-info">Students can register through the main website.</p>
                 </div>
             @endif
         </div>
     </div>
 </div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the student "<span id="clientName"></span>"?</p>
-                <p class="text-danger"><small>This action cannot be undone.</small></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" class="d-inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Delete Student</button>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
-
-@push('scripts')
-<script>
-function confirmDelete(clientId, clientName) {
-    document.getElementById('clientName').textContent = clientName;
-    document.getElementById('deleteForm').action = `/admin/clients/${clientId}`;
-    new bootstrap.Modal(document.getElementById('deleteModal')).show();
-}
-</script>
-@endpush
 @endsection
