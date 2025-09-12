@@ -62,31 +62,6 @@ class ClientController extends Controller
         return view('admin.clients.show', compact('client', 'stats'));
     }
     
-    public function create()
-    {
-        return view('admin.clients.create');
-    }
-    
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-        
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'student',
-            'email_verified_at' => now(),
-        ]);
-        
-        return redirect()->route('admin.clients.index')
-            ->with('success', 'Client created successfully!');
-    }
-    
     public function edit(User $client)
     {
         if ($client->role !== 'student') {
@@ -120,25 +95,7 @@ class ClientController extends Controller
         $client->update($data);
         
         return redirect()->route('admin.clients.index')
-            ->with('success', 'Client updated successfully!');
-    }
-    
-    public function destroy(User $client)
-    {
-        if ($client->role !== 'student') {
-            abort(404);
-        }
-        
-        // Check if client has enrollments
-        if ($client->enrollments()->count() > 0) {
-            return redirect()->route('admin.clients.index')
-                ->with('error', 'Cannot delete client with existing enrollments. Consider deactivating instead.');
-        }
-        
-        $client->delete();
-        
-        return redirect()->route('admin.clients.index')
-            ->with('success', 'Client deleted successfully!');
+            ->with('success', 'Student updated successfully!');
     }
     
     public function enrollments(User $client)
@@ -155,6 +112,184 @@ class ClientController extends Controller
         return view('admin.clients.enrollments', compact('client', 'enrollments'));
     }
     
+    public function activities(User $client, Request $request)
+    {
+        if ($client->role !== 'student') {
+            abort(404);
+        }
+        
+        $perPage = 10;
+        $page = $request->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+        $filter = $request->get('filter', 'all'); // all, completed, in_progress, not_started
+        
+        // Get lesson progress activities with completion status
+        $lessonProgress = $client->lessonProgress()
+            ->with(['lesson.course'])
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function($progress) use ($client) {
+                $course = $progress->lesson->course;
+                $totalLessons = $course->lessons->count();
+                $completedLessons = $client->lessonProgress()
+                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
+                    ->where('completed', true)
+                    ->count();
+                $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+                
+                // More precise course status logic
+                $courseStatus = 'not_started';
+                if ($totalLessons > 0) {
+                    if ($completedLessons >= $totalLessons) {
+                        $courseStatus = 'completed';
+                    } elseif ($completedLessons > 0) {
+                        $courseStatus = 'in_progress';
+                    }
+                }
+                
+                return [
+                    'type' => 'lesson_progress',
+                    'title' => $progress->completed ? 'Completed Lesson' : 'Started Lesson',
+                    'description' => "Lesson: {$progress->lesson->title} in {$progress->lesson->course->title}",
+                    'date' => $progress->updated_at,
+                    'status' => $progress->completed ? 'completed' : 'in_progress',
+                    'course' => $progress->lesson->course->title,
+                    'course_id' => $course->id,
+                    'progress_percentage' => $progressPercentage,
+                    'completed_lessons' => $completedLessons,
+                    'total_lessons' => $totalLessons,
+                    'course_status' => $courseStatus
+                ];
+            });
+        
+        // Get enrollment activities with completion status
+        $enrollmentActivities = $client->enrollments()
+            ->with('course')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function($enrollment) use ($client) {
+                $course = $enrollment->course;
+                $totalLessons = $course->lessons->count();
+                $completedLessons = $client->lessonProgress()
+                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
+                    ->where('completed', true)
+                    ->count();
+                $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+                
+                // More precise course status logic
+                $courseStatus = 'not_started';
+                if ($totalLessons > 0) {
+                    if ($completedLessons >= $totalLessons) {
+                        $courseStatus = 'completed';
+                    } elseif ($completedLessons > 0) {
+                        $courseStatus = 'in_progress';
+                    }
+                }
+                
+                return [
+                    'type' => 'enrollment',
+                    'title' => 'Enrolled in Course',
+                    'description' => "Course: {$enrollment->course->title}",
+                    'date' => $enrollment->created_at,
+                    'status' => 'enrolled',
+                    'course' => $enrollment->course->title,
+                    'course_id' => $course->id,
+                    'progress_percentage' => $progressPercentage,
+                    'completed_lessons' => $completedLessons,
+                    'total_lessons' => $totalLessons,
+                    'course_status' => $courseStatus
+                ];
+            });
+        
+        // Merge all activities and remove duplicates by course_id to ensure accurate filtering
+        $allActivities = $lessonProgress->merge($enrollmentActivities)
+            ->sortByDesc('date')
+            ->groupBy('course_id')
+            ->map(function($courseActivities) {
+                // For each course, take the most recent activity
+                return $courseActivities->first();
+            })
+            ->values();
+        
+        // Apply filter
+        if ($filter !== 'all') {
+            $allActivities = $allActivities->filter(function($activity) use ($filter) {
+                return $activity['course_status'] === $filter;
+            });
+        }
+        
+        // Manual pagination
+        $total = $allActivities->count();
+        $activities = $allActivities->slice($offset, $perPage)->values();
+        
+        // Create pagination data
+        $pagination = [
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => ceil($total / $perPage),
+            'from' => $total > 0 ? $offset + 1 : 0,
+            'to' => min($offset + $perPage, $total),
+            'has_more_pages' => $page < ceil($total / $perPage),
+            'prev_page_url' => $page > 1 ? request()->fullUrlWithQuery(['page' => $page - 1]) : null,
+            'next_page_url' => $page < ceil($total / $perPage) ? request()->fullUrlWithQuery(['page' => $page + 1]) : null,
+        ];
+        
+        // Get filter statistics using the same logic as the activities filtering
+        // This ensures the filter counts match the actual filtered results
+        $allActivitiesForStats = $lessonProgress->merge($enrollmentActivities)
+            ->groupBy('course_id')
+            ->map(function($courseActivities) {
+                return $courseActivities->first();
+            })
+            ->values();
+        
+        $completed = $allActivitiesForStats->where('course_status', 'completed')->count();
+        $inProgress = $allActivitiesForStats->where('course_status', 'in_progress')->count(); 
+        $notStarted = $allActivitiesForStats->where('course_status', 'not_started')->count();
+        
+        // Keep the detailed debug info from enrollments for verification
+        $allEnrollments = $client->enrollments()->with(['course.lessons'])->get();
+        $debugInfo = [];
+        
+        foreach ($allEnrollments as $enrollment) {
+            $course = $enrollment->course;
+            $totalLessons = $course->lessons->count();
+            
+            $completedLessons = $client->lessonProgress()
+                ->whereIn('lesson_id', $course->lessons->pluck('id'))
+                ->where('completed', true)
+                ->count();
+            
+            $status = 'not_started';
+            if ($totalLessons > 0) {
+                if ($completedLessons >= $totalLessons) {
+                    $status = 'completed';
+                } elseif ($completedLessons > 0) {
+                    $status = 'in_progress';
+                }
+            }
+            
+            $debugInfo[] = [
+                'course' => $course->title,
+                'total_lessons' => $totalLessons,
+                'completed_lessons' => $completedLessons,
+                'status' => $status,
+                'progress_percentage' => $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0
+            ];
+        }
+        
+        $filterStats = [
+            'all' => $allActivitiesForStats->count(),
+            'completed' => $completed,
+            'in_progress' => $inProgress,
+            'not_started' => $notStarted,
+            'debug' => $debugInfo // Add debug info for verification
+        ];
+        
+        return view('admin.clients.activities', compact('client', 'activities', 'pagination', 'filter', 'filterStats'));
+    }
+    
     private function getCompletedCoursesCount(User $client)
     {
         $completedCount = 0;
@@ -166,7 +301,7 @@ class ClientController extends Controller
             if ($totalLessons > 0) {
                 $completedLessons = $client->lessonProgress()
                     ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('is_completed', true)
+                    ->where('completed', true)
                     ->count();
                 
                 if ($completedLessons >= $totalLessons) {
@@ -189,7 +324,7 @@ class ClientController extends Controller
             if ($totalLessons > 0) {
                 $completedLessons = $client->lessonProgress()
                     ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('is_completed', true)
+                    ->where('completed', true)
                     ->count();
                 
                 if ($completedLessons > 0 && $completedLessons < $totalLessons) {
