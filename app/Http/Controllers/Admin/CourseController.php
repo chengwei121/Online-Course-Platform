@@ -69,52 +69,7 @@ class CourseController extends Controller
         return view('admin.courses.show', compact('course', 'stats'));
     }
     
-    public function create()
-    {
-        $categories = Category::orderBy('name')->get();
-        $instructors = Instructor::orderBy('name')->get();
-        
-        return view('admin.courses.create', compact('categories', 'instructors'));
-    }
-    
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'instructor_id' => 'required|exists:instructors,id',
-            'price' => 'required|numeric|min:0',
-            'level' => 'required|in:beginner,intermediate,advanced',
-            'duration' => 'nullable|string',
-            'learning_hours' => 'nullable|integer|min:1',
-            'skills_to_learn' => 'nullable|string',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'status' => 'required|in:draft,published,archived'
-        ]);
-        
-        $data = $request->all();
-        $data['slug'] = Str::slug($request->title);
-        $data['is_free'] = $request->price == 0;
-        
-        // Handle skills as array
-        if ($request->skills_to_learn) {
-            $data['skills_to_learn'] = array_map('trim', explode(',', $request->skills_to_learn));
-        }
-        
-        // Handle thumbnail upload
-        if ($request->hasFile('thumbnail')) {
-            $file = $request->file('thumbnail');
-            $filename = time() . '_' . Str::slug($request->title) . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs('images/courses', $filename, 'public');
-            $data['thumbnail'] = $path;
-        }
-        
-        $course = Course::create($data);
-        
-        return redirect()->route('admin.courses.index')
-            ->with('success', 'Course created successfully!');
-    }
+
     
     public function edit(Course $course)
     {
@@ -208,7 +163,7 @@ class CourseController extends Controller
             
             $completedLessons = $enrollment->user->lessonProgress()
                 ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                ->where('is_completed', true)
+                ->where('completed', true)
                 ->count();
                 
             return $completedLessons >= $totalLessons;
