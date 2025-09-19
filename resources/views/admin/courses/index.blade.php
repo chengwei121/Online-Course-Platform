@@ -194,11 +194,53 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-2" 
-                                                         style="width: 30px; height: 30px;">
-                                                        <span class="text-white fw-bold small">{{ substr($course->instructor->name, 0, 1) }}</span>
+                                                    <div class="instructor-avatar me-3">
+                                                        @if(!empty($course->instructor->profile_picture) && file_exists(public_path($course->instructor->profile_picture)))
+                                                            <img src="{{ asset($course->instructor->profile_picture) }}" 
+                                                                 alt="{{ $course->instructor->name }}" 
+                                                                 class="rounded-circle"
+                                                                 style="width: 40px; height: 40px; object-fit: cover; border: 2px solid rgba(255,255,255,0.2);"
+                                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                                            <div class="avatar-placeholder rounded-circle align-items-center justify-content-center" 
+                                                                 style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 14px; display: none;">
+                                                                @php
+                                                                    $nameParts = explode(' ', trim($course->instructor->name));
+                                                                    if (count($nameParts) >= 2) {
+                                                                        echo strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+                                                                    } else {
+                                                                        echo strtoupper(substr($course->instructor->name, 0, 2));
+                                                                    }
+                                                                @endphp
+                                                            </div>
+                                                        @else
+                                                            <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center" 
+                                                                 style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-weight: bold; font-size: 14px;"
+                                                                 title="{{ $course->instructor->name }}">
+                                                                @php
+                                                                    $nameParts = explode(' ', trim($course->instructor->name));
+                                                                    if (count($nameParts) >= 2) {
+                                                                        echo strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+                                                                    } else {
+                                                                        echo strtoupper(substr($course->instructor->name, 0, 2));
+                                                                    }
+                                                                @endphp
+                                                            </div>
+                                                        @endif
                                                     </div>
-                                                    <span class="fw-medium">{{ $course->instructor->name }}</span>
+                                                    <div class="instructor-info">
+                                                        <div class="fw-medium text-dark mb-1" style="font-size: 14px;">
+                                                            {{ $course->instructor->name }}
+                                                        </div>
+                                                        @if($course->instructor->title)
+                                                            <div class="text-muted small" style="font-size: 12px;">
+                                                                <i class="fas fa-user-tie me-1"></i>{{ $course->instructor->title }}
+                                                            </div>
+                                                        @else
+                                                            <div class="text-muted small" style="font-size: 12px;">
+                                                                <i class="fas fa-chalkboard-teacher me-1"></i>Instructor
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td>
@@ -237,10 +279,6 @@
                                                     <a href="{{ route('admin.courses.show', $course) }}" 
                                                        class="btn btn-info btn-sm" title="View Details">
                                                         <i class="fas fa-eye"></i>
-                                                    </a>
-                                                    <a href="{{ route('admin.courses.edit', $course) }}" 
-                                                       class="btn btn-warning btn-sm" title="Edit Course">
-                                                        <i class="fas fa-edit"></i>
                                                     </a>
                                                     <form method="POST" action="{{ route('admin.courses.toggle-status', $course) }}" class="d-inline">
                                                         @csrf
@@ -499,6 +537,187 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+<style>
+/* Instructor Avatar Improvements */
+.instructor-avatar {
+    position: relative;
+}
+
+.avatar-placeholder {
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.avatar-placeholder:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.instructor-info {
+    line-height: 1.2;
+}
+
+/* Table row hover effects */
+.table tbody tr:hover {
+    background-color: #f8f9fc;
+    transform: translateX(2px);
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover .avatar-placeholder {
+    transform: scale(1.1);
+}
+
+/* Improve overall table styling */
+.table th {
+    font-weight: 600;
+    color: #5a5c69;
+    border-bottom: 2px solid #e3e6f0;
+    padding: 1rem 0.75rem;
+}
+
+.table td {
+    padding: 1rem 0.75rem;
+    vertical-align: middle;
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+/* Status badges with better colors */
+.badge.bg-success {
+    background-color: #1cc88a !important;
+}
+
+.badge.bg-warning {
+    background-color: #f6c23e !important;
+    color: #000 !important;
+}
+
+.badge.bg-info {
+    background-color: #36b9cc !important;
+}
+
+/* Button group improvements */
+.btn-group .btn {
+    border-radius: 4px !important;
+    margin-right: 2px;
+    transition: all 0.2s ease;
+}
+
+.btn-group .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Course thumbnail improvements */
+.table img {
+    transition: transform 0.2s ease;
+    border: 1px solid #e3e6f0;
+}
+
+.table tr:hover img {
+    transform: scale(1.02);
+}
+
+/* Level badge styling */
+.badge.bg-light {
+    border: 1px solid #d1d3e2;
+    color: #5a5c69 !important;
+}
+
+/* Pagination improvements */
+.pagination .page-link {
+    transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pagination .page-item.active .page-link {
+    box-shadow: 0 2px 4px rgba(78, 115, 223, 0.3);
+}
+
+/* Card improvements */
+.card {
+    transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Search input improvements */
+.input-group-text {
+    background-color: #f8f9fc;
+    border-color: #d1d3e2;
+    color: #6c757d;
+}
+
+.form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Statistics cards improvements */
+.bg-info, .bg-success, .bg-warning, .bg-secondary {
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-info) 100%) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #36b9cc 0%, #258391 100%) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #169b6b 100%) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%) !important;
+}
+
+.bg-secondary {
+    background: linear-gradient(135deg, #858796 0%, #60616f 100%) !important;
+}
+
+/* Empty state improvements */
+.display-1 {
+    opacity: 0.3;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .instructor-avatar {
+        margin-right: 0.5rem !important;
+    }
+    
+    .avatar-placeholder {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+    }
+    
+    .instructor-info .fw-medium {
+        font-size: 13px !important;
+    }
+    
+    .instructor-info .small {
+        font-size: 11px !important;
+    }
+}
+</style>
 @endpush
 </div>
 @endsection

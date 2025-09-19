@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
@@ -75,7 +76,7 @@ class Course extends Model
 
     public function instructor(): BelongsTo
     {
-        return $this->belongsTo(Instructor::class);
+        return $this->belongsTo(Teacher::class, 'instructor_id');
     }
 
     public function category(): BelongsTo

@@ -98,9 +98,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('teachers', App\Http\Controllers\Admin\TeacherController::class);
     Route::patch('teachers/{teacher}/toggle-status', [App\Http\Controllers\Admin\TeacherController::class, 'toggleStatus'])->name('teachers.toggle-status');
     
-    // Course Management
-    Route::resource('courses', App\Http\Controllers\Admin\CourseController::class)->except(['create', 'store']);
+    // Course Management (View only - no editing)
+    Route::get('courses', [App\Http\Controllers\Admin\CourseController::class, 'index'])->name('courses.index');
+    Route::get('courses/{course}', [App\Http\Controllers\Admin\CourseController::class, 'show'])->name('courses.show');
+    Route::delete('courses/{course}', [App\Http\Controllers\Admin\CourseController::class, 'destroy'])->name('courses.destroy');
     Route::patch('courses/{course}/toggle-status', [App\Http\Controllers\Admin\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
+    
+    // Category Management
+    Route::resource('categories', App\Http\Controllers\Admin\CategoryController::class);
+    
+    // Payment Management
+    Route::get('payments', [App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/{enrollment}', [App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('payments.show');
+    Route::patch('payments/{enrollment}/status', [App\Http\Controllers\Admin\PaymentController::class, 'updateStatus'])->name('payments.update-status');
+    Route::get('payments-statistics', [App\Http\Controllers\Admin\PaymentController::class, 'statistics'])->name('payments.statistics');
+    Route::get('payments-export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
+    
+    // Payment AJAX endpoints
+    Route::get('payments-realtime-stats', [App\Http\Controllers\Admin\PaymentController::class, 'getRealtimeStats'])->name('payments.realtime-stats');
+    Route::get('payments-list-ajax', [App\Http\Controllers\Admin\PaymentController::class, 'getPaymentsList'])->name('payments.list-ajax');
     
     // Client Management - Admin can only view, edit, and see enrollments (no create/delete)
     Route::get('clients', [App\Http\Controllers\Admin\ClientController::class, 'index'])->name('clients.index');
@@ -110,6 +126,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
     Route::get('clients/{client}/enrollments', [App\Http\Controllers\Admin\ClientController::class, 'enrollments'])->name('clients.enrollments');
     Route::get('clients/{client}/activities', [App\Http\Controllers\Admin\ClientController::class, 'activities'])->name('clients.activities');
+    
+    // Administrator Management
+    Route::resource('admins', App\Http\Controllers\Admin\AdminController::class)->except(['create', 'store']);
+    Route::patch('admins/{admin}/toggle-verification', [App\Http\Controllers\Admin\AdminController::class, 'toggleVerification'])->name('admins.toggle-verification');
 });
 
 // Temporary chart data route outside middleware for debugging
@@ -137,8 +157,23 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::get('dashboard', [App\Http\Controllers\Teacher\DashboardController::class, 'index'])->name('dashboard');
     
     // Course management
+    Route::get('courses/by-category', [App\Http\Controllers\Teacher\CourseController::class, 'getCoursesByCategory'])->name('courses.by-category');
     Route::resource('courses', App\Http\Controllers\Teacher\CourseController::class);
     Route::post('courses/{course}/toggle-status', [App\Http\Controllers\Teacher\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
+    
+    // Lesson management
+    Route::resource('courses.lessons', App\Http\Controllers\Teacher\LessonController::class)->except(['index']);
+    Route::get('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'index'])->name('courses.lessons.index');
+    Route::post('courses/{course}/lessons/reorder', [App\Http\Controllers\Teacher\LessonController::class, 'reorder'])->name('courses.lessons.reorder');
+    
+    // Assignment management
+    Route::resource('courses.lessons.assignments', App\Http\Controllers\Teacher\AssignmentController::class)->except(['index']);
+    Route::get('courses/{course}/lessons/{lesson}/assignments/create', [App\Http\Controllers\Teacher\AssignmentController::class, 'create'])->name('assignments.create');
+    Route::post('courses/{course}/lessons/{lesson}/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'store'])->name('assignments.store');
+    Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'show'])->name('assignments.show');
+    Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}/edit', [App\Http\Controllers\Teacher\AssignmentController::class, 'edit'])->name('assignments.edit');
+    Route::put('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'update'])->name('assignments.update');
+    Route::delete('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'destroy'])->name('assignments.destroy');
     
     // Teacher logout
     Route::post('logout', [App\Http\Controllers\Teacher\AuthController::class, 'logout'])->name('logout');

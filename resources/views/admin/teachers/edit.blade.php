@@ -1,6 +1,18 @@
-@extends('layouts.admin')
-
-@section('title', 'Edit Teacher')
+@extends('layouts.@section('content')
+<div data-page-loaded="true">
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow border-0">
+            <div class="card-header py-3 bg-secondary text-white border-bottom">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-user-circle me-2"></i>
+                    Edit Teacher Information
+                </h6>
+            </div>
+            <div class="card-body p-4">`tion('title', 'Edit Teacher')
 
 @section('header')
     <h1 class="h2">
@@ -22,23 +34,23 @@
     use Illuminate\Support\Facades\Storage;
 @endphp
 <div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow">
-            <div class="card-header py-3">
-                <h6 class="m-0 font-weight-bold text-primary">
+    <div class="col-lg-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-header py-4 bg-light border-bottom">
+                <h6 class="m-0 font-weight-bold text-secondary">
                     <i class="fas fa-user-circle me-2"></i>
                     Edit Teacher Information
                 </h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-5">
                 <form action="{{ route('admin.teachers.update', $teacher) }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
                     
-                    <div class="row">
+                    <div class="row g-3">
                         <!-- Personal Information -->
                         <div class="col-md-6">
-                            <h5 class="mb-3 text-primary">
+                            <h5 class="mb-3 text-primary border-bottom pb-2">
                                 <i class="fas fa-user me-2"></i>Personal Information
                             </h5>
                             
@@ -61,12 +73,18 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="phone" class="form-label">Phone Number</label>
-                                <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                       id="phone" name="phone" value="{{ old('phone', $teacher->phone) }}">
+                                <label for="phone" class="form-label">Phone Number (Malaysia) <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">🇲🇾 +60</span>
+                                    <input type="text" class="form-control @error('phone') is-invalid @enderror" 
+                                           id="phone" name="phone" value="{{ old('phone', $teacher->phone) }}" 
+                                           placeholder="12-345-6789" pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}" 
+                                           title="Please enter a valid Malaysian phone number (e.g., 12-345-6789)" required>
+                                </div>
                                 @error('phone')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="form-text text-muted">Format: XX-XXX-XXXX (without +60 prefix)</small>
                             </div>
 
                             <div class="mb-3">
@@ -95,9 +113,16 @@
                             
                             <div class="mb-3">
                                 <label for="qualification" class="form-label">Qualification <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('qualification') is-invalid @enderror" 
-                                       id="qualification" name="qualification" value="{{ old('qualification', $teacher->qualification) }}" 
-                                       placeholder="e.g., PhD in Computer Science" required>
+                                <select class="form-select @error('qualification') is-invalid @enderror" 
+                                        id="qualification" name="qualification" required>
+                                    <option value="">Select Qualification</option>
+                                    <option value="Certificate" {{ old('qualification', $teacher->qualification) === 'Certificate' ? 'selected' : '' }}>Certificate</option>
+                                    <option value="Diploma" {{ old('qualification', $teacher->qualification) === 'Diploma' ? 'selected' : '' }}>Diploma</option>
+                                    <option value="Bachelor's Degree" {{ old('qualification', $teacher->qualification) === "Bachelor's Degree" ? 'selected' : '' }}>Bachelor's Degree</option>
+                                    <option value="Master's Degree" {{ old('qualification', $teacher->qualification) === "Master's Degree" ? 'selected' : '' }}>Master's Degree</option>
+                                    <option value="PhD/Doctorate" {{ old('qualification', $teacher->qualification) === 'PhD/Doctorate' ? 'selected' : '' }}>PhD/Doctorate</option>
+                                    <option value="Professional Certification" {{ old('qualification', $teacher->qualification) === 'Professional Certification' ? 'selected' : '' }}>Professional Certification</option>
+                                </select>
                                 @error('qualification')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -105,22 +130,39 @@
 
                             <div class="mb-3">
                                 <label for="department" class="form-label">Department <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('department') is-invalid @enderror" 
-                                       id="department" name="department" value="{{ old('department', $teacher->department) }}" 
-                                       placeholder="e.g., Computer Science" required>
+                                <select class="form-select @error('department') is-invalid @enderror" 
+                                        id="department" name="department" required>
+                                    <option value="">Select Department</option>
+                                    <option value="Computer Science & IT" {{ old('department', $teacher->department) === 'Computer Science & IT' ? 'selected' : '' }}>Computer Science & IT</option>
+                                    <option value="Engineering" {{ old('department', $teacher->department) === 'Engineering' ? 'selected' : '' }}>Engineering</option>
+                                    <option value="Business & Management" {{ old('department', $teacher->department) === 'Business & Management' ? 'selected' : '' }}>Business & Management</option>
+                                    <option value="Mathematics & Statistics" {{ old('department', $teacher->department) === 'Mathematics & Statistics' ? 'selected' : '' }}>Mathematics & Statistics</option>
+                                    <option value="Science & Technology" {{ old('department', $teacher->department) === 'Science & Technology' ? 'selected' : '' }}>Science & Technology</option>
+                                    <option value="Arts & Design" {{ old('department', $teacher->department) === 'Arts & Design' ? 'selected' : '' }}>Arts & Design</option>
+                                    <option value="Languages & Literature" {{ old('department', $teacher->department) === 'Languages & Literature' ? 'selected' : '' }}>Languages & Literature</option>
+                                    <option value="Health & Medicine" {{ old('department', $teacher->department) === 'Health & Medicine' ? 'selected' : '' }}>Health & Medicine</option>
+                                    <option value="Education & Training" {{ old('department', $teacher->department) === 'Education & Training' ? 'selected' : '' }}>Education & Training</option>
+                                    <option value="Finance & Accounting" {{ old('department', $teacher->department) === 'Finance & Accounting' ? 'selected' : '' }}>Finance & Accounting</option>
+                                    <option value="Marketing & Sales" {{ old('department', $teacher->department) === 'Marketing & Sales' ? 'selected' : '' }}>Marketing & Sales</option>
+                                    <option value="Other" {{ old('department', $teacher->department) === 'Other' ? 'selected' : '' }}>Other</option>
+                                </select>
                                 @error('department')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
                             <div class="mb-3">
-                                <label for="hourly_rate" class="form-label">Hourly Rate ($)</label>
-                                <input type="number" class="form-control @error('hourly_rate') is-invalid @enderror" 
-                                       id="hourly_rate" name="hourly_rate" value="{{ old('hourly_rate', $teacher->hourly_rate) }}" 
-                                       min="0" step="0.01" placeholder="0.00">
+                                <label for="hourly_rate" class="form-label">Hourly Rate (RM)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">RM</span>
+                                    <input type="number" class="form-control @error('hourly_rate') is-invalid @enderror" 
+                                           id="hourly_rate" name="hourly_rate" value="{{ old('hourly_rate', $teacher->hourly_rate) }}" 
+                                           min="0" step="0.01" placeholder="0.00">
+                                </div>
                                 @error('hourly_rate')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                                <small class="form-text text-muted">Optional: Teaching rate in Malaysian Ringgit per hour</small>
                             </div>
 
                             <div class="mb-3">
@@ -206,5 +248,118 @@
             reader.readAsDataURL(file);
         }
     });
+
+    // Malaysian phone number formatting and validation
+    document.getElementById('phone').addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        
+        // Format as XX-XXX-XXXX
+        if (value.length >= 2) {
+            value = value.substring(0, 2) + '-' + value.substring(2);
+        }
+        if (value.length >= 6) {
+            value = value.substring(0, 6) + '-' + value.substring(6, 10);
+        }
+        
+        e.target.value = value;
+        
+        // Validation for Malaysian numbers
+        const isValid = /^(1[0-9]|01[0-9])-[0-9]{3,4}-[0-9]{4}$/.test(value);
+        
+        if (value.length > 0 && !isValid && value.length >= 11) {
+            e.target.setCustomValidity('Please enter a valid Malaysian phone number (e.g., 12-345-6789)');
+        } else {
+            e.target.setCustomValidity('');
+        }
+    });
+
+    // Form validation before submit
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const phone = document.getElementById('phone').value;
+        const phonePattern = /^(0[1-9][0-9]?|1[0-9])-[0-9]{3,4}-[0-9]{4}$/;
+        
+        if (phone && !phonePattern.test(phone)) {
+            e.preventDefault();
+            alert('Please enter a valid Malaysian phone number format: XX-XXX-XXXX');
+            document.getElementById('phone').focus();
+            return false;
+        }
+    });
 </script>
+
+<style>
+/* Enhanced form styling */
+.input-group-text {
+    background-color: #f8f9fc;
+    border-color: #d1d3e2;
+    color: #5a5c69;
+    font-weight: 500;
+}
+
+.form-select:focus, .form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Phone number specific styling */
+#phone {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+}
+
+/* Flag emoji styling */
+.input-group-text {
+    font-size: 14px;
+}
+
+/* Custom validation styling */
+.is-invalid {
+    border-color: #e74a3b !important;
+}
+
+.invalid-feedback {
+    color: #e74a3b;
+    font-size: 0.875rem;
+}
+
+/* Form section headers */
+h5.text-primary {
+    border-bottom: 2px solid #4e73df;
+    padding-bottom: 8px;
+    margin-bottom: 20px !important;
+}
+
+/* Card styling improvements */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+/* Button improvements */
+.btn-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(28, 200, 138, 0.4);
+}
+
+.btn-secondary {
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+}
+</style>
 @endpush

@@ -69,9 +69,6 @@
                         </div>
                         <div class="col-md-4 text-end">
                             <div class="d-flex gap-2 justify-content-end">
-                                <a href="{{ route('admin.courses.edit', $course) }}" class="btn btn-light btn-lg">
-                                    <i class="fas fa-edit me-2"></i>Edit Course
-                                </a>
                                 <a href="{{ route('admin.courses.index') }}" class="btn btn-outline-light btn-lg">
                                     <i class="fas fa-arrow-left me-2"></i>Back
                                 </a>
@@ -311,10 +308,6 @@
                                 {{ $course->status == 'published' ? 'Unpublish Course' : 'Publish Course' }}
                             </button>
                         </form>
-                        
-                        <a href="{{ route('admin.courses.edit', $course) }}" class="btn btn-outline-light">
-                            <i class="fas fa-edit me-2"></i>Edit Course Details
-                        </a>
                         
                         @if($course->enrollments->count() == 0)
                             <button type="button" class="btn btn-outline-light" onclick="confirmDelete()">

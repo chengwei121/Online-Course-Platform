@@ -16,14 +16,37 @@ class CourseController extends Controller
     /**
      * Display a listing of teacher's courses
      */
-    public function index()
+    public function index(Request $request)
     {
         $teacher = Auth::user()->teacher;
         
-        $courses = Course::where('instructor_id', $teacher->id)
-            ->withCount(['enrollments', 'lessons'])
-            ->latest()
-            ->paginate(10);
+        $perPage = $request->get('per_page', 12);
+        // Validate per_page value
+        if (!in_array($perPage, [12, 24, 48])) {
+            $perPage = 12;
+        }
+        
+        $query = Course::where('instructor_id', $teacher->id)
+            ->withCount(['enrollments', 'lessons']);
+            
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        // Status filter
+        if ($request->filled('status') && $request->get('status') !== 'all') {
+            $query->where('status', $request->get('status'));
+        }
+        
+        $courses = $query->latest()->paginate($perPage);
+        
+        // Preserve query parameters in pagination links
+        $courses->appends($request->query());
 
         return view('teacher.courses.index', compact('courses'));
     }
@@ -31,10 +54,64 @@ class CourseController extends Controller
     /**
      * Show the form for creating a new course
      */
-    public function create()
+    public function create(Request $request)
     {
         $categories = Category::all();
-        return view('teacher.courses.create', compact('categories'));
+        $selectedCategoryId = $request->get('category_id');
+        $coursesByCategory = [];
+        
+        if ($selectedCategoryId) {
+            $coursesByCategory = Course::where('category_id', $selectedCategoryId)
+                ->with(['instructor', 'category'])
+                ->withCount(['enrollments', 'lessons'])
+                ->latest()
+                ->get()
+                ->groupBy(function($course) {
+                    return $course->instructor_id == Auth::user()->teacher->id ? 'my_courses' : 'other_courses';
+                });
+        }
+        
+        return view('teacher.courses.create', compact('categories', 'selectedCategoryId', 'coursesByCategory'));
+    }
+
+    /**
+     * Get courses by category (AJAX endpoint)
+     */
+    public function getCoursesByCategory(Request $request)
+    {
+        $categoryId = $request->get('category_id');
+        $teacher = Auth::user()->teacher;
+        
+        if (!$categoryId) {
+            return response()->json(['courses' => []]);
+        }
+        
+        $courses = Course::where('category_id', $categoryId)
+            ->with(['instructor', 'category'])
+            ->withCount(['enrollments', 'lessons'])
+            ->latest()
+            ->get();
+            
+        $courseData = $courses->map(function($course) use ($teacher) {
+            return [
+                'id' => $course->id,
+                'title' => $course->title,
+                'description' => Str::limit($course->description, 100),
+                'price' => $course->price,
+                'level' => $course->level,
+                'status' => $course->status,
+                'thumbnail_url' => $course->thumbnail_url,
+                'instructor_name' => $course->instructor->name,
+                'enrollments_count' => $course->enrollments_count,
+                'lessons_count' => $course->lessons_count,
+                'is_my_course' => $course->instructor_id == ($teacher ? $teacher->id : null),
+                'created_at' => $course->created_at->diffForHumans(),
+                'edit_url' => route('teacher.courses.edit', $course),
+                'view_url' => route('teacher.courses.show', $course)
+            ];
+        });
+        
+        return response()->json(['courses' => $courseData]);
     }
 
     /**
@@ -46,9 +123,11 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'difficulty_level' => 'required|in:beginner,intermediate,advanced',
-            'duration_hours' => 'required|integer|min:1',
+            'price' => 'nullable|numeric|min:0',
+            'level' => 'required|in:beginner,intermediate,advanced',
+            'learning_hours' => 'required|integer|min:1',
+            'skills_to_learn' => 'nullable|string',
+            'is_free' => 'nullable|boolean',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -56,7 +135,14 @@ class CourseController extends Controller
         
         $thumbnailPath = null;
         if ($request->hasFile('thumbnail')) {
-            $thumbnailPath = $request->file('thumbnail')->store('course-thumbnails', 'public');
+            $thumbnailPath = $request->file('thumbnail')->store('images/courses', 'public');
+        }
+
+        // Process skills to learn
+        $skillsArray = null;
+        if ($request->filled('skills_to_learn')) {
+            $skillsArray = array_map('trim', explode(',', $request->skills_to_learn));
+            $skillsArray = array_filter($skillsArray); // Remove empty values
         }
 
         $course = Course::create([
@@ -65,9 +151,11 @@ class CourseController extends Controller
             'description' => $request->description,
             'instructor_id' => $teacher->id,
             'category_id' => $request->category_id,
-            'price' => $request->price,
-            'difficulty_level' => $request->difficulty_level,
-            'duration_hours' => $request->duration_hours,
+            'price' => $request->is_free ? 0 : ($request->price ?? 0),
+            'level' => $request->level,
+            'learning_hours' => $request->learning_hours,
+            'skills_to_learn' => $skillsArray,
+            'is_free' => (bool) $request->is_free,
             'thumbnail' => $thumbnailPath,
             'status' => 'draft',
         ]);
@@ -82,6 +170,10 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         $this->authorize('view', $course);
+        
+        // Load course with counts and related data
+        $course->loadCount(['enrollments', 'lessons']);
+        $course->load(['category', 'instructor']);
         
         $lessons = $course->lessons()->orderBy('order')->get();
         $enrollments = $course->enrollments()->with('user')->latest()->take(10)->get();

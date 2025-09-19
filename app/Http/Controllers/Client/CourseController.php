@@ -265,19 +265,29 @@ class CourseController extends Controller
 
             // If marking as complete
             if ($request->boolean('completed')) {
-                $minRequiredProgress = $lesson->duration * 60; // Convert to seconds
+                // For completion, we'll be more flexible about the requirements
+                // Check if they've made reasonable progress (at least 60 seconds or 80% of reported progress)
+                $hasMinimumProgress = $progress->video_progress >= 60; // At least 1 minute
                 
                 Log::info('Checking completion requirements', [
+                    'user_id' => $user->id,
+                    'lesson_id' => $lesson->id,
                     'current_progress' => $progress->video_progress,
-                    'required_progress' => $minRequiredProgress,
+                    'has_minimum_progress' => $hasMinimumProgress,
                     'lesson_duration' => $lesson->duration
                 ]);
 
-                // Allow completion if progress is sufficient
-                if ($progress->video_progress >= $minRequiredProgress) {
+                // Allow completion if they have minimum progress
+                if ($hasMinimumProgress) {
                     $progress->completed = true;
                     $progress->completed_at = now();
                     $progress->save();
+
+                    Log::info('Lesson marked as complete', [
+                        'user_id' => $user->id,
+                        'lesson_id' => $lesson->id,
+                        'progress' => $progress->video_progress
+                    ]);
 
                     return response()->json([
                         'success' => true,
@@ -289,9 +299,16 @@ class CourseController extends Controller
                         ]
                     ]);
                 } else {
+                    Log::warning('Insufficient progress for completion', [
+                        'user_id' => $user->id,
+                        'lesson_id' => $lesson->id,
+                        'current_progress' => $progress->video_progress,
+                        'required_minimum' => 60
+                    ]);
+                    
                     return response()->json([
                         'success' => false,
-                        'message' => 'You must watch the entire video before marking it as complete.'
+                        'message' => 'You must watch at least 1 minute of the video before marking it as complete.'
                     ], 400);
                 }
             }

@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Assignment;
 use App\Models\Enrollment;
 use App\Models\AssignmentSubmission;
+use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,7 +21,7 @@ class DashboardController extends Controller
         $teacher = Auth::user()->teacher;
         
         if (!$teacher) {
-            return redirect()->route('teacher.login')->with('error', 'Teacher profile not found.');
+            return redirect()->route('login')->with('error', 'Teacher profile not found.');
         }
 
         // Get teacher's courses
@@ -36,8 +37,9 @@ class DashboardController extends Controller
             Course::where('instructor_id', $teacher->id)->pluck('id')
         )->distinct('user_id')->count();
         
-        $totalAssignments = Assignment::whereIn('course_id',
-            Course::where('instructor_id', $teacher->id)->pluck('id')
+        // Get total assignments (assignments are linked to lessons, not directly to courses)
+        $totalAssignments = Assignment::whereIn('lesson_id',
+            Lesson::whereIn('course_id', Course::where('instructor_id', $teacher->id)->pluck('id'))->pluck('id')
         )->count();
 
         // Get recent enrollments
@@ -47,15 +49,18 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Get pending assignment submissions
+        // Get pending assignment submissions (submissions that are submitted but not yet graded)
         $pendingSubmissions = AssignmentSubmission::with(['assignment', 'user'])
             ->whereIn('assignment_id', 
-                Assignment::whereIn('course_id', 
-                    Course::where('instructor_id', $teacher->id)->pluck('id')
+                Assignment::whereIn('lesson_id', 
+                    Lesson::whereIn('course_id', 
+                        Course::where('instructor_id', $teacher->id)->pluck('id')
+                    )->pluck('id')
                 )->pluck('id')
             )
-            ->where('status', 'submitted')
-            ->latest()
+            ->whereNotNull('submitted_at')
+            ->whereNull('score') // Not yet graded
+            ->latest('submitted_at')
             ->take(5)
             ->get();
 

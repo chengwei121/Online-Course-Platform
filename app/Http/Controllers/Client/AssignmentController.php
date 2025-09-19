@@ -32,15 +32,14 @@ class AssignmentController extends Controller
                 'assignment_id' => $assignment->id,
             ],
             [
-                'content' => $request->content,
-                'status' => 'submitted',
+                'submission_text' => $request->content,
                 'submitted_at' => now(),
             ]
         );
 
         if ($request->hasFile('file')) {
             $path = $request->file('file')->store('assignment-submissions', 'public');
-            $submission->update(['file_path' => $path]);
+            $submission->update(['submission_file' => $path]);
         }
 
         return redirect()->back()->with('success', 'Assignment submitted successfully!');

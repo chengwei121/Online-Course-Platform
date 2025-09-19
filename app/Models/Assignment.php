@@ -15,7 +15,10 @@ class Assignment extends Model
         'description',
         'instructions',
         'due_date',
-        'points'
+        'points',
+        'assignment_type',
+        'difficulty_level',
+        'estimated_time'
     ];
 
     protected $casts = [

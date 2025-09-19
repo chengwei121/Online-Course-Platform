@@ -3,1725 +3,3055 @@
 @section('title', 'Admin Dashboard')
 
 @section('header')
-    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
-        <div class="flex-grow-1">
-            <h1 class="h2 mb-2 mb-lg-0">
-                <i class="fas fa-tachometer-alt me-2 text-primary"></i>
-                Dashboard
-            </h1>
-            <p class="text-muted mb-0 fs-6">Welcome back, {{ Auth::user()->name }}! Here's what's happening today.</p>
+    <h1 class="h2">
+        <i class="fas fa-tachometer-alt me-3"></i>
+        Admin Dashboard
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshDashboard()" id="refreshBtn">
+                <i class="fas fa-sync-alt me-1"></i>
+                Refresh
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-download me-1"></i>
+                Export
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#"><i class="fas fa-file-pdf me-2"></i>PDF Report</a></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-file-excel me-2"></i>Excel Export</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" href="#"><i class="fas fa-chart-line me-2"></i>Analytics Report</a></li>
+            </ul>
         </div>
-        <div class="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-3">
-            <div class="text-center text-sm-end">
-                <small class="text-muted d-block">Last Login</small>
-                <small class="fw-bold">{{ Auth::user()->updated_at ? Auth::user()->updated_at->diffForHumans() : 'Never' }}</small>
-            </div>
-            <div class="badge bg-success fs-6 px-3 py-2">
-                <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>
-                System Online
-            </div>
-        </div>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#quickActionsModal">
+            <i class="fas fa-plus me-1"></i>
+            Quick Actions
+        </button>
     </div>
 @endsection
 
 @section('content')
 <div data-page-loaded="true">
-@php
-    use Illuminate\Support\Facades\Storage;
-@endphp
-<!-- Statistics Cards -->
-<div class="row g-3 g-lg-4 mb-4">
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body p-3 p-lg-4 position-relative overflow-hidden">
-                <div class="row align-items-center g-0">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-uppercase text-muted mb-1 mb-lg-2">Total Teachers</div>
-                        <div class="h4 h3-lg mb-0 font-weight-bold text-dark total-teachers">{{ $stats['total_teachers'] }}</div>
-                        <div class="mt-2 d-none d-sm-block">
-                            <small class="text-{{ $growthTrends['teachers'] >= 0 ? 'success' : 'danger' }}">
-                                <i class="fas fa-arrow-{{ $growthTrends['teachers'] >= 0 ? 'up' : 'down' }} me-1"></i>
-                                {{ $growthTrends['teachers'] >= 0 ? '+' : '' }}{{ $growthTrends['teachers'] }}% from last month
-                            </small>
-                            <div class="mt-1">
-                                <span class="badge bg-primary realtime-indicator">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.4rem;"></i>
-                                    Live
-                                </span>
+    <!-- Dashboard Stats Row -->
+    <div class="row mb-4" id="statsContainer">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="enhanced-stat-card students-card">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-header">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon bg-gradient-primary">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <div class="stat-icon-bg">
+                                <i class="fas fa-user-graduate"></i>
                             </div>
                         </div>
                     </div>
-                    <div class="col-auto">
-                        <div class="icon-shape bg-gradient-primary text-white rounded-circle shadow d-flex align-items-center justify-content-center">
-                            <i class="fas fa-chalkboard-teacher fs-5 fs-4-lg"></i>
+                    <div class="stat-body">
+                        <div class="stat-title">Total Students</div>
+                        <div class="stat-number" id="totalStudents">
+                            {{ $stats['total_students'] ?? 0 }}
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar" style="width: 75%"></div>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span id="studentGrowth">{{ $growthTrends['students'] ?? 0 }}%</span>
+                            </div>
+                            <div class="stat-meta">vs last month</div>
                         </div>
                     </div>
                 </div>
-                <div class="progress mt-3 d-none d-md-block" style="height: 4px;">
-                    <div class="progress-bar bg-primary" role="progressbar" style="width: 75%"></div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="enhanced-stat-card teachers-card">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-header">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon bg-gradient-success">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <div class="stat-icon-bg">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-title">Total Teachers</div>
+                        <div class="stat-number" id="totalTeachers">
+                            {{ $stats['total_teachers'] ?? 0 }}
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar" style="width: 60%"></div>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-badge active">
+                                <span id="activeTeachers">{{ $stats['active_teachers'] ?? 0 }}</span> Active
+                            </div>
+                            <div class="stat-meta">currently teaching</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="enhanced-stat-card courses-card">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-header">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon bg-gradient-info">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <div class="stat-icon-bg">
+                                <i class="fas fa-book"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-title">Total Courses</div>
+                        <div class="stat-number" id="totalCourses">
+                            {{ $stats['total_courses'] ?? 0 }}
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar" style="width: 85%"></div>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-badge published">
+                                <span id="publishedCourses">{{ $stats['published_courses'] ?? 0 }}</span> Published
+                            </div>
+                            <div class="stat-meta">available for students</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="enhanced-stat-card enrollments-card">
+                <div class="stat-card-overlay"></div>
+                <div class="stat-card-content">
+                    <div class="stat-header">
+                        <div class="stat-icon-wrapper">
+                            <div class="stat-icon bg-gradient-warning">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-icon-bg">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-body">
+                        <div class="stat-title">Total Enrollments</div>
+                        <div class="stat-number" id="totalEnrollments">
+                            {{ $stats['total_enrollments'] ?? 0 }}
+                        </div>
+                        <div class="stat-progress">
+                            <div class="progress-bar" style="width: 92%"></div>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-trend positive">
+                                <i class="fas fa-arrow-up"></i>
+                                <span id="enrollmentGrowth">{{ $growthTrends['enrollments'] ?? 0 }}%</span>
+                            </div>
+                            <div class="stat-meta">vs last month</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body p-3 p-lg-4 position-relative overflow-hidden">
-                <div class="row align-items-center g-0">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-uppercase text-muted mb-1 mb-lg-2">Active Teachers</div>
-                        <div class="h4 h3-lg mb-0 font-weight-bold text-dark active-teachers">{{ $stats['active_teachers'] }}</div>
-                        <div class="mt-2 d-none d-sm-block">
-                            <small class="text-{{ $growthTrends['teachers'] >= 0 ? 'success' : 'danger' }}">
-                                <i class="fas fa-arrow-{{ $growthTrends['teachers'] >= 0 ? 'up' : 'down' }} me-1"></i>
-                                {{ $growthTrends['teachers'] >= 0 ? '+' : '' }}{{ $growthTrends['teachers'] }}% active rate
-                            </small>
-                            <div class="mt-1">
-                                <span class="badge bg-success realtime-indicator">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.4rem;"></i>
-                                    Live
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="icon-shape bg-gradient-success text-white rounded-circle shadow d-flex align-items-center justify-content-center">
-                            <i class="fas fa-user-check fs-5 fs-4-lg"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress mt-3 d-none d-md-block" style="height: 4px;">
-                    <div class="progress-bar bg-success" role="progressbar" style="width: 85%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body p-3 p-lg-4 position-relative overflow-hidden">
-                <div class="row align-items-center g-0">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-uppercase text-muted mb-1 mb-lg-2">Total Courses</div>
-                        <div class="h4 h3-lg mb-0 font-weight-bold text-dark total-courses">{{ $stats['total_courses'] }}</div>
-                        <div class="mt-2 d-none d-sm-block">
-                            <small class="text-{{ $growthTrends['courses'] >= 0 ? 'success' : ($growthTrends['courses'] == 0 ? 'warning' : 'danger') }}">
-                                <i class="fas fa-arrow-{{ $growthTrends['courses'] > 0 ? 'up' : ($growthTrends['courses'] == 0 ? 'right' : 'down') }} me-1"></i>
-                                {{ $growthTrends['courses'] >= 0 ? '+' : '' }}{{ $growthTrends['courses'] }}% from last month
-                            </small>
-                            <div class="mt-1">
-                                <span class="badge bg-warning realtime-indicator">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.4rem;"></i>
-                                    Live
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="icon-shape bg-gradient-warning text-white rounded-circle shadow d-flex align-items-center justify-content-center">
-                            <i class="fas fa-book fs-5 fs-4-lg"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress mt-3 d-none d-md-block" style="height: 4px;">
-                    <div class="progress-bar bg-warning" role="progressbar" style="width: 60%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-6 col-lg-3">
-        <div class="card border-0 shadow-sm h-100 hover-card">
-            <div class="card-body p-3 p-lg-4 position-relative overflow-hidden">
-                <div class="row align-items-center g-0">
-                    <div class="col">
-                        <div class="text-xs font-weight-bold text-uppercase text-muted mb-1 mb-lg-2">Total Students</div>
-                        <div class="h4 h3-lg mb-0 font-weight-bold text-dark total-students">{{ $stats['total_students'] }}</div>
-                        <div class="mt-2 d-none d-sm-block">
-                            <small class="text-{{ $growthTrends['students'] >= 0 ? 'success' : 'danger' }}">
-                                <i class="fas fa-arrow-{{ $growthTrends['students'] >= 0 ? 'up' : 'down' }} me-1"></i>
-                                {{ $growthTrends['students'] >= 0 ? '+' : '' }}{{ $growthTrends['students'] }}% from last month
-                            </small>
-                            <div class="mt-1">
-                                <span class="badge bg-info realtime-indicator">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.4rem;"></i>
-                                    Live
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="icon-shape bg-gradient-info text-white rounded-circle shadow d-flex align-items-center justify-content-center">
-                            <i class="fas fa-users fs-5 fs-4-lg"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="progress mt-3 d-none d-md-block" style="height: 4px;">
-                    <div class="progress-bar bg-info" role="progressbar" style="width: 90%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Analytics Row -->
-<div class="row g-3 g-lg-4 mb-4">
-    <!-- System Overview -->
-    <div class="col-12 col-xl-8 mb-3 mb-xl-0">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                    <h6 class="m-0 font-weight-bold text-white">
+    <!-- Charts and Recent Activity Row -->
+    <div class="row mb-4">
+        <!-- Analytics Chart -->
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow">
+                <div class="card-header modern-grey-header text-white d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold">
                         <i class="fas fa-chart-area me-2"></i>
-                        Platform Overview
+                        Platform Analytics
                     </h6>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" data-bs-toggle="dropdown" id="periodDropdown">
-                            <i class="fas fa-calendar me-1"></i>
-                            <span class="d-none d-sm-inline" id="periodText">This Month</span>
-                            <span class="d-sm-none" id="periodTextShort">Month</span>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <input type="radio" class="btn-check" name="chartPeriod" id="weekBtn" value="week">
+                        <label class="btn btn-outline-light btn-sm" for="weekBtn">Week</label>
+                        
+                        <input type="radio" class="btn-check" name="chartPeriod" id="monthBtn" value="month" checked>
+                        <label class="btn btn-outline-light btn-sm" for="monthBtn">Month</label>
+                        
+                        <input type="radio" class="btn-check" name="chartPeriod" id="yearBtn" value="year">
+                        <label class="btn btn-outline-light btn-sm" for="yearBtn">Year</label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="position: relative; height: 400px;">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                    <div class="mt-3">
+                        <div class="row text-center">
+                            <div class="col">
+                                <span class="badge bg-primary me-1">●</span>
+                                <small class="text-muted">Students</small>
+                            </div>
+                            <div class="col">
+                                <span class="badge bg-success me-1">●</span>
+                                <small class="text-muted">Teachers</small>
+                            </div>
+                            <div class="col">
+                                <span class="badge bg-info me-1">●</span>
+                                <small class="text-muted">Courses</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow h-100" style="overflow: visible !important;">
+                <div class="card-header modern-grey-header text-white d-flex justify-content-between align-items-center" style="overflow: visible !important; position: relative; z-index: 1060;">
+                    <div>
+                        <h6 class="m-0 font-weight-bold">
+                            <i class="fas fa-pulse me-2"></i>
+                            Recent Activity
+                        </h6>
+                        <small class="opacity-75">Live platform updates</small>
+                    </div>
+                    <div class="dropdown" style="position: relative; z-index: 1060;">
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle" type="button" id="activityFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-filter me-1"></i>Filter
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item period-option" href="#" data-period="week">This Week</a></li>
-                            <li><a class="dropdown-item period-option active" href="#" data-period="month">This Month</a></li>
-                            <li><a class="dropdown-item period-option" href="#" data-period="year">This Year</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end" style="position: absolute !important; z-index: 1060 !important; top: 100% !important; right: 0 !important; left: auto !important;">
+                            <li><a class="dropdown-item" href="#" onclick="filterActivity('all')">
+                                <i class="fas fa-list me-2"></i>All Activity
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterActivity('teachers')">
+                                <i class="fas fa-chalkboard-teacher me-2"></i>Teachers Only
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterActivity('courses')">
+                                <i class="fas fa-book me-2"></i>Courses Only
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterActivity('enrollments')">
+                                <i class="fas fa-user-graduate me-2"></i>Enrollments Only
+                            </a></li>
                         </ul>
                     </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="row g-2 g-md-0">
-                    <div class="col-12 col-md-4 text-center mb-3">
-                        <div class="border-end-md h-100 d-flex flex-column justify-content-center">
-                            <div class="h4 h3-lg text-primary mb-1">{{ $stats['total_courses'] }}</div>
-                            <small class="text-muted">Total Courses</small>
-                            <div class="mt-1">
-                                <small class="text-success">
-                                    <i class="fas fa-arrow-up me-1"></i>
-                                    {{ $stats['published_courses'] }} published
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 text-center mb-3">
-                        <div class="border-end-md h-100 d-flex flex-column justify-content-center">
-                            <div class="h4 h3-lg text-success mb-1">{{ round(($stats['active_teachers'] / max($stats['total_teachers'], 1)) * 100) }}%</div>
-                            <small class="text-muted">Active Teachers</small>
-                            <div class="mt-1">
-                                <small class="text-info">
-                                    <i class="fas fa-users me-1"></i>
-                                    {{ $stats['active_teachers'] }}/{{ $stats['total_teachers'] }} active
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4 text-center mb-3">
-                        <div class="h-100 d-flex flex-column justify-content-center">
-                            <div class="h4 h3-lg text-info mb-1">{{ $stats['total_enrollments'] }}</div>
-                            <small class="text-muted">Total Enrollments</small>
-                            <div class="mt-1">
-                                <small class="text-warning">
-                                    <i class="fas fa-graduation-cap me-1"></i>
-                                    {{ $stats['total_students'] }} students
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-3 d-none d-lg-block">
-                    <canvas id="platformChart" height="100"></canvas>
-                </div>
-                <div class="mt-3 d-lg-none">
-                    <canvas id="platformChart" height="200"></canvas>
-                </div>
-                
-                <!-- Real-time data indicators -->
-                <div class="row mt-3 pt-3 border-top">
-                    <div class="col-12">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
-                                <i class="fas fa-sync-alt me-1"></i>
-                                Last updated: {{ now()->format('M d, Y H:i:s') }}
-                            </small>
-                            <div class="d-flex gap-3">
-                                <small class="text-success">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.5rem;"></i>
-                                    Live Data
-                                </small>
-                                <small class="text-primary">
-                                    <i class="fas fa-chart-line me-1"></i>
-                                    <span id="chartViewText">6 Months View</span>
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- System Status -->
-    <div class="col-12 col-xl-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <h6 class="m-0 font-weight-bold text-white">
-                    <i class="fas fa-server me-2"></i>
-                    System Status
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded" style="background-color: #f8f9fa;">
-                    <span class="text-muted">Database</span>
-                    <span class="badge bg-success">
-                        <i class="fas fa-check me-1"></i>Online
-                    </span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded" style="background-color: #f8f9fa;">
-                    <span class="text-muted">File Storage</span>
-                    <span class="badge bg-success">
-                        <i class="fas fa-check me-1"></i>Online
-                    </span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded" style="background-color: #f8f9fa;">
-                    <span class="text-muted">Email Service</span>
-                    <span class="badge bg-success">
-                        <i class="fas fa-check me-1"></i>Online
-                    </span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3 p-2 rounded" style="background-color: #f8f9fa;">
-                    <span class="text-muted">Backup Status</span>
-                    <span class="badge bg-warning">
-                        <i class="fas fa-clock me-1"></i>Pending
-                    </span>
-                </div>
-                <hr>
-                <div class="text-center">
-                    <div class="realtime-clock mb-2"></div>
-                    <small class="text-muted last-updated-time">Last Updated: {{ now()->format('M d, Y H:i') }}</small>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Content Row -->
-<div class="row g-3 g-lg-4 mb-4">
-    <!-- Recent Teachers -->
-    <div class="col-12 col-lg-6 mb-3 mb-lg-0">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                    <h6 class="m-0 font-weight-bold text-white">
-                        <i class="fas fa-chalkboard-teacher me-2"></i>
-                        Recent Teachers
-                    </h6>
-                    <a href="{{ route('admin.teachers.index') }}" class="btn btn-sm btn-outline-light">
-                        <i class="fas fa-external-link-alt me-1"></i>
-                        <span class="d-none d-sm-inline">View All</span>
-                        <span class="d-sm-none">All</span>
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                @if($recentTeachers->count() > 0)
-                    <div class="list-group list-group-flush">
-                        @foreach($recentTeachers as $teacher)
-                            @if($teacher && $teacher->created_at)
-                            <div class="list-group-item border-0 p-3 hover-item">
-                                <div class="d-flex justify-content-between align-items-start align-items-sm-center">
-                                    <div class="d-flex align-items-center flex-grow-1 me-3">
-                                        <div class="me-3 position-relative flex-shrink-0">
-                                            @if($teacher->profile_picture)
-                                                <img src="{{ Storage::url($teacher->profile_picture) }}" 
-                                                     class="rounded-circle shadow-sm" width="45" height="45" alt="Profile">
-                                            @else
-                                                <div class="bg-gradient-secondary rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
-                                                     style="width: 45px; height: 45px;">
-                                                    <i class="fas fa-user text-white"></i>
-                                                </div>
-                                            @endif
-                                            <span class="position-absolute bottom-0 end-0 bg-{{ $teacher->status === 'active' ? 'success' : 'secondary' }} border border-white rounded-circle" 
-                                                  style="width: 12px; height: 12px;"></span>
-                                        </div>
-                                        <div class="min-w-0 flex-grow-1">
-                                            <h6 class="mb-1 fw-bold text-truncate">{{ $teacher->name }}</h6>
-                                            <small class="text-muted d-block text-truncate">{{ $teacher->department }}</small>
-                                            <div class="mt-1 d-none d-md-block">
-                                                <small class="text-primary">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    Joined {{ $teacher->created_at ? $teacher->created_at->diffForHumans() : 'Recently' }}
-                                                </small>
-                                            </div>
-                                        </div>
+                <div class="card-body p-0">
+                    <div class="activity-timeline" style="max-height: 420px; overflow-y: auto;">
+                        
+                        <!-- Recent Enrollments Timeline - Only show if there are enrollments -->
+                        @if(!empty($recentEnrollments) && count($recentEnrollments) > 0)
+                        <div class="timeline-section" data-category="enrollments">
+                            @foreach($recentEnrollments as $index => $enrollment)
+                            <div class="timeline-item {{ $index === 0 ? 'latest' : '' }}">
+                                <div class="timeline-marker">
+                                    <div class="timeline-icon bg-primary">
+                                        <i class="fas fa-user-graduate"></i>
                                     </div>
-                                    <div class="text-end flex-shrink-0">
-                                        <span class="badge bg-{{ $teacher->status === 'active' ? 'success' : 'secondary' }} mb-1">
-                                            {{ ucfirst($teacher->status) }}
-                                        </span>
-                                        <div class="d-none d-sm-block">
-                                            <small class="text-muted">ID: #{{ $teacher->id }}</small>
+                                    @if(!$loop->last || !empty($recentTeachers) || !empty($recentCourses))
+                                    <div class="timeline-line"></div>
+                                    @endif
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="timeline-title mb-1">New Enrollment</h6>
+                                            <span class="timeline-badge badge bg-primary">
+                                                <i class="fas fa-graduation-cap me-1"></i>Student
+                                            </span>
+                                        </div>
+                                        <p class="timeline-description">
+                                            <strong>{{ $enrollment->user->name ?? 'Student' }}</strong> enrolled in 
+                                            <em>{{ Str::limit($enrollment->course->title ?? 'Course', 25) }}</em>
+                                        </p>
+                                        <div class="timeline-meta">
+                                            <span class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $enrollment->created_at ? $enrollment->created_at->diffForHumans() : 'Recently' }}
+                                            </span>
+                                            <span class="text-muted ms-3">
+                                                <i class="fas fa-dollar-sign me-1"></i>
+                                                ${{ $enrollment->course->price ?? '0' }}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endif
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="fas fa-user-plus fa-3x text-muted"></i>
+                            @endforeach
                         </div>
-                        <h6 class="text-muted mb-2">No Teachers Registered</h6>
-                        <p class="text-muted small mb-3 px-3">Start building your educational team by adding teachers.</p>
-                        <a href="{{ route('admin.teachers.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Add First Teacher
-                        </a>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
+                        @endif
 
-    <!-- Recent Courses -->
-    <div class="col-12 col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                    <h6 class="m-0 font-weight-bold text-white">
-                        <i class="fas fa-book me-2"></i>
-                        Recent Courses
-                    </h6>
-                    <a href="{{ route('admin.courses.index') }}" class="btn btn-sm btn-outline-light">
-                        <i class="fas fa-external-link-alt me-1"></i>
-                        <span class="d-none d-sm-inline">View All</span>
-                        <span class="d-sm-none">All</span>
-                    </a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                @if($recentCourses->count() > 0)
-                    <div class="list-group list-group-flush">
-                        @foreach($recentCourses as $course)
-                            @if($course && $course->created_at)
-                            <div class="list-group-item border-0 p-3 hover-item">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="d-flex align-items-center flex-grow-1 me-3">
-                                        <div class="me-3 flex-shrink-0">
-                                            @if($course->thumbnail)
-                                                <img src="{{ $course->thumbnail }}" 
-                                                     class="rounded shadow-sm" width="55" height="45" alt="Course thumbnail"
-                                                     style="object-fit: cover;">
-                                            @else
-                                                <div class="bg-gradient-primary rounded d-flex align-items-center justify-content-center shadow-sm" 
-                                                     style="width: 55px; height: 45px;">
-                                                    <i class="fas fa-book text-white"></i>
-                                                </div>
+                        <!-- Recent Teachers Timeline - Only show if there are teachers -->
+                        @if(!empty($recentTeachers) && count($recentTeachers) > 0)
+                        <div class="timeline-section" data-category="teachers">
+                            @foreach($recentTeachers as $index => $teacher)
+                            <div class="timeline-item">
+                                <div class="timeline-marker">
+                                    <div class="timeline-icon bg-success">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                    </div>
+                                    @if(!$loop->last || !empty($recentCourses))
+                                    <div class="timeline-line"></div>
+                                    @endif
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="timeline-title mb-1">New Teacher</h6>
+                                            <span class="timeline-badge badge bg-success">
+                                                <i class="fas fa-user-check me-1"></i>
+                                                {{ ucfirst($teacher->status ?? 'active') }}
+                                            </span>
+                                        </div>
+                                        <p class="timeline-description">
+                                            <strong>{{ $teacher->name }}</strong> joined as instructor
+                                            @if($teacher->department)
+                                            in <em>{{ $teacher->department }}</em>
+                                            @endif
+                                        </p>
+                                        <div class="timeline-meta">
+                                            <span class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $teacher->created_at ? $teacher->created_at->diffForHumans() : 'Recently' }}
+                                            </span>
+                                            @if($teacher->courses_count ?? 0 > 0)
+                                            <span class="text-muted ms-3">
+                                                <i class="fas fa-book me-1"></i>
+                                                {{ $teacher->courses_count }} courses
+                                            </span>
                                             @endif
                                         </div>
-                                        <div class="min-w-0 flex-grow-1">
-                                            <h6 class="mb-1 fw-bold text-truncate">{{ Str::limit($course->title, 30) }}</h6>
-                                            <small class="text-muted d-block text-truncate">
-                                                <i class="fas fa-user me-1"></i>
-                                                by {{ $course->instructor->name ?? 'Unknown' }}
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+
+                        <!-- Recent Courses Timeline - Only show if there are courses -->
+                        @if(!empty($recentCourses) && count($recentCourses) > 0)
+                        <div class="timeline-section" data-category="courses">
+                            @foreach($recentCourses as $index => $course)
+                            <div class="timeline-item">
+                                <div class="timeline-marker">
+                                    <div class="timeline-icon bg-info">
+                                        <i class="fas fa-book"></i>
+                                    </div>
+                                    @if(!$loop->last)
+                                    <div class="timeline-line"></div>
+                                    @endif
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="timeline-title mb-1">New Course</h6>
+                                            <span class="timeline-badge badge bg-{{ $course->status === 'published' ? 'success' : 'warning' }}">
+                                                <i class="fas fa-{{ $course->status === 'published' ? 'check-circle' : 'clock' }} me-1"></i>
+                                                {{ ucfirst($course->status ?? 'draft') }}
+                                            </span>
+                                        </div>
+                                        <p class="timeline-description">
+                                            <strong>{{ Str::limit($course->title, 35) }}</strong>
+                                            <br>
+                                            <small class="text-muted">
+                                                by {{ $course->instructor->name ?? 'Unknown Instructor' }}
                                             </small>
-                                            <div class="mt-1 d-none d-md-block">
-                                                <small class="text-info">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    {{ $course->created_at ? $course->created_at->diffForHumans() : 'Recently' }}
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="text-end flex-shrink-0">
-                                        <span class="badge bg-{{ $course->status === 'published' ? 'success' : ($course->status === 'draft' ? 'warning' : 'secondary') }} mb-1">
-                                            {{ ucfirst($course->status) }}
-                                        </span>
-                                        <div class="d-none d-sm-block">
-                                            @if($course->is_free)
-                                                <small class="text-success fw-bold">FREE</small>
-                                            @else
-                                                <small class="text-primary fw-bold">${{ number_format($course->price, 0) }}</small>
+                                        </p>
+                                        <div class="timeline-meta">
+                                            <span class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $course->created_at ? $course->created_at->diffForHumans() : 'Recently' }}
+                                            </span>
+                                            @if($course->enrollments_count ?? 0 > 0)
+                                            <span class="text-muted ms-3">
+                                                <i class="fas fa-users me-1"></i>
+                                                {{ $course->enrollments_count }} enrolled
+                                            </span>
                                             @endif
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            @endif
-                        @endforeach
-                    </div>
-                @else
-                    <div class="text-center py-5">
-                        <div class="mb-3">
-                            <i class="fas fa-book fa-3x text-muted"></i>
+                            @endforeach
                         </div>
-                        <h6 class="text-muted mb-2">No Courses Available</h6>
-                        <p class="text-muted small mb-3 px-3">Courses will appear here once teachers start creating content.</p>
-                        <a href="{{ route('admin.courses.index') }}" class="btn btn-warning">
-                            <i class="fas fa-eye me-1"></i>View Course Management
-                        </a>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
+                        @endif
 
-<!-- Activity Feed -->
-<div class="row g-3 g-lg-4 mb-4">
-    <div class="col-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-                    <h6 class="m-0 font-weight-bold text-white">
-                        <i class="fas fa-stream me-2"></i>
-                        Recent Activity
-                    </h6>
-                    <button class="btn btn-sm btn-outline-light">
+                        <!-- No Enrollments Message - Show when enrollments filter is selected but no enrollments exist -->
+                        <div class="text-center py-5 no-enrollments-message" style="display: none;">
+                            <div class="text-muted">
+                                <i class="fas fa-user-graduate fa-3x mb-3 opacity-50"></i>
+                                <h5 class="text-muted mb-2">No Recent Enrollments</h5>
+                                <p class="mb-0">When students enroll in courses, their activity will appear here.</p>
+                            </div>
+                        </div>
+
+                        <!-- No Recent Activity Message - Show when no sections have data -->
+                        @if((empty($recentEnrollments) || count($recentEnrollments) == 0) && 
+                            (empty($recentTeachers) || count($recentTeachers) == 0) && 
+                            (empty($recentCourses) || count($recentCourses) == 0))
+                        <div class="text-center py-5 no-activity-message">
+                            <div class="text-muted">
+                                <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
+                                <h5 class="text-muted mb-2">No Recent Activity</h5>
+                                <p class="mb-0">New enrollments, teachers, and courses will appear here when available.</p>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Load More Button - Only show if there might be more data -->
+                        @php
+                            $hasMoreEnrollments = !empty($recentEnrollments) && count($recentEnrollments) >= 5;
+                            $hasMoreTeachers = !empty($recentTeachers) && count($recentTeachers) >= 5;
+                            $hasMoreCourses = !empty($recentCourses) && count($recentCourses) >= 5;
+                            $showLoadMore = $hasMoreEnrollments || $hasMoreTeachers || $hasMoreCourses;
+                        @endphp
+                        
+                        @if($showLoadMore)
+                        <div class="timeline-item text-center">
+                            <button class="btn btn-outline-primary btn-sm" onclick="loadMoreActivity()">
+                                <i class="fas fa-plus me-1"></i>
+                                Load More Activity
+                            </button>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+                <div class="card-footer bg-light text-center">
+                    <small class="text-muted">
                         <i class="fas fa-sync-alt me-1"></i>
-                        <span class="d-none d-sm-inline">Refresh</span>
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="timeline-responsive">
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-success"></div>
-                        <div class="timeline-content">
-                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-3">
-                                    <h6 class="mb-1">New Teacher Registration</h6>
-                                    <p class="text-muted mb-1 small">{{ $recentTeachers->first()?->name ?? 'John Doe' }} joined the platform</p>
-                                </div>
-                                <small class="text-muted flex-shrink-0">{{ $recentTeachers->first()?->created_at?->diffForHumans() ?? '2 hours ago' }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-primary"></div>
-                        <div class="timeline-content">
-                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-3">
-                                    <h6 class="mb-1">Course Published</h6>
-                                    <p class="text-muted mb-1 small">{{ $recentCourses->first()?->title ?? 'Introduction to Programming' }} was published</p>
-                                </div>
-                                <small class="text-muted flex-shrink-0">{{ $recentCourses->first()?->created_at?->diffForHumans() ?? '5 hours ago' }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-marker bg-info"></div>
-                        <div class="timeline-content">
-                            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-3">
-                                    <h6 class="mb-1">System Update</h6>
-                                    <p class="text-muted mb-1 small">Platform updated to version 2.1.0</p>
-                                </div>
-                                <small class="text-muted flex-shrink-0">1 day ago</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Quick Actions & Performance -->
-<div class="row g-3 g-lg-4">
-    <!-- Quick Actions -->
-    <div class="col-12 col-xl-8 mb-3 mb-xl-0">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <h6 class="m-0 font-weight-bold text-white">
-                    <i class="fas fa-bolt me-2"></i>
-                    Quick Actions
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="row g-3 mb-4">
-                    <div class="col-6 col-lg-3">
-                        <a href="{{ route('admin.teachers.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-chalkboard-teacher fa-2x mb-2 mb-lg-3 text-primary"></i>
-                            <span class="fw-bold small">Manage Teachers</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">View & Edit</small>
-                        </a>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <a href="{{ route('admin.courses.index') }}" class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-book fa-2x mb-2 mb-lg-3 text-warning"></i>
-                            <span class="fw-bold small">Manage Courses</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Content Control</small>
-                        </a>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-users fa-2x mb-2 mb-lg-3 text-info"></i>
-                            <span class="fw-bold small">View Students</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Monitor & Edit</small>
-                        </a>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <a href="#" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-chart-bar fa-2x mb-2 mb-lg-3 text-success"></i>
-                            <span class="fw-bold small">View Reports</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Analytics</small>
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Additional Actions Row -->
-                <div class="row g-3">
-                    <div class="col-6 col-lg-3">
-                        <a href="#" class="btn btn-outline-dark w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-cog fa-2x mb-2 mb-lg-3 text-dark"></i>
-                            <span class="fw-bold small">System Settings</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Configuration</small>
-                        </a>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <a href="#" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-database fa-2x mb-2 mb-lg-3 text-secondary"></i>
-                            <span class="fw-bold small">Backup Data</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Data Safety</small>
-                        </a>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <a href="#" class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-shield-alt fa-2x mb-2 mb-lg-3 text-danger"></i>
-                            <span class="fw-bold small">Security Logs</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Monitor Access</small>
-                        </a>
-                    </div>
-                    <div class="col-6 col-lg-3">
-                        <a href="#" class="btn btn-outline-purple w-100 h-100 d-flex flex-column justify-content-center py-3 py-lg-4 border-2 hover-lift text-decoration-none">
-                            <i class="fas fa-bell fa-2x mb-2 mb-lg-3" style="color: #6f42c1;"></i>
-                            <span class="fw-bold small">Notifications</span>
-                            <small class="text-muted mt-1 d-none d-lg-block">Alerts & Messages</small>
-                        </a>
-                    </div>
+                        Auto-refreshes every 30 seconds
+                    </small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Performance Metrics -->
-    <div class="col-12 col-xl-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header border-0 py-3" style="background-color: #1a202c;">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-white">
-                        <i class="fas fa-tachometer-alt me-2"></i>
-                        Performance Metrics
+    <!-- Quick Actions Row -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header modern-grey-header text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
                     </h6>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-success ms-2 performance-live-indicator">
-                            <i class="fas fa-circle me-1" style="font-size: 0.4rem;"></i>
-                            Live
-                        </span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{{ route('admin.teachers.create') }}" class="btn btn-outline-success w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-user-plus fa-2x mb-2"></i>
+                                <span class="font-weight-bold">Add Teacher</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{{ route('admin.courses.index') }}" class="btn btn-outline-info w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-book fa-2x mb-2"></i>
+                                <span class="font-weight-bold">Manage Courses</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <span class="font-weight-bold">View Students</span>
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <button class="btn btn-outline-warning w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3" onclick="generateReport()">
+                                <i class="fas fa-chart-bar fa-2x mb-2"></i>
+                                <span class="font-weight-bold">Generate Report</span>
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <button class="btn btn-outline-danger w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3" onclick="clearCache()">
+                                <i class="fas fa-trash fa-2x mb-2"></i>
+                                <span class="font-weight-bold">Clear Cache</span>
+                            </button>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <button class="btn btn-outline-secondary w-100 h-100 d-flex flex-column justify-content-center align-items-center py-3" onclick="systemSettings()">
+                                <i class="fas fa-cogs fa-2x mb-2"></i>
+                                <span class="font-weight-bold">Settings</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div id="performance-metrics-container">
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Teacher Engagement</span>
-                            <span class="fw-bold text-success" id="teacher-engagement-percent">{{ $performanceMetrics['teacher_engagement'] }}%</span>
+        </div>
+    </div>
+
+    <!-- System Status Row -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header modern-grey-header text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-server me-2"></i>
+                        System Status
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="system-status">
+                        <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success me-3"></div>
+                                <span class="font-weight-bold">Database Connection</span>
+                            </div>
+                            <span class="badge bg-success">Online</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-success" id="teacher-engagement-bar" data-metric="teacher_engagement" style="width: {{ $performanceMetrics['teacher_engagement'] }}%"></div>
+                        <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success me-3"></div>
+                                <span class="font-weight-bold">Cache System</span>
+                            </div>
+                            <span class="badge bg-success">Active</span>
                         </div>
-                        <small class="text-muted" id="teacher-engagement-desc">{{ $stats['active_teachers'] }} of {{ $stats['total_teachers'] }} teachers active</small>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Course Publication Rate</span>
-                            <span class="fw-bold text-primary" id="course-publication-percent">{{ $performanceMetrics['course_publication_rate'] }}%</span>
+                        <div class="status-item d-flex justify-content-between align-items-center mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-warning me-3"></div>
+                                <span class="font-weight-bold">Storage Space</span>
+                            </div>
+                            <span class="badge bg-warning">75% Used</span>
                         </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-primary" id="course-publication-bar" data-metric="course_publication_rate" style="width: {{ $performanceMetrics['course_publication_rate'] }}%"></div>
+                        <div class="status-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="status-indicator bg-success me-3"></div>
+                                <span class="font-weight-bold">Application</span>
+                            </div>
+                            <span class="badge bg-success">Running</span>
                         </div>
-                        <small class="text-muted" id="course-publication-desc">{{ $stats['published_courses'] }} of {{ $stats['total_courses'] }} courses published</small>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Enrollment Rate</span>
-                            <span class="fw-bold text-warning" id="enrollment-rate-percent">{{ $performanceMetrics['student_course_ratio'] }}%</span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-warning" id="enrollment-rate-bar" data-metric="student_course_ratio" style="width: {{ $performanceMetrics['student_course_ratio'] }}%"></div>
-                        </div>
-                        <small class="text-muted" id="enrollment-rate-desc">{{ $stats['total_enrollments'] }} total enrollments</small>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Platform Growth (30 days)</span>
-                            <span class="fw-bold text-{{ $performanceMetrics['platform_growth'] >= 0 ? 'success' : 'danger' }}" id="platform-growth-percent">
-                                {{ $performanceMetrics['platform_growth'] >= 0 ? '+' : '' }}{{ $performanceMetrics['platform_growth'] }}%
-                            </span>
-                        </div>
-                        <div class="progress" style="height: 8px;">
-                            <div class="progress-bar bg-{{ $performanceMetrics['platform_growth'] >= 0 ? 'info' : 'danger' }}" 
-                                 id="platform-growth-bar" data-metric="platform_growth" style="width: {{ abs($performanceMetrics['platform_growth']) }}%"></div>
-                        </div>
-                        <small class="text-muted" id="platform-growth-desc">Compared to previous month</small>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted">Last Updated:</small>
-                            <small class="text-primary fw-bold" id="performance-last-updated">Just now</small>
-                        </div>
-                        <button class="btn btn-sm btn-outline-light w-100" onclick="refreshPerformanceMetrics()">
-                            <i class="fas fa-sync-alt me-1"></i>
-                            Refresh Metrics
-                        </button>
                     </div>
                 </div>
-                
-                <!-- Loading State -->
-                <div id="performance-loading" class="text-center py-5" style="display: none;">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <div class="mt-2">
-                        <small class="text-muted">Updating metrics...</small>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header modern-grey-header text-white">
+                    <h6 class="m-0 font-weight-bold">
+                        <i class="fas fa-bell me-2"></i>
+                        Notifications & Alerts
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="notifications-list" style="max-height: 250px; overflow-y: auto;">
+                        <div class="notification-item d-flex align-items-start mb-3">
+                            <div class="notification-icon bg-info text-white rounded-circle me-3">
+                                <i class="fas fa-info"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">System Update Available</h6>
+                                <p class="mb-1 text-muted small">Laravel framework update is available</p>
+                                <small class="text-muted">2 hours ago</small>
+                            </div>
+                        </div>
+                        <div class="notification-item d-flex align-items-start mb-3">
+                            <div class="notification-icon bg-warning text-white rounded-circle me-3">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">High Storage Usage</h6>
+                                <p class="mb-1 text-muted small">Storage is 75% full, consider cleanup</p>
+                                <small class="text-muted">1 day ago</small>
+                            </div>
+                        </div>
+                        <div class="notification-item d-flex align-items-start">
+                            <div class="notification-icon bg-success text-white rounded-circle me-3">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">Backup Completed</h6>
+                                <p class="mb-1 text-muted small">Weekly backup completed successfully</p>
+                                <small class="text-muted">2 days ago</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Quick Actions Modal -->
+<div class="modal fade" id="quickActionsModal" tabindex="-1" aria-labelledby="quickActionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="quickActionsModalLabel">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions Panel
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold mb-3">User Management</h6>
+                        <div class="list-group">
+                            <a href="{{ route('admin.teachers.create') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-plus me-2"></i>Add New Teacher
+                            </a>
+                            <a href="{{ route('admin.clients.index') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-users me-2"></i>Manage Students
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-shield me-2"></i>Admin Permissions
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold mb-3">Content Management</h6>
+                        <div class="list-group">
+                            <a href="{{ route('admin.courses.index') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-book me-2"></i>Manage Courses
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-folder me-2"></i>Categories
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-file-alt me-2"></i>Lessons
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold mb-3">Reports & Analytics</h6>
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action" onclick="generateReport()">
+                                <i class="fas fa-chart-bar me-2"></i>Performance Report
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-chart-pie me-2"></i>User Analytics
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-download me-2"></i>Export Data
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="font-weight-bold mb-3">System Tools</h6>
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action" onclick="clearCache()">
+                                <i class="fas fa-trash me-2"></i>Clear Cache
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                <i class="fas fa-database me-2"></i>Backup Data
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action" onclick="systemSettings()">
+                                <i class="fas fa-cogs me-2"></i>System Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
 
 @push('styles')
 <style>
-    /* Enhanced Responsive Styles */
-    .hover-card {
-        transition: all 0.3s ease;
+/* Modern Grey Card Header */
+.modern-grey-header {
+    background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
+    border-bottom: 3px solid #1e293b;
+    position: relative;
+    overflow: hidden;
+}
+
+.modern-grey-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.1) 75%, transparent 75%);
+    background-size: 20px 20px;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.modern-grey-header h6 {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.modern-grey-header i {
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.modern-grey-header small {
+    position: relative;
+    z-index: 2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Button styling on grey header */
+.modern-grey-header .btn-outline-light {
+    position: relative;
+    z-index: 2;
+    border-color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+}
+
+.modern-grey-header .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.8);
+    color: white;
+}
+
+.modern-grey-header .btn-check:checked + .btn-outline-light {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.8);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Activity Filter Dropdown Fixes */
+.modern-grey-header .dropdown {
+    position: relative;
+    z-index: 1060;
+}
+
+.modern-grey-header .dropdown-menu {
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+    z-index: 1060 !important;
+    min-width: 200px;
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+    margin-top: 0.125rem;
+}
+
+.modern-grey-header .dropdown-item {
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.modern-grey-header .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.modern-grey-header .dropdown-item:active {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
+.modern-grey-header .dropdown-item i {
+    width: 20px;
+    text-align: center;
+    filter: none;
+    text-shadow: none;
+}
+
+/* Ensure dropdown doesn't get cut off */
+.card-header .dropdown {
+    position: relative;
+    z-index: 1060;
+}
+
+.card-header .dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    left: auto !important;
+    transform: none !important;
+    margin-top: 0.125rem;
+    z-index: 1060 !important;
+}
+
+/* Fix card overflow issues */
+.card {
+    overflow: visible !important;
+}
+
+.card-header {
+    overflow: visible !important;
+    position: relative;
+    z-index: 10;
+}
+
+.card-body {
+    position: relative;
+    z-index: 1;
+}
+
+/* Recent Activity specific fixes */
+.col-lg-4 .card {
+    overflow: visible !important;
+}
+
+.col-lg-4 .card-header {
+    overflow: visible !important;
+}
+
+.activity-timeline {
+    position: relative;
+    z-index: 1;
+}
+
+/* Bootstrap 5 dropdown override for activity filter */
+#activityFilterBtn + .dropdown-menu {
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    left: auto !important;
+    z-index: 1060 !important;
+    transform: none !important;
+    margin-top: 0.125rem !important;
+    inset: auto 0px auto auto !important;
+}
+
+/* Force dropdown to stay visible */
+.dropdown-menu.show {
+    display: block !important;
+    position: absolute !important;
+    z-index: 1060 !important;
+}
+
+/* Row and column overflow fixes */
+.row {
+    overflow: visible !important;
+}
+
+.col-lg-4, .col-lg-8 {
+    overflow: visible !important;
+}
+
+/* Additional dropdown positioning fixes */
+@media (min-width: 992px) {
+    .col-lg-4 .dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
     }
-    .hover-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Ensure parent containers don't clip dropdown */
+.container-fluid {
+    overflow: visible !important;
+}
+
+.main-content {
+    overflow: visible !important;
+}
+
+/* Enhanced Dashboard Stats Styles */
+.enhanced-stat-card {
+    position: relative;
+    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    height: 180px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    pointer-events: none;
+    z-index: 1;
+}
+
+.stat-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.students-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.teachers-card {
+    background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    color: white;
+}
+
+.courses-card {
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    color: white;
+}
+
+.enrollments-card {
+    background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+    color: white;
+}
+
+.enhanced-stat-card:hover .stat-card-overlay {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.stat-card-content {
+    position: relative;
+    z-index: 3;
+    height: 100%;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.stat-icon-wrapper {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.stat-icon {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.stat-icon-bg {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    color: rgba(255, 255, 255, 0.1);
+    z-index: 1;
+}
+
+.enhanced-stat-card:hover .stat-icon {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+.stat-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.stat-progress {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+}
+
+.stat-progress .progress-bar {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    position: relative;
+}
+
+.stat-progress .progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.stat-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-trend.positive {
+    background: rgba(72, 187, 120, 0.3);
+}
+
+.stat-trend.negative {
+    background: rgba(245, 101, 101, 0.3);
+}
+
+.stat-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.stat-badge.active {
+    background: rgba(72, 187, 120, 0.3);
+}
+
+.stat-badge.published {
+    background: rgba(66, 153, 225, 0.3);
+}
+
+.stat-meta {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+/* Enhanced responsive design */
+@media (max-width: 1200px) {
+    .enhanced-stat-card {
+        height: 160px;
     }
     
-    .hover-item {
-        transition: background-color 0.3s ease;
-    }
-    .hover-item:hover {
-        background-color: #f8f9fa;
+    .stat-number {
+        font-size: 2rem;
     }
     
-    .hover-lift {
-        transition: all 0.3s ease;
-    }
-    .hover-lift:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+    .stat-icon-wrapper {
+        width: 50px;
+        height: 50px;
     }
     
-    .icon-shape {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .enhanced-stat-card {
+        height: 140px;
+        margin-bottom: 1rem;
     }
     
-    /* Responsive icon sizing */
-    @media (max-width: 768px) {
-        .icon-shape {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
-        .fs-5 {
-            font-size: 0.9rem !important;
-        }
+    .stat-card-content {
+        padding: 1rem;
     }
     
-    /* Enhanced gradient backgrounds */
-    .bg-gradient-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .bg-gradient-success {
-        background: linear-gradient(135deg, #56CCF2 0%, #2F80ED 100%);
-    }
-    .bg-gradient-warning {
-        background: linear-gradient(135deg, #FFD89B 0%, #19547B 100%);
-    }
-    .bg-gradient-info {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    .bg-gradient-secondary {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    .stat-number {
+        font-size: 1.8rem;
     }
     
-    /* Responsive timeline */
-    .timeline-responsive {
-        position: relative;
-        padding-left: 2rem;
+    .stat-icon-wrapper {
+        width: 40px;
+        height: 40px;
     }
     
-    .timeline-responsive::before {
-        content: '';
-        position: absolute;
-        left: 1rem;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: #e9ecef;
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
     }
     
-    .timeline-item {
-        position: relative;
-        margin-bottom: 2rem;
+    .stat-icon-bg {
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
     }
     
+    .stat-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+}
+
+/* Loading state for stats */
+.enhanced-stat-card.loading .stat-number {
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+/* Timeline activity styles without animations */
+
+/* Border left styles for compatibility */
+.border-left-primary {
+    border-left: 0.25rem solid var(--primary-color) !important;
+}
+.border-left-success {
+    border-left: 0.25rem solid var(--success-color) !important;
+}
+.border-left-info {
+    border-left: 0.25rem solid var(--info-color) !important;
+}
+.border-left-warning {
+    border-left: 0.25rem solid var(--warning-color) !important;
+}
+
+/* Enhanced Performance Metrics Styles */
+.metric-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    height: 100%;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-color: #cbd5e0;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.metric-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    color: white;
+    font-size: 20px;
+}
+
+.metric-info {
+    flex: 1;
+}
+
+.metric-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #2d3748;
+}
+
+.metric-subtitle {
+    font-size: 13px;
+    color: #718096;
+    margin: 0;
+}
+
+.metric-body {
+    text-align: center;
+}
+
+.metric-chart {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Enhanced Progress Ring Styles */
+.progress-ring {
+    position: relative;
+    display: inline-block;
+}
+
+.progress-ring-svg {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle-bg {
+    fill: transparent;
+    stroke: #e2e8f0;
+    stroke-width: 8;
+}
+
+.progress-ring-circle {
+    fill: transparent;
+    stroke: var(--primary-color);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 314;
+    stroke-dashoffset: 314;
+    transition: stroke-dashoffset 1.5s ease, stroke 0.3s ease;
+}
+
+.progress-ring-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-ring-text .percentage {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+    color: #2d3748;
+    line-height: 1;
+}
+
+.progress-ring-text .label {
+    display: block;
+    font-size: 12px;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+/* Metric Details */
+.metric-details {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    gap: 12px;
+}
+
+.detail-item {
+    text-align: center;
+}
+
+.detail-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2d3748;
+    line-height: 1;
+}
+
+.detail-label {
+    display: block;
+    font-size: 11px;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+.detail-divider {
+    color: #cbd5e0;
+    font-weight: 300;
+    font-size: 16px;
+}
+
+/* Metric Trend */
+.metric-trend {
+    padding: 8px 12px;
+    background: #f7fafc;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #718096;
+    display: inline-block;
+}
+
+/* Performance Summary */
+.performance-summary {
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+.summary-header h6 {
+    color: #2d3748;
+}
+
+/* Insight Cards */
+.insight-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.insight-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.insight-card.excellent {
+    border-left: 4px solid #48bb78;
+    background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+}
+
+.insight-card.good {
+    border-left: 4px solid #4299e1;
+    background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+}
+
+.insight-card.attention {
+    border-left: 4px solid #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.insight-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 18px;
+}
+
+.insight-card.excellent .insight-icon {
+    background: #48bb78;
+    color: white;
+}
+
+.insight-card.good .insight-icon {
+    background: #4299e1;
+    color: white;
+}
+
+.insight-card.attention .insight-icon {
+    background: #f59e0b;
+    color: white;
+}
+
+.insight-content h6 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #2d3748;
+}
+
+.insight-content p {
+    font-size: 13px;
+    color: #718096;
+    margin: 0;
+}
+
+/* Specific metric card colors */
+.teacher-engagement .progress-ring-circle {
+    stroke: #48bb78;
+}
+
+.course-publication .progress-ring-circle {
+    stroke: #4299e1;
+}
+
+.student-enrollment .progress-ring-circle {
+    stroke: #4a5568;
+}
+
+.platform-growth .progress-ring-circle {
+    stroke: #f59e0b;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .metric-card {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .metric-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .metric-title {
+        font-size: 14px;
+    }
+    
+    .metric-subtitle {
+        font-size: 12px;
+    }
+    
+    .progress-ring-svg {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .progress-ring-text .percentage {
+        font-size: 16px;
+    }
+    
+    .detail-value {
+        font-size: 16px;
+    }
+    
+    .performance-summary {
+        padding: 20px;
+    }
+    
+    .insight-card {
+        padding: 16px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .insight-icon {
+        margin-right: 0;
+        margin-bottom: 12px;
+    }
+}
+
+/* Animation for progress rings */
+@keyframes progressRingAnimation {
+    from {
+        stroke-dashoffset: 314;
+    }
+    to {
+        stroke-dashoffset: var(--target-offset);
+    }
+}
+
+/* Loading animation for metrics */
+.metric-card.loading .progress-ring-circle {
+    stroke-dasharray: 314;
+    stroke-dashoffset: 314;
+    animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Hover effects for progress rings */
+.metric-card:hover .progress-ring-circle {
+    stroke-width: 10;
+    filter: drop-shadow(0 0 8px rgba(74, 85, 104, 0.3));
+}
+
+/* Progress Circles */
+.progress-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+}
+
+.progress-circle-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary-color) 0deg, #e9ecef 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-circle-inner::before {
+    content: '';
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+}
+
+.progress-circle-text {
+    position: relative;
+    z-index: 1;
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--primary-color);
+}
+
+/* Activity Feed */
+.activity-feed {
+    border-radius: 0.375rem;
+}
+
+.activity-item {
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+    background-color: #f8f9fa;
+}
+
+.activity-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+
+/* Status Indicators */
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.notification-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* Chart Container */
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+}
+
+/* Quick Action Buttons */
+.btn-outline-success:hover,
+.btn-outline-info:hover,
+.btn-outline-primary:hover,
+.btn-outline-warning:hover,
+.btn-outline-danger:hover,
+.btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .progress-circle {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .progress-circle-inner::before {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .progress-circle-text {
+        font-size: 12px;
+    }
+    
+    .activity-icon,
+    .notification-icon {
+        width: 28px;
+        height: 28px;
+        font-size: 10px;
+    }
+}
+
+/* Loading states */
+.card.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.card.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    border-radius: inherit;
+}
+
+.card.loading::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    z-index: 11;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-primary {
+    background: linear-gradient(45deg, var(--primary-color), #667eea);
+}
+
+.bg-gradient-success {
+    background: linear-gradient(45deg, var(--success-color), #68d391);
+}
+
+.bg-gradient-info {
+    background: linear-gradient(45deg, var(--info-color), #63b3ed);
+}
+
+.bg-gradient-warning {
+    background: linear-gradient(45deg, var(--warning-color), #fbbf24);
+}
+
+.bg-gradient-dark {
+    background: linear-gradient(45deg, #2d3748, #4a5568);
+}
+
+/* Enhanced Timeline Activity Styles */
+.activity-timeline {
+    position: relative;
+    padding: 1rem 0;
+}
+
+.timeline-section {
+    position: relative;
+}
+
+.timeline-item {
+    position: relative;
+    display: flex;
+    margin-bottom: 1.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.timeline-item .timeline-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.timeline-item .timeline-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    border-color: #cbd5e0;
+}
+
+.timeline-item .timeline-card::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 8px 0;
+    border-color: transparent #ffffff transparent transparent;
+    z-index: 2;
+}
+
+.timeline-item .timeline-card::after {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 8px 0;
+    border-color: transparent #e2e8f0 transparent transparent;
+    z-index: 1;
+}
+
+.timeline-marker {
+    position: relative;
+    flex-shrink: 0;
+    width: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 8px;
+}
+
+.timeline-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 3px solid white;
+}
+
+.timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 40px;
+    width: 2px;
+    height: calc(100% + 24px);
+    background: linear-gradient(to bottom, #e2e8f0, #cbd5e0);
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.timeline-content {
+    flex: 1;
+    margin-left: 1rem;
+    position: relative;
+}
+
+.timeline-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.timeline-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    border-color: #cbd5e0;
+}
+
+.timeline-card::before {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 8px 0;
+    border-color: transparent #ffffff transparent transparent;
+    z-index: 2;
+}
+
+.timeline-card::after {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 12px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 8px 8px 8px 0;
+    border-color: transparent #e2e8f0 transparent transparent;
+    z-index: 1;
+}
+
+.timeline-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-description {
+    font-size: 0.85rem;
+    color: #4a5568;
+    line-height: 1.4;
+    margin-bottom: 0.75rem;
+}
+
+.timeline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #718096;
+}
+
+.timeline-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Timeline Animation Keyframes - Removed */
+
+.timeline-section.filtered-out {
+    display: none;
+}
+
+/* Scrollbar styling for timeline */
+.activity-timeline::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-timeline::-webkit-scrollbar-track {
+    background: #f1f3f4;
+    border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.activity-timeline::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Responsive timeline adjustments */
+@media (max-width: 768px) {
     .timeline-marker {
-        position: absolute;
-        left: -1.75rem;
-        top: 0.5rem;
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
-        border: 3px solid #fff;
-        box-shadow: 0 0 0 2px #e9ecef;
+        width: 30px;
+    }
+    
+    .timeline-icon {
+        width: 24px;
+        height: 24px;
+        font-size: 10px;
+        border-width: 2px;
     }
     
     .timeline-content {
-        background: #fff;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        border-left: 3px solid #e9ecef;
+        margin-left: 0.5rem;
     }
     
-    /* Mobile responsive timeline */
-    @media (max-width: 576px) {
-        .timeline-responsive {
-            padding-left: 1.5rem;
-        }
-        
-        .timeline-responsive::before {
-            left: 0.75rem;
-        }
-        
-        .timeline-marker {
-            left: -1.25rem;
-            width: 10px;
-            height: 10px;
-        }
-        
-        .timeline-content {
-            padding: 0.75rem;
-        }
+    .timeline-card {
+        padding: 0.75rem;
     }
     
-    /* Enhanced responsive borders */
-    @media (min-width: 768px) {
-        .border-end-md {
-            border-right: 1px solid #dee2e6 !important;
-        }
+    .timeline-title {
+        font-size: 0.85rem;
     }
     
-    /* Responsive text sizing */
-    @media (min-width: 992px) {
-        .h3-lg {
-            font-size: calc(1.3rem + 0.6vw) !important;
-        }
-        .fs-4-lg {
-            font-size: 1.5rem !important;
-        }
+    .timeline-description {
+        font-size: 0.8rem;
     }
-    
-    /* Enhanced card spacing */
-    .card-body {
-        padding: 1.25rem;
-    }
-    
-    @media (max-width: 576px) {
-        .card-body {
-            padding: 1rem;
-        }
-    }
-    
-    /* Flexible content layout */
-    .min-w-0 {
-        min-width: 0;
-    }
-    
-    .flex-shrink-0 {
-        flex-shrink: 0;
-    }
-    
-    /* Enhanced button styles */
-    .btn-outline-primary:hover,
-    .btn-outline-warning:hover,
-    .btn-outline-info:hover,
-    .btn-outline-success:hover {
-        transform: translateY(-1px);
-    }
-    
-    /* Dropdown active state */
-    .dropdown-item.active {
-        background-color: #667eea;
-        color: white;
-    }
-    
-    .dropdown-item:hover {
-        background-color: #f8f9fa;
-    }
-    
-    .dropdown-item.active:hover {
-        background-color: #5a67d8;
-        color: white;
-    }
-    
-    /* Custom gap utilities for better spacing */
-    .g-3 {
-        --bs-gutter-x: 1rem;
-        --bs-gutter-y: 1rem;
-    }
-    
-    .g-lg-4 {
-        --bs-gutter-x: 1.5rem;
-        --bs-gutter-y: 1.5rem;
-    }
-    
-    @media (min-width: 992px) {
-        .g-lg-4 {
-            --bs-gutter-x: 1.5rem;
-            --bs-gutter-y: 1.5rem;
-        }
-    }
-    
-    /* Enhanced progress bars */
-    .progress {
-        background-color: #f8f9fa;
-        border-radius: 0.375rem;
-    }
-    
-    .progress-bar {
-        border-radius: 0.375rem;
-    }
-    
-    /* Better mobile card stacking */
-    @media (max-width: 991.98px) {
-        .card {
-            margin-bottom: 1rem;
-        }
-    }
-    
-    /* Enhanced dropdown positioning */
-    .dropdown-menu-end {
-        --bs-position: end;
-    }
-    
-    @media (max-width: 576px) {
-        .dropdown-menu {
-            font-size: 0.875rem;
-        }
-    }
-    
-    /* Purple button styling */
-    .btn-outline-purple {
-        border-color: #6f42c1;
-        color: #6f42c1;
-    }
-    
-    .btn-outline-purple:hover {
-        background-color: #6f42c1;
-        border-color: #6f42c1;
-        color: white;
-        transform: translateY(-1px);
-    }
-    
-    /* Additional chart styling */
-    .chart-container {
-        position: relative;
-        width: 100%;
-        height: auto;
-    }
-    
-    /* Enhanced mobile responsiveness for new sections */
-    @media (max-width: 576px) {
-        .card-header h6 {
-            font-size: 0.9rem;
-        }
-        
-        .progress {
-            height: 6px !important;
-        }
-        
-        .badge {
-            font-size: 0.75rem;
-        }
-    }
-    
-    /* Animation for new charts */
-    @keyframes chartFadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .chart-container canvas {
-        animation: chartFadeIn 1s ease-out;
-    }
-    
-    /* Real-time animations */
-    @keyframes pulse {
-        0% { opacity: 1; }
-        50% { opacity: 0.5; }
-        100% { opacity: 1; }
-    }
-    
-    @keyframes glow {
-        0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
-        50% { box-shadow: 0 0 15px rgba(102, 126, 234, 0.8); }
-        100% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
-    }
-    
-    .realtime-indicator {
-        animation: glow 2s ease-in-out infinite;
-    }
-    
-    .realtime-clock {
-        font-family: 'Courier New', monospace;
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
-        padding: 0.5rem;
-        border-radius: 0.375rem;
-        font-weight: bold;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    }
-    
-    /* Enhanced hover effects for new sections */
-    .hover-item {
-        transition: all 0.3s ease;
-    }
-    
-    .hover-item:hover {
-        background-color: #f8f9fa;
-        transform: translateX(5px);
-    }
+}
 </style>
 @endpush
 
 @push('scripts')
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-    // Platform Overview Chart with Real Data
-    const ctx = document.getElementById('platformChart').getContext('2d');
+// Global variables
+let analyticsChart = null;
+let chartData = @json($chartData ?? []);
+let currentPeriod = 'month';
+
+// Initialize dashboard when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit for Bootstrap to fully load
+    setTimeout(() => {
+        initializeDashboard();
+        
+        // Restore state after load more
+        restoreStateAfterReload();
+    }, 100);
     
-    // Real data from backend
-    let chartData = @json($chartData);
-    let platformChart;
+    // Additional fallback for dropdown initialization
+    setTimeout(() => {
+        ensureDropdownsWork();
+    }, 500);
+});
 
-    function initChart() {
-        platformChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartData.labels,
-                datasets: [
-                    {
-                        label: 'New Enrollments',
-                        data: chartData.enrollments,
-                        borderColor: '#667eea',
-                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#667eea',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    },
-                    {
-                        label: 'New Courses',
-                        data: chartData.courses,
-                        borderColor: '#48bb78',
-                        backgroundColor: 'rgba(72, 187, 120, 0.1)',
-                        tension: 0.4,
-                        fill: false,
-                        pointBackgroundColor: '#48bb78',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    },
-                    {
-                        label: 'New Teachers',
-                        data: chartData.teachers,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        tension: 0.4,
-                        fill: false,
-                        pointBackgroundColor: '#f59e0b',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            usePointStyle: true,
-                            padding: 20,
-                            font: {
-                                size: 12
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleColor: '#fff',
-                        bodyColor: '#fff',
-                        borderColor: '#667eea',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        displayColors: true,
-                        callbacks: {
-                            title: function(context) {
-                                return 'Period: ' + context[0].label;
-                            },
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            display: true,
-                            color: '#f1f5f9',
-                            drawBorder: false
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 11
-                            },
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            font: {
-                                size: 11
-                            }
-                        }
-                    }
-                },
-                elements: {
-                    point: {
-                        radius: 4,
-                        hoverRadius: 6
-                    },
-                    line: {
-                        borderWidth: 3
-                    }
-                },
-                animation: {
-                    duration: 1000,
-                    easing: 'easeInOutQuart'
-                }
+// Ensure dropdowns are working with fallback
+function ensureDropdownsWork() {
+    const activityFilterBtn = document.getElementById('activityFilterBtn');
+    if (activityFilterBtn) {
+        // Check if Bootstrap dropdown is working
+        try {
+            let dropdown = bootstrap.Dropdown.getInstance(activityFilterBtn);
+            if (!dropdown) {
+                dropdown = new bootstrap.Dropdown(activityFilterBtn);
+                console.log('Activity filter dropdown initialized with fallback');
             }
-        });
-    }
-
-    function updateChart(newData) {
-        platformChart.data.labels = newData.labels;
-        platformChart.data.datasets[0].data = newData.enrollments;
-        platformChart.data.datasets[1].data = newData.courses;
-        platformChart.data.datasets[2].data = newData.teachers;
-        platformChart.update('active');
-    }
-
-    function loadChartData(period) {
-        // Show loading state
-        const dropdownButton = document.getElementById('periodDropdown');
-        const originalHTML = dropdownButton.innerHTML;
-        dropdownButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Loading...';
-        dropdownButton.disabled = true;
-
-        // Get CSRF token
-        const token = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = token ? token.getAttribute('content') : '';
-
-        fetch(`{{ route('admin.dashboard.chart-data') }}?period=${period}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                updateChart(data);
-                // Update period text safely
-                const periodTexts = {
-                    'week': ['This Week', 'Week'],
-                    'month': ['This Month', 'Month'],
-                    'year': ['This Year', 'Year']
-                };
-                const viewTexts = {
-                    'week': '7 Days View',
-                    'month': '6 Months View',
-                    'year': '12 Months View'
-                };
-                
-                // Update period text safely with a small delay to ensure DOM is ready
-                setTimeout(() => {
-                    const periodTextElement = document.getElementById('periodText');
-                    const periodTextShortElement = document.getElementById('periodTextShort');
-                    const chartViewTextElement = document.getElementById('chartViewText');
+            
+            // Add click event listener as backup
+            const dropdownItems = activityFilterBtn.parentElement.querySelectorAll('.dropdown-item');
+            dropdownItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     
-                    try {
-                        if (periodTextElement) {
-                            periodTextElement.textContent = periodTexts[period][0];
+                    // Extract filter category from onclick attribute
+                    const onclick = this.getAttribute('onclick');
+                    if (onclick) {
+                        const match = onclick.match(/filterActivity\('([^']+)'\)/);
+                        if (match) {
+                            filterActivity(match[1]);
                         }
-                        if (periodTextShortElement) {
-                            periodTextShortElement.textContent = periodTexts[period][1];
-                        }
-                        if (chartViewTextElement) {
-                            chartViewTextElement.textContent = viewTexts[period];
-                        }
-                    } catch (error) {
-                        console.error('Error updating period text:', error);
                     }
-                }, 10);
-                
-                // Update active state
-                document.querySelectorAll('.period-option').forEach(option => {
-                    option.classList.remove('active');
                 });
-                document.querySelector(`[data-period="${period}"]`).classList.add('active');
-                
-                // Restore button
-                dropdownButton.innerHTML = originalHTML;
-                dropdownButton.disabled = false;
-            })
-            .catch(error => {
-                console.error('Error loading chart data:', error);
-                // Restore button on error
-                dropdownButton.innerHTML = originalHTML;
-                dropdownButton.disabled = false;
-                
-                // Show detailed error message
-                console.error('Full error details:', {
-                    message: error.message,
-                    stack: error.stack,
-                    period: period,
-                    url: `{{ route('admin.dashboard.chart-data') }}?period=${period}`
-                });
-                
-                alert(`Failed to load chart data for period: ${period}. Check console for details.`);
             });
-    }
-
-    // Real-time dashboard data refresh
-    function refreshDashboardData() {
-        // Show subtle loading indicator for statistics
-        const statsCards = document.querySelectorAll('.hover-card');
-        statsCards.forEach(card => {
-            card.style.opacity = '0.7';
-            card.style.transition = 'opacity 0.3s ease';
-        });
-
-        const token = document.querySelector('meta[name="csrf-token"]');
-        const csrfToken = token ? token.getAttribute('content') : '';
-
-        fetch(`{{ route('admin.dashboard.realtime-stats') }}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updateStatisticsCards(data.stats);
-                updatePerformanceMetrics(data.performanceMetrics); // Add back performance metrics update
-                updateLastUpdatedTime();
-                showRealTimeIndicator();
-                
-                // Show success indicator briefly
-                showSuccessNotification('Dashboard data updated', 2000);
-            }
-        })
-        .catch(error => {
-            console.error('Error refreshing dashboard data:', error);
-            showErrorNotification('Failed to refresh dashboard data');
-        })
-        .finally(() => {
-            // Restore card opacity
-            statsCards.forEach(card => {
-                card.style.opacity = '1';
-            });
-        });
-    }
-
-    function updateStatisticsCards(stats) {
-        // Update statistics with smooth animation
-        updateCounterWithAnimation('.total-teachers', stats.total_teachers);
-        updateCounterWithAnimation('.active-teachers', stats.active_teachers);
-        updateCounterWithAnimation('.total-courses', stats.total_courses);
-        updateCounterWithAnimation('.total-students', stats.total_students);
-    }
-
-    function updateCounterWithAnimation(selector, newValue) {
-        const element = document.querySelector(selector);
-        if (!element) return;
-
-        const currentValue = parseInt(element.textContent) || 0;
-        const increment = newValue > currentValue ? 1 : -1;
-        const steps = Math.abs(newValue - currentValue);
-        let current = currentValue;
-        let step = 0;
-
-        const timer = setInterval(() => {
-            current += increment;
-            element.textContent = current;
-            step++;
             
-            if (step >= steps) {
-                clearInterval(timer);
-                element.textContent = newValue;
-                
-                // Add flash effect for changes
-                if (newValue !== currentValue) {
-                    element.style.background = '#e3f2fd';
-                    setTimeout(() => {
-                        element.style.background = 'transparent';
-                    }, 1000);
-                }
-            }
-        }, 50);
-    }
-
-    function updateLastUpdatedTime() {
-        const timeElements = document.querySelectorAll('.last-updated-time');
-        const now = new Date().toLocaleString();
-        timeElements.forEach(element => {
-            element.textContent = `Last updated: ${now}`;
-        });
-    }
-
-    function showRealTimeIndicator() {
-        const indicators = document.querySelectorAll('.realtime-indicator');
-        indicators.forEach(indicator => {
-            indicator.style.animation = 'pulse 0.5s ease-in-out';
-            setTimeout(() => {
-                indicator.style.animation = '';
-            }, 500);
-        });
-    }
-
-    function updateRealTimeClock() {
-        const clockElements = document.querySelectorAll('.realtime-clock');
-        const now = new Date();
-        const timeString = now.toLocaleTimeString();
-        const dateString = now.toLocaleDateString();
-        
-        clockElements.forEach(element => {
-            element.innerHTML = `
-                <div class="text-center">
-                    <div class="fw-bold">${timeString}</div>
-                    <small class="text-muted">${dateString}</small>
-                </div>
-            `;
-        });
-    }
-
-    // Initialize real-time updates on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Setup CSRF token for AJAX requests
-        const token = document.querySelector('meta[name="csrf-token"]');
-        if (token) {
-            window.axios = window.axios || {};
-            window.axios.defaults = window.axios.defaults || {};
-            window.axios.defaults.headers = window.axios.defaults.headers || {};
-            window.axios.defaults.headers.common = window.axios.defaults.headers.common || {};
-            window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.getAttribute('content');
-        }
-
-        // Setup fetch default headers for CSRF
-        const originalFetch = window.fetch;
-        window.fetch = function(...args) {
-            if (args[1]) {
-                args[1].headers = args[1].headers || {};
-                args[1].headers['X-CSRF-TOKEN'] = token ? token.getAttribute('content') : '';
-            } else {
-                args[1] = {
-                    headers: {
-                        'X-CSRF-TOKEN': token ? token.getAttribute('content') : ''
-                    }
-                };
-            }
-            return originalFetch.apply(this, args);
-        };
-
-        initChart();
-
-        // Add event listeners to dropdown options
-        document.querySelectorAll('.period-option').forEach(option => {
-            option.addEventListener('click', function(e) {
+        } catch (error) {
+            console.error('Error initializing dropdown:', error);
+            
+            // Fallback: manual toggle
+            activityFilterBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                const period = this.dataset.period;
-                loadChartData(period);
+                const menu = this.nextElementSibling;
+                if (menu && menu.classList.contains('dropdown-menu')) {
+                    menu.classList.toggle('show');
+                }
             });
-        });
-        
-        // Check if all dashboard components are loaded
-        const checkDashboardLoaded = () => {
-            const chartCanvas = document.getElementById('platformChart');
-            const performanceMetrics = document.getElementById('performance-metrics-container');
-            const statsCards = document.querySelectorAll('.hover-card').length;
-            
-            if (chartCanvas && performanceMetrics && statsCards >= 4) {
-                // All main components are present, mark page as loaded
-                setTimeout(() => {
-                    pageLoadComplete();
-                }, 500); // Small delay to ensure rendering is complete
-                return true;
-            }
-            return false;
-        };
-        
-        // Check every 100ms until loaded
-        const loadCheckInterval = setInterval(() => {
-            if (checkDashboardLoaded()) {
-                clearInterval(loadCheckInterval);
-            }
-        }, 100);
-        
-        // Fallback timeout
-        setTimeout(() => {
-            clearInterval(loadCheckInterval);
-            if (document.getElementById('globalLoadingScreen').style.display !== 'none') {
-                pageLoadComplete();
-            }
-        }, 5000); // 5 second fallback
+        }
+    }
+}
+
+function initializeDashboard() {
+    // Initialize chart
+    initializeChart();
+    
+    // Initialize chart period toggles
+    initializeChartToggles();
+    
+    // Initialize dropdown functionality
+    initializeDropdowns();
+    
+    // Start real-time updates
+    startRealtimeUpdates();
+}
+
+// Initialize all Bootstrap dropdowns
+function initializeDropdowns() {
+    // Initialize all dropdowns on the page
+    const dropdownElements = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+    dropdownElements.forEach(element => {
+        if (!bootstrap.Dropdown.getInstance(element)) {
+            new bootstrap.Dropdown(element);
+        }
     });
-
-    // Real-time updates - refresh dashboard data every 30 seconds
-    setInterval(function() {
-        refreshDashboardData();
-        autoRefreshPerformanceMetrics(); // Also refresh performance metrics
-    }, 30000); // 30 seconds
-
-    // Real-time performance metrics update every 15 seconds
-    setInterval(function() {
-        autoRefreshPerformanceMetrics();
-    }, 15000); // 15 seconds
-
-    // Auto-refresh chart data every 2 minutes for real-time feeling
-    setInterval(function() {
-        const activePeriod = document.querySelector('.period-option.active').dataset.period;
-        loadChartData(activePeriod);
-    }, 120000); // 2 minutes
-
-    // Real-time clock update
-    setInterval(function() {
-        updateRealTimeClock();
-    }, 1000); // 1 second
-
-    // Performance Metrics Functions
-    function autoRefreshPerformanceMetrics() {
-        fetch('{{ route("admin.dashboard.performance-metrics") }}', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    
+    // Specific initialization for activity filter dropdown
+    const activityFilterBtn = document.getElementById('activityFilterBtn');
+    if (activityFilterBtn && !bootstrap.Dropdown.getInstance(activityFilterBtn)) {
+        const dropdown = new bootstrap.Dropdown(activityFilterBtn, {
+            boundary: 'viewport',
+            display: 'dynamic'
+        });
+        
+        // Add event listeners
+        activityFilterBtn.addEventListener('shown.bs.dropdown', function () {
+            console.log('Activity filter dropdown opened');
+            
+            // Ensure dropdown is positioned correctly
+            const dropdownMenu = this.nextElementSibling;
+            if (dropdownMenu) {
+                dropdownMenu.style.position = 'absolute';
+                dropdownMenu.style.zIndex = '1060';
+                dropdownMenu.style.top = '100%';
+                dropdownMenu.style.right = '0';
+                dropdownMenu.style.left = 'auto';
+                dropdownMenu.style.transform = 'none';
             }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updatePerformanceMetrics(data.performanceMetrics, data.metricsDetails);
-                updatePerformanceTimestamp(data.lastUpdated);
-                
-                // Flash the live indicator
-                const liveIndicator = document.querySelector('.performance-live-indicator');
-                if (liveIndicator) {
-                    liveIndicator.style.backgroundColor = '#28a745';
-                    setTimeout(() => {
-                        liveIndicator.style.backgroundColor = '';
-                    }, 1000);
-                }
-            } else {
-                console.error('Failed to fetch performance metrics:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Performance metrics fetch error:', error);
+        });
+        
+        activityFilterBtn.addEventListener('hidden.bs.dropdown', function () {
+            console.log('Activity filter dropdown closed');
         });
     }
+}
 
-    function refreshPerformanceMetrics() {
-        fetch('{{ route("admin.dashboard.performance-metrics") }}', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updatePerformanceMetrics(data.performanceMetrics, data.metricsDetails);
-                updatePerformanceTimestamp(data.lastUpdated);
-                
-                // Flash the live indicator
-                const liveIndicator = document.querySelector('.performance-live-indicator');
-                if (liveIndicator) {
-                    liveIndicator.style.backgroundColor = '#28a745';
-                    setTimeout(() => {
-                        liveIndicator.style.backgroundColor = '';
-                    }, 1000);
-                }
-            } else {
-                console.error('Failed to fetch performance metrics:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Performance metrics fetch error:', error);
-        });
-    }
-
-    function updatePerformanceMetrics(metrics, details = null) {
-        // If details are provided, use them. Otherwise, construct basic descriptions
-        const defaultDetails = {
-            teacher_engagement: { description: `Teacher engagement: ${metrics.teacher_engagement}%` },
-            course_publication_rate: { description: `Course publication: ${metrics.course_publication_rate}%` },
-            enrollment_rate: { description: `Enrollment rate: ${metrics.student_course_ratio}%` },
-            platform_growth: { description: `Platform growth: ${metrics.platform_growth}%` }
-        };
-        
-        const metricsDetails = details || defaultDetails;
-        
-        // Update Teacher Engagement
-        updateMetric('teacher-engagement', metrics.teacher_engagement, metricsDetails.teacher_engagement.description);
-        
-        // Update Course Publication Rate
-        updateMetric('course-publication', metrics.course_publication_rate, metricsDetails.course_publication_rate.description);
-        
-        // Update Enrollment Rate
-        updateMetric('enrollment-rate', metrics.student_course_ratio, metricsDetails.enrollment_rate.description);
-        
-        // Update Platform Growth
-        updatePlatformGrowth(metrics.platform_growth, metricsDetails.platform_growth.description);
-    }
-
-    function updateMetric(metricName, percentage, description) {
-        // Update percentage text
-        const percentElement = document.getElementById(metricName + '-percent');
-        if (percentElement) {
-            animateNumber(percentElement, parseInt(percentElement.textContent), percentage, '%');
-        }
-        
-        // Update progress bar with animation
-        const barElement = document.getElementById(metricName + '-bar');
-        if (barElement) {
-            animateProgressBar(barElement, percentage);
-        }
-        
-        // Update description
-        const descElement = document.getElementById(metricName + '-desc');
-        if (descElement) {
-            descElement.textContent = description;
-        }
-    }
-
-    function updatePlatformGrowth(percentage, description) {
-        const percentElement = document.getElementById('platform-growth-percent');
-        const barElement = document.getElementById('platform-growth-bar');
-        const descElement = document.getElementById('platform-growth-desc');
-        
-        if (percentElement) {
-            // Update color based on positive/negative growth
-            const isPositive = percentage >= 0;
-            percentElement.className = 'fw-bold ' + (isPositive ? 'text-success' : 'text-danger');
-            percentElement.textContent = (isPositive ? '+' : '') + percentage + '%';
-        }
-        
-        if (barElement) {
-            // Update progress bar color and width
-            const isPositive = percentage >= 0;
-            barElement.className = 'progress-bar ' + (isPositive ? 'bg-info' : 'bg-danger');
-            animateProgressBar(barElement, Math.abs(percentage));
-        }
-        
-        if (descElement) {
-            descElement.textContent = description;
-        }
-    }
-
-    function animateNumber(element, startValue, endValue, suffix = '') {
-        const duration = 1000; // 1 second
-        const startTime = performance.now();
-        
-        function updateNumber(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Easing function for smooth animation
-            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-            const currentValue = Math.round(startValue + (endValue - startValue) * easeOutQuart);
-            
-            element.textContent = currentValue + suffix;
-            
-            if (progress < 1) {
-                requestAnimationFrame(updateNumber);
-            }
-        }
-        
-        requestAnimationFrame(updateNumber);
-    }
-
-    function animateProgressBar(element, targetWidth) {
-        const currentWidth = parseFloat(element.style.width) || 0;
-        const duration = 1000; // 1 second
-        const startTime = performance.now();
-        
-        function updateProgress(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Easing function for smooth animation
-            const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-            const width = currentWidth + (targetWidth - currentWidth) * easeOutQuart;
-            
-            element.style.width = width + '%';
-            
-            if (progress < 1) {
-                requestAnimationFrame(updateProgress);
-            }
-        }
-        
-        requestAnimationFrame(updateProgress);
-    }
-
-    function updatePerformanceTimestamp(timestamp) {
-        const timestampElement = document.getElementById('performance-last-updated');
-        if (timestampElement) {
-            timestampElement.textContent = 'Just now';
-            
-            // Show full timestamp after a delay
+// Restore filter state and scroll position after reload
+function restoreStateAfterReload() {
+    const loadMoreClicked = sessionStorage.getItem('loadMoreClicked');
+    
+    if (loadMoreClicked) {
+        // Restore filter
+        const savedFilter = sessionStorage.getItem('dashboardFilter');
+        if (savedFilter && savedFilter !== 'all') {
             setTimeout(() => {
-                const date = new Date();
-                timestampElement.textContent = date.toLocaleTimeString();
-            }, 2000);
-        }
-    }
-
-    // Manual refresh function for button click
-    function refreshPerformanceMetrics() {
-        const container = document.getElementById('performance-metrics-container');
-        const loading = document.getElementById('performance-loading');
-        
-        // Show loading state
-        if (container && loading) {
-            container.style.display = 'none';
-            loading.style.display = 'block';
+                filterActivity(savedFilter);
+            }, 100);
         }
         
-        fetch('{{ route("admin.dashboard.performance-metrics") }}', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updatePerformanceMetrics(data.performanceMetrics, data.metricsDetails);
-                updatePerformanceTimestamp(data.lastUpdated);
-            } else {
-                console.error('Failed to fetch performance metrics:', data.error);
-            }
-        })
-        .catch(error => {
-            console.error('Performance metrics fetch error:', error);
-        })
-        .finally(() => {
-            // Hide loading state
-            if (container && loading) {
-                loading.style.display = 'none';
-                container.style.display = 'block';
-            }
-        });
-    }
-    
-    // Demo function to test loading screen (remove in production)
-    function testLoadingScreen() {
-        showNavigationLoading();
+        // Restore scroll position
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition) {
+            setTimeout(() => {
+                window.scrollTo(0, parseInt(scrollPosition));
+            }, 200);
+        }
         
-        // Test the actual loading route
-        performAjaxRequest('{{ route("admin.dashboard.test-loading") }}', {
-            timeout: 15000 // 15 seconds timeout for testing
-        })
-        .then(data => {
-            showSuccessNotification(data.message || 'Loading test completed!');
-            console.log('Test loading data:', data);
-        })
-        .catch(error => {
-            console.error('Loading test failed:', error);
-            showErrorNotification('Loading test failed: ' + error.message);
-        })
-        .finally(() => {
-            hideLoadingScreen();
-        });
-    }
-    
-    // Add test button for loading screen (remove in production)
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add a test button to the page header
+        // Check if load more button should be hidden
         setTimeout(() => {
-            const header = document.querySelector('.d-flex .btn-group');
-            if (header) {
-                const testBtn = document.createElement('button');
-                testBtn.className = 'btn btn-outline-info btn-sm ms-2';
-                testBtn.innerHTML = '<i class="fas fa-vial me-1"></i>Test Loading';
-                testBtn.onclick = testLoadingScreen;
-                header.parentNode.appendChild(testBtn);
+            const loadMoreBtn = document.querySelector('.timeline-item.text-center button');
+            if (loadMoreBtn && !hasMoreData()) {
+                loadMoreBtn.closest('.timeline-item').style.display = 'none';
+                showSuccessNotification('All available activity loaded');
+            } else if (loadMoreBtn) {
+                showSuccessNotification('Dashboard refreshed');
             }
-        }, 1000);
+        }, 300);
+        
+        // Clear session storage
+        sessionStorage.removeItem('loadMoreClicked');
+        sessionStorage.removeItem('dashboardFilter');
+        sessionStorage.removeItem('scrollPosition');
+    }
+}
+
+// Check if there's more data to load
+function hasMoreData() {
+    const enrollmentItems = document.querySelectorAll('.timeline-section[data-category="enrollments"] .timeline-item').length;
+    const teacherItems = document.querySelectorAll('.timeline-section[data-category="teachers"] .timeline-item').length;
+    const courseItems = document.querySelectorAll('.timeline-section[data-category="courses"] .timeline-item').length;
+    
+    // If any category has exactly 5 items, there might be more
+    return enrollmentItems >= 5 || teacherItems >= 5 || courseItems >= 5;
+}
+
+
+
+function initializeChart() {
+    const ctx = document.getElementById('analyticsChart');
+    if (!ctx) return;
+    
+    analyticsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels || [],
+            datasets: [
+                {
+                    label: 'Enrollments',
+                    data: chartData.enrollments || [],
+                    borderColor: '#4a5568',
+                    backgroundColor: 'rgba(74, 85, 104, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Courses',
+                    data: chartData.courses || [],
+                    borderColor: '#4299e1',
+                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Teachers',
+                    data: chartData.teachers || [],
+                    borderColor: '#48bb78',
+                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e2e8f0'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: '#e2e8f0'
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 4,
+                    hoverRadius: 6
+                }
+            }
+        }
     });
+}
+
+function initializeProgressCircles() {
+    // Initialize enhanced progress rings
+    document.querySelectorAll('.progress-ring').forEach(ring => {
+        const percent = ring.dataset.percent || 0;
+        const color = ring.dataset.color || '#4a5568';
+        const circle = ring.querySelector('.progress-ring-circle');
+        
+        if (circle) {
+            // Set the stroke color
+            circle.style.stroke = color;
+            
+            // Calculate the circumference (2 * π * r, where r = 50)
+            const circumference = 2 * Math.PI * 50;
+            
+            // Calculate the offset based on percentage
+            const offset = circumference - (percent / 100) * circumference;
+            
+            // Set initial state
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+            
+            // Animate to the target
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+        }
+    });
+
+    // Initialize legacy progress circles for compatibility
+    document.querySelectorAll('.progress-circle').forEach(circle => {
+        const percent = circle.dataset.percent || 0;
+        const inner = circle.querySelector('.progress-circle-inner');
+        
+        if (inner) {
+            const deg = (percent / 100) * 360;
+            inner.style.background = `conic-gradient(var(--primary-color) ${deg}deg, #e9ecef ${deg}deg)`;
+        }
+    });
+}
+
+function refreshMetrics() {
+    // Add loading state to all metric cards
+    document.querySelectorAll('.metric-card').forEach(card => {
+        card.classList.add('loading');
+    });
+    
+    // Fetch new performance metrics
+    fetch('{{ route('admin.dashboard.performance-metrics') }}', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.performanceMetrics) {
+            updatePerformanceMetrics(data.performanceMetrics);
+            updateInsightCards(data.performanceMetrics);
+            
+            // Remove loading state
+            document.querySelectorAll('.metric-card').forEach(card => {
+                card.classList.remove('loading');
+            });
+            
+            showSuccessNotification('Performance metrics refreshed successfully');
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing metrics:', error);
+        
+        // Remove loading state
+        document.querySelectorAll('.metric-card').forEach(card => {
+            card.classList.remove('loading');
+        });
+        
+        showErrorNotification('Failed to refresh performance metrics');
+    });
+}
+
+function exportMetrics() {
+    // Show loading notification
+    showSuccessNotification('Preparing performance metrics report for download...');
+    
+    // Simulate export process
+    setTimeout(() => {
+        // Create a simple CSV export
+        const metricsData = [
+            ['Metric', 'Value', 'Status'],
+            ['Teacher Engagement', document.querySelector('.teacher-engagement .percentage')?.textContent || '0%', 'Active'],
+            ['Course Publication', document.querySelector('.course-publication .percentage')?.textContent || '0%', 'Published'],
+            ['Student Enrollment', document.querySelector('.student-enrollment .percentage')?.textContent || '0%', 'Enrolled'],
+            ['Platform Growth', document.querySelector('.platform-growth .percentage')?.textContent || '0%', 'Growing']
+        ];
+        
+        const csvContent = metricsData.map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `performance_metrics_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+        showSuccessNotification('Performance metrics report downloaded successfully');
+    }, 1500);
+}
+
+function viewDetailedAnalytics() {
+    // Show modal with detailed analytics
+    const modalHtml = `
+        <div class="modal fade" id="detailedAnalyticsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-gradient-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Detailed Performance Analytics
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Historical Trends</h6>
+                                <canvas id="detailedChart" height="200"></canvas>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Performance Breakdown</h6>
+                                <div class="detailed-metrics">
+                                    <div class="metric-detail-item">
+                                        <span class="metric-name">Teacher Engagement Rate</span>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" style="width: ${document.querySelector('.teacher-engagement .percentage')?.textContent || '0%'}"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-detail-item">
+                                        <span class="metric-name">Course Publication Rate</span>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" style="width: ${document.querySelector('.course-publication .percentage')?.textContent || '0%'}"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-detail-item">
+                                        <span class="metric-name">Student Enrollment Rate</span>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" style="width: ${document.querySelector('.student-enrollment .percentage')?.textContent || '0%'}"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-detail-item">
+                                        <span class="metric-name">Platform Growth Rate</span>
+                                        <div class="metric-bar">
+                                            <div class="metric-fill" style="width: ${Math.abs(parseInt(document.querySelector('.platform-growth .percentage')?.textContent || '0'))}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="exportMetrics()">
+                            <i class="fas fa-download me-1"></i>Export Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if any
+    const existingModal = document.getElementById('detailedAnalyticsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to DOM
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('detailedAnalyticsModal'));
+    modal.show();
+    
+    // Add styles for the detailed metrics
+    const style = document.createElement('style');
+    style.textContent = `
+        .detailed-metrics {
+            padding: 20px 0;
+        }
+        
+        .metric-detail-item {
+            margin-bottom: 20px;
+        }
+        
+        .metric-name {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        
+        .metric-bar {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .metric-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a5568, #667eea);
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function updateInsightCards(metrics) {
+    // Update insight cards based on performance metrics
+    const insightCards = document.querySelectorAll('.insight-card');
+    
+    // Teacher engagement insight
+    if (metrics.teacher_engagement >= 80) {
+        updateInsightCard(0, 'excellent', 'Excellent Performance', 'Teacher engagement is above 80%', 'fas fa-trophy');
+    } else if (metrics.teacher_engagement >= 60) {
+        updateInsightCard(0, 'good', 'Good Performance', 'Teacher engagement is healthy', 'fas fa-thumbs-up');
+    } else {
+        updateInsightCard(0, 'attention', 'Needs Attention', 'Teacher engagement needs improvement', 'fas fa-exclamation-triangle');
+    }
+    
+    // Course publication insight
+    if (metrics.course_publication_rate >= 70) {
+        updateInsightCard(1, 'excellent', 'Strong Publishing', 'Course publication rate is excellent', 'fas fa-trophy');
+    } else if (metrics.course_publication_rate >= 50) {
+        updateInsightCard(1, 'good', 'Steady Progress', 'Course publication is on track', 'fas fa-thumbs-up');
+    } else {
+        updateInsightCard(1, 'attention', 'Publishing Gap', 'More courses need to be published', 'fas fa-chart-line');
+    }
+    
+    // Growth insight
+    if (metrics.platform_growth > 0) {
+        updateInsightCard(2, 'excellent', 'Positive Growth', `Platform growing by ${metrics.platform_growth}%`, 'fas fa-rocket');
+    } else if (metrics.platform_growth === 0) {
+        updateInsightCard(2, 'good', 'Stable Platform', 'Platform maintaining stability', 'fas fa-equals');
+    } else {
+        updateInsightCard(2, 'attention', 'Growth Challenge', 'Platform needs growth focus', 'fas fa-chart-line');
+    }
+}
+
+function updateInsightCard(index, type, title, description, icon) {
+    const cards = document.querySelectorAll('.insight-card');
+    if (cards[index]) {
+        const card = cards[index];
+        
+        // Remove existing type classes
+        card.classList.remove('excellent', 'good', 'attention');
+        card.classList.add(type);
+        
+        // Update icon
+        const iconElement = card.querySelector('.insight-icon i');
+        if (iconElement) {
+            iconElement.className = icon;
+        }
+        
+        // Update content
+        const titleElement = card.querySelector('.insight-content h6');
+        const descElement = card.querySelector('.insight-content p');
+        
+        if (titleElement) titleElement.textContent = title;
+        if (descElement) descElement.textContent = description;
+    }
+}
+
+function initializeChartToggles() {
+    document.querySelectorAll('input[name="chartPeriod"]').forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                updateChart(this.value);
+            }
+        });
+    });
+}
+
+function updateChart(period) {
+    currentPeriod = period;
+    
+    // Show loading state
+    const chartContainer = document.querySelector('.chart-container');
+    chartContainer.classList.add('loading');
+    
+    // Fetch new chart data
+    fetch(`{{ route('admin.dashboard.chart-data') }}?period=${period}`, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (analyticsChart) {
+            analyticsChart.data.labels = data.labels || [];
+            analyticsChart.data.datasets[0].data = data.enrollments || [];
+            analyticsChart.data.datasets[1].data = data.courses || [];
+            analyticsChart.data.datasets[2].data = data.teachers || [];
+            analyticsChart.update();
+        }
+        
+        chartContainer.classList.remove('loading');
+        showSuccessNotification('Chart updated successfully');
+    })
+    .catch(error => {
+        console.error('Error updating chart:', error);
+        chartContainer.classList.remove('loading');
+        showErrorNotification('Failed to update chart data');
+    });
+}
+
+function startRealtimeUpdates() {
+    // Update stats every 30 seconds
+    setInterval(updateRealtimeStats, 30000);
+}
+
+function updateRealtimeStats() {
+    fetch('{{ route('admin.dashboard.realtime-stats') }}', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.stats) {
+            updateStatsDisplay(data.stats);
+            updatePerformanceMetrics(data.performanceMetrics);
+            
+            // Update recent activity with real-time data
+            if (data.recentActivity) {
+                updateRecentActivity(data.recentActivity);
+            }
+        }
+    })
+    .catch(error => {
+        console.log('Realtime update failed:', error);
+    });
+}
+
+function updateStatsDisplay(stats) {
+    // Update stat numbers directly without animation
+    if (document.getElementById('totalStudents')) {
+        document.getElementById('totalStudents').textContent = stats.total_students.toLocaleString();
+    }
+    if (document.getElementById('totalTeachers')) {
+        document.getElementById('totalTeachers').textContent = stats.total_teachers.toLocaleString();
+    }
+    if (document.getElementById('totalCourses')) {
+        document.getElementById('totalCourses').textContent = stats.total_courses.toLocaleString();
+    }
+    if (document.getElementById('totalEnrollments')) {
+        document.getElementById('totalEnrollments').textContent = stats.total_enrollments.toLocaleString();
+    }
+    
+    // Update additional info
+    if (document.getElementById('activeTeachers')) {
+        document.getElementById('activeTeachers').textContent = stats.active_teachers;
+    }
+    if (document.getElementById('publishedCourses')) {
+        document.getElementById('publishedCourses').textContent = stats.published_courses;
+    }
+}
+
+function updatePerformanceMetrics(metrics) {
+    if (!metrics) return;
+    
+    // Update enhanced progress rings
+    const progressRings = document.querySelectorAll('.progress-ring');
+    const values = [
+        metrics.teacher_engagement,
+        metrics.course_publication_rate,
+        metrics.student_course_ratio,
+        Math.abs(metrics.platform_growth)
+    ];
+    
+    progressRings.forEach((ring, index) => {
+        if (values[index] !== undefined) {
+            const percent = values[index];
+            const circle = ring.querySelector('.progress-ring-circle');
+            const text = ring.querySelector('.progress-ring-text .percentage');
+            
+            if (circle && text) {
+                // Calculate the circumference (2 * π * r, where r = 50)
+                const circumference = 2 * Math.PI * 50;
+                
+                // Calculate the offset based on percentage
+                const offset = circumference - (percent / 100) * circumference;
+                
+                // Update the progress ring
+                circle.style.strokeDashoffset = offset;
+                
+                // Update the text with animation
+                animateValue(text, parseInt(text.textContent), percent, 1000, '%');
+            }
+        }
+    });
+
+    // Update legacy progress circles for compatibility
+    document.querySelectorAll('.progress-circle').forEach((circle, index) => {
+        const values = [
+            metrics.teacher_engagement,
+            metrics.course_publication_rate,
+            metrics.student_course_ratio,
+            Math.abs(metrics.platform_growth)
+        ];
+        
+        if (values[index] !== undefined) {
+            const percent = values[index];
+            const inner = circle.querySelector('.progress-circle-inner');
+            const text = circle.querySelector('.progress-circle-text');
+            
+            if (inner && text) {
+                const deg = (percent / 100) * 360;
+                inner.style.background = `conic-gradient(var(--primary-color) ${deg}deg, #e9ecef ${deg}deg)`;
+                text.textContent = percent + '%';
+            }
+        }
+    });
+
+    // Update insight cards
+    updateInsightCards(metrics);
+}
+
+function updateRecentActivity(recentActivity) {
+    if (!recentActivity) return;
+    
+    const timeline = document.querySelector('.activity-timeline');
+    if (!timeline) return;
+    
+    // Clear existing activity
+    const existingSections = timeline.querySelectorAll('.timeline-section');
+    existingSections.forEach(section => section.remove());
+    
+    // Clear no activity messages
+    const noActivityMessages = timeline.querySelectorAll('.no-activity-message, .no-enrollments-message');
+    noActivityMessages.forEach(msg => msg.remove());
+    
+    let hasAnyActivity = false;
+    
+    // Add enrollments if any
+    if (recentActivity.enrollments && recentActivity.enrollments.length > 0) {
+        hasAnyActivity = true;
+        const enrollmentSection = createEnrollmentSection(recentActivity.enrollments);
+        timeline.insertBefore(enrollmentSection, timeline.querySelector('.timeline-item.text-center') || null);
+    }
+    
+    // Add teachers if any
+    if (recentActivity.teachers && recentActivity.teachers.length > 0) {
+        hasAnyActivity = true;
+        const teacherSection = createTeacherSection(recentActivity.teachers);
+        timeline.insertBefore(teacherSection, timeline.querySelector('.timeline-item.text-center') || null);
+    }
+    
+    // Add courses if any
+    if (recentActivity.courses && recentActivity.courses.length > 0) {
+        hasAnyActivity = true;
+        const courseSection = createCourseSection(recentActivity.courses);
+        timeline.insertBefore(courseSection, timeline.querySelector('.timeline-item.text-center') || null);
+    }
+    
+    // Show no activity message if nothing to display
+    if (!hasAnyActivity) {
+        const noActivityDiv = document.createElement('div');
+        noActivityDiv.className = 'text-center py-5 no-activity-message';
+        noActivityDiv.innerHTML = `
+            <div class="text-muted">
+                <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
+                <h5 class="text-muted mb-2">No Recent Activity</h5>
+                <p class="mb-0">New enrollments, teachers, and courses will appear here when available.</p>
+            </div>
+        `;
+        timeline.insertBefore(noActivityDiv, timeline.querySelector('.timeline-item.text-center') || null);
+    }
+    
+    // Update load more button visibility
+    updateLoadMoreButton(recentActivity);
+}
+
+function createEnrollmentSection(enrollments) {
+    const section = document.createElement('div');
+    section.className = 'timeline-section';
+    section.setAttribute('data-category', 'enrollments');
+    
+    enrollments.forEach((enrollment, index) => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = `timeline-item ${index === 0 ? 'latest' : ''}`;
+        
+        const hasMore = index < enrollments.length - 1 || document.querySelector('[data-category="teachers"], [data-category="courses"]');
+        
+        timelineItem.innerHTML = `
+            <div class="timeline-marker">
+                <div class="timeline-icon bg-primary">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+                ${hasMore ? '<div class="timeline-line"></div>' : ''}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="timeline-title mb-1">New Enrollment</h6>
+                        <span class="timeline-badge badge bg-primary">
+                            <i class="fas fa-graduation-cap me-1"></i>Student
+                        </span>
+                    </div>
+                    <p class="timeline-description">
+                        <strong>${enrollment.user?.name || 'Student'}</strong> enrolled in 
+                        <em>${enrollment.course?.title?.substring(0, 25) || 'Course'}${(enrollment.course?.title?.length || 0) > 25 ? '...' : ''}</em>
+                    </p>
+                    <div class="timeline-meta">
+                        <span class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            ${formatTimeAgo(enrollment.created_at)}
+                        </span>
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-dollar-sign me-1"></i>
+                            $${enrollment.course?.price || '0'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        section.appendChild(timelineItem);
+    });
+    
+    return section;
+}
+
+function createTeacherSection(teachers) {
+    const section = document.createElement('div');
+    section.className = 'timeline-section';
+    section.setAttribute('data-category', 'teachers');
+    
+    teachers.forEach((teacher, index) => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'timeline-item';
+        
+        const hasMore = index < teachers.length - 1 || document.querySelector('[data-category="courses"]');
+        
+        timelineItem.innerHTML = `
+            <div class="timeline-marker">
+                <div class="timeline-icon bg-success">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                ${hasMore ? '<div class="timeline-line"></div>' : ''}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="timeline-title mb-1">New Teacher</h6>
+                        <span class="timeline-badge badge bg-success">
+                            <i class="fas fa-user-check me-1"></i>
+                            ${teacher.status ? teacher.status.charAt(0).toUpperCase() + teacher.status.slice(1) : 'Active'}
+                        </span>
+                    </div>
+                    <p class="timeline-description">
+                        <strong>${teacher.name}</strong> joined as instructor
+                        ${teacher.department ? `in <em>${teacher.department}</em>` : ''}
+                    </p>
+                    <div class="timeline-meta">
+                        <span class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            ${formatTimeAgo(teacher.created_at)}
+                        </span>
+                        ${teacher.courses_count ? `
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-book me-1"></i>
+                            ${teacher.courses_count} courses
+                        </span>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        section.appendChild(timelineItem);
+    });
+    
+    return section;
+}
+
+function createCourseSection(courses) {
+    const section = document.createElement('div');
+    section.className = 'timeline-section';
+    section.setAttribute('data-category', 'courses');
+    
+    courses.forEach((course, index) => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'timeline-item';
+        
+        const hasMore = index < courses.length - 1;
+        
+        timelineItem.innerHTML = `
+            <div class="timeline-marker">
+                <div class="timeline-icon bg-info">
+                    <i class="fas fa-book"></i>
+                </div>
+                ${hasMore ? '<div class="timeline-line"></div>' : ''}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="timeline-title mb-1">New Course</h6>
+                        <span class="timeline-badge badge bg-${course.status === 'published' ? 'success' : 'warning'}">
+                            <i class="fas fa-${course.status === 'published' ? 'check-circle' : 'clock'} me-1"></i>
+                            ${course.status ? course.status.charAt(0).toUpperCase() + course.status.slice(1) : 'Draft'}
+                        </span>
+                    </div>
+                    <p class="timeline-description">
+                        <strong>${course.title?.substring(0, 35) || 'Course'}${(course.title?.length || 0) > 35 ? '...' : ''}</strong>
+                        <br>
+                        <small class="text-muted">
+                            by ${course.instructor?.name || 'Unknown Instructor'}
+                        </small>
+                    </p>
+                    <div class="timeline-meta">
+                        <span class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            ${formatTimeAgo(course.created_at)}
+                        </span>
+                        ${course.enrollments_count ? `
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-users me-1"></i>
+                            ${course.enrollments_count} enrolled
+                        </span>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        section.appendChild(timelineItem);
+    });
+    
+    return section;
+}
+
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    return date.toLocaleDateString();
+}
+
+function updateLoadMoreButton(recentActivity) {
+    const loadMoreButton = document.querySelector('.timeline-item.text-center');
+    if (!loadMoreButton) return;
+    
+    const hasMoreEnrollments = recentActivity.enrollments && recentActivity.enrollments.length >= 5;
+    const hasMoreTeachers = recentActivity.teachers && recentActivity.teachers.length >= 5;
+    const hasMoreCourses = recentActivity.courses && recentActivity.courses.length >= 5;
+    
+    const showLoadMore = hasMoreEnrollments || hasMoreTeachers || hasMoreCourses;
+    loadMoreButton.style.display = showLoadMore ? 'block' : 'none';
+}
+
+function animateValue(element, start, end, duration = 0, suffix = '') {
+    // Handle both element ID strings and direct element references
+    const targetElement = typeof element === 'string' ? document.getElementById(element) : element;
+    if (!targetElement) return;
+    
+    // Set value immediately without animation
+    targetElement.textContent = end.toLocaleString() + suffix;
+}
+
+function refreshDashboard() {
+    const refreshBtn = document.getElementById('refreshBtn');
+    refreshBtn.disabled = true;
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+    
+    // Refresh stats
+    updateRealtimeStats();
+    
+    // Refresh chart
+    updateChart(currentPeriod);
+    
+    // Reset button after 2 seconds
+    setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-1"></i>Refresh';
+        showSuccessNotification('Dashboard refreshed successfully');
+    }, 2000);
+}
+
+function generateReport() {
+    showSuccessNotification('Report generation started. You will be notified when ready.');
+    
+    // Simulate report generation
+    setTimeout(() => {
+        showSuccessNotification('Performance report has been generated and is ready for download.');
+    }, 3000);
+}
+
+function clearCache() {
+    if (confirm('Are you sure you want to clear the system cache? This may temporarily slow down the application.')) {
+        showSuccessNotification('Cache cleared successfully. System performance optimized.');
+    }
+}
+
+function systemSettings() {
+    showSuccessNotification('System settings panel will be available in the next update.');
+}
+
+// Timeline Activity Functions
+function filterActivity(category) {
+    // Prevent event bubbling to avoid dropdown closing
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const sections = document.querySelectorAll('.timeline-section');
+    const noActivityMessage = document.querySelector('.no-activity-message');
+    const noEnrollmentsMessage = document.querySelector('.no-enrollments-message');
+    
+    // Hide all messages initially
+    if (noActivityMessage) noActivityMessage.style.display = 'none';
+    if (noEnrollmentsMessage) noEnrollmentsMessage.style.display = 'none';
+    
+    sections.forEach(section => {
+        const sectionCategory = section.getAttribute('data-category');
+        
+        if (category === 'all' || sectionCategory === category) {
+            section.classList.remove('filtered-out');
+        } else {
+            section.classList.add('filtered-out');
+        }
+    });
+    
+    // Special handling for enrollments filter
+    if (category === 'enrollments') {
+        const enrollmentSection = document.querySelector('.timeline-section[data-category="enrollments"]');
+        const hasEnrollments = enrollmentSection && enrollmentSection.children.length > 0;
+        
+        if (!hasEnrollments) {
+            // Hide all sections and show no enrollments message
+            sections.forEach(section => {
+                section.classList.add('filtered-out');
+            });
+            if (noEnrollmentsMessage) {
+                noEnrollmentsMessage.style.display = 'block';
+            }
+        }
+    } else {
+        // For other filters, handle normally
+        const visibleSections = Array.from(sections).filter(section => 
+            !section.classList.contains('filtered-out') && section.children.length > 0
+        );
+        
+        if (visibleSections.length === 0 && noActivityMessage) {
+            noActivityMessage.style.display = 'block';
+        }
+    }
+    
+    // Update filter button text
+    const filterBtn = document.getElementById('activityFilterBtn');
+    const categoryNames = {
+        'all': 'All Activity',
+        'teachers': 'Teachers Only',
+        'courses': 'Courses Only',
+        'enrollments': 'Enrollments Only'
+    };
+    
+    if (filterBtn) {
+        filterBtn.innerHTML = `<i class="fas fa-filter me-1"></i>${categoryNames[category] || 'Filter'}`;
+    }
+    
+    // Close the dropdown manually
+    const dropdown = bootstrap.Dropdown.getInstance(filterBtn);
+    if (dropdown) {
+        dropdown.hide();
+    }
+    
+    showSuccessNotification(`Filtered to show: ${categoryNames[category]}`);
+}
+
+function loadMoreActivity() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Loading...';
+    btn.disabled = true;
+    
+    // Get current filter to load more of the same type
+    const currentFilter = getCurrentFilter();
+    
+    // Store current scroll position
+    const scrollPosition = window.pageYOffset;
+    
+    // Simulate loading more activity with real data refresh
+    setTimeout(() => {
+        // Store the filter state before reload
+        sessionStorage.setItem('dashboardFilter', currentFilter);
+        sessionStorage.setItem('scrollPosition', scrollPosition);
+        sessionStorage.setItem('loadMoreClicked', 'true');
+        
+        // Refresh the page
+        location.reload();
+    }, 1000);
+}
+
+// Helper function to get current filter
+function getCurrentFilter() {
+    const filterBtn = document.getElementById('activityFilterBtn');
+    if (!filterBtn) return 'all';
+    
+    const filterText = filterBtn.textContent.toLowerCase();
+    
+    if (filterText.includes('teachers')) return 'teachers';
+    if (filterText.includes('courses')) return 'courses';
+    if (filterText.includes('enrollments')) return 'enrollments';
+    return 'all';
+}
+
+// Enhanced notification function
+function showSuccessNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'position-fixed top-0 end-0 p-3';
+    notification.style.zIndex = '9999';
+    
+    notification.innerHTML = `
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close btn-close-white" onclick="this.closest('.position-fixed').remove()"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 3000);
+}
+
+function showErrorNotification(message) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'position-fixed top-0 end-0 p-3';
+    notification.style.zIndex = '9999';
+    
+    notification.innerHTML = `
+        <div class="toast show" role="alert">
+            <div class="toast-header bg-danger text-white">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close btn-close-white" onclick="this.closest('.position-fixed').remove()"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', function() {
+    if (analyticsChart) {
+        analyticsChart.destroy();
+    }
+});
 </script>
 @endpush
-</div>
-@endsection

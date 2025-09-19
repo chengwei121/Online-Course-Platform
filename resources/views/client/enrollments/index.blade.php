@@ -44,8 +44,19 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Dashboard Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">My Learning Dashboard</h1>
-            <p class="mt-2 text-gray-600">Track your progress and continue learning</p>
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">My Learning Dashboard</h1>
+                    <p class="mt-2 text-gray-600">Track your progress and continue learning</p>
+                </div>
+                <div class="hidden sm:block">
+                    <a href="{{ route('client.courses.index') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-200">
+                        <i class="fas fa-plus mr-2"></i>
+                        Explore More Courses
+                    </a>
+                </div>
+            </div>
             
             <!-- Course Type Filter -->
             <div class="mt-4 flex gap-2">
@@ -63,6 +74,16 @@
                         class="course-filter px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 bg-gray-200 text-gray-700 hover:bg-gray-300" 
                         data-filter="premium">
                     Premium Courses
+                </button>
+                <button onclick="filterCourses('completed')" 
+                        class="course-filter px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 bg-gray-200 text-gray-700 hover:bg-gray-300" 
+                        data-filter="completed">
+                    Completed
+                </button>
+                <button onclick="filterCourses('in_progress')" 
+                        class="course-filter px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 bg-gray-200 text-gray-700 hover:bg-gray-300" 
+                        data-filter="in_progress">
+                    In Progress
                 </button>
             </div>
         </div>
@@ -137,9 +158,11 @@
                             ->where('completed', true)
                             ->count();
                         $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+                        $courseStatus = $progressPercentage >= 95 ? 'completed' : 'in_progress';
                     @endphp
                     <div class="course-card bg-white rounded-lg shadow-sm overflow-hidden" 
-                         data-course-type="{{ $enrollment->course->is_free ? 'free' : 'premium' }}">
+                         data-course-type="{{ $enrollment->course->is_free ? 'free' : 'premium' }}"
+                         data-course-status="{{ $courseStatus }}">
                         <!-- Course Thumbnail -->
                         <div class="relative h-48">
                             <img src="{{ $enrollment->course->thumbnail }}" 
@@ -287,7 +310,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Filter courses
         document.querySelectorAll('.course-card').forEach(card => {
-            if (type === 'all' || card.dataset.courseType === type) {
+            const courseType = card.dataset.courseType;
+            const courseStatus = card.dataset.courseStatus;
+            let shouldShow = false;
+            
+            if (type === 'all') {
+                shouldShow = true;
+            } else if (type === 'free' || type === 'premium') {
+                shouldShow = courseType === type;
+            } else if (type === 'completed' || type === 'in_progress') {
+                shouldShow = courseStatus === type;
+            }
+            
+            if (shouldShow) {
                 card.style.display = 'block';
             } else {
                 card.style.display = 'none';

@@ -17,12 +17,12 @@ class TeacherMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect()->route('teacher.login');
+            return redirect()->route('login');
         }
 
         if (!Auth::user()->isTeacher()) {
             Auth::logout();
-            return redirect()->route('teacher.login')->with('error', 'Access denied. Teachers only.');
+            return redirect()->route('login')->with('error', 'Access denied. Teachers only.');
         }
 
         return $next($request);

@@ -869,9 +869,14 @@
                 <nav class="hidden lg:flex items-center space-x-6">
                     @auth
                         <a href="{{ route('client.courses.index') }}" 
-                           class="nav-link text-sm lg:text-base {{ request()->routeIs('client.courses.*') ? 'active' : '' }}">
+                           class="nav-link text-sm lg:text-base {{ request()->routeIs('client.courses.*') && !request()->routeIs('client.courses.learn') ? 'active' : '' }}">
                             <i class="fas fa-graduation-cap mr-2"></i>
                             Courses
+                        </a>
+                        <a href="{{ route('client.enrollments.index') }}" 
+                           class="nav-link text-sm lg:text-base {{ request()->routeIs('client.enrollments.*') ? 'active' : '' }}">
+                            <i class="fas fa-bookmark mr-2"></i>
+                            My Learning
                         </a>
                     @endauth
                 </nav>
@@ -936,7 +941,14 @@
 
                                     <!-- Menu Items -->
                                     <div class="p-2">
-                                        <div class="grid grid-cols-1 gap-2 mb-2">
+                                        <div class="grid grid-cols-2 gap-2 mb-3">
+                                            <a href="{{ route('client.enrollments.index') }}" 
+                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 mb-1">
+                                                    <i class="fas fa-bookmark text-sm"></i>
+                                                </div>
+                                                <span class="text-xs font-medium text-gray-700">My Learning</span>
+                                            </a>
                                             <a href="#" 
                                                class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-1">
@@ -1032,11 +1044,15 @@
              x-cloak>
             <div class="pt-2 pb-3 space-y-1 px-4 sm:px-6">
                 <a href="{{ route('client.courses.index') }}"
-                   class="block py-2 px-3 text-base font-medium rounded-lg transition {{ request()->routeIs('client.courses.*') ? 'bg-primary-50 text-primary' : 'text-gray-700 hover:bg-gray-100' }}">
+                   class="block py-2 px-3 text-base font-medium rounded-lg transition {{ request()->routeIs('client.courses.*') && !request()->routeIs('client.courses.learn') ? 'bg-primary-50 text-primary' : 'text-gray-700 hover:bg-gray-100' }}">
                     <i class="fas fa-graduation-cap mr-2"></i>
                     Courses
                 </a>
-
+                <a href="{{ route('client.enrollments.index') }}"
+                   class="block py-2 px-3 text-base font-medium rounded-lg transition {{ request()->routeIs('client.enrollments.*') ? 'bg-primary-50 text-primary' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i class="fas fa-bookmark mr-2"></i>
+                    My Learning
+                </a>
             </div>
 
             @auth

@@ -31,7 +31,7 @@
             </div>
 
             <!-- Submission Form -->
-            @if(!$submission || $submission->status !== 'graded')
+            @if(!$submission || is_null($submission->score))
                 <div class="border-t border-gray-200 pt-8">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Your Submission</h2>
                     <form action="{{ route('client.assignments.submit', $assignment) }}" method="POST" enctype="multipart/form-data">
@@ -46,7 +46,7 @@
                                               name="content" 
                                               rows="8" 
                                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                              placeholder="Write your assignment submission here...">{{ $submission ? $submission->content : '' }}</textarea>
+                                              placeholder="Write your assignment submission here...">{{ $submission ? $submission->submission_text : '' }}</textarea>
                                 </div>
                                 @error('content')
                                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -63,10 +63,10 @@
                                            name="file" 
                                            class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                 </div>
-                                @if($submission && $submission->file_path)
+                                @if($submission && $submission->submission_file)
                                     <p class="mt-2 text-sm text-gray-500">
                                         Current file: 
-                                        <a href="{{ asset('storage/' . $submission->file_path) }}" 
+                                        <a href="{{ asset('storage/' . $submission->submission_file) }}" 
                                            class="text-indigo-600 hover:text-indigo-500"
                                            target="_blank">
                                             View Attachment
@@ -94,9 +94,9 @@
                     <div class="bg-gray-50 rounded-lg p-4">
                         <div class="mb-4">
                             <h3 class="text-sm font-medium text-gray-700">Your Work</h3>
-                            <p class="mt-2 text-gray-600">{{ $submission->content }}</p>
-                            @if($submission->file_path)
-                                <a href="{{ asset('storage/' . $submission->file_path) }}" 
+                            <p class="mt-2 text-gray-600">{{ $submission->submission_text }}</p>
+                            @if($submission->submission_file)
+                                <a href="{{ asset('storage/' . $submission->submission_file) }}" 
                                    class="mt-2 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500"
                                    target="_blank">
                                     View Attachment
@@ -111,10 +111,10 @@
                             </div>
                         @endif
                         
-                        @if($submission->grade)
+                        @if($submission->score)
                             <div class="border-t border-gray-200 pt-4 mt-4">
                                 <h3 class="text-sm font-medium text-gray-700">Grade</h3>
-                                <p class="mt-2 text-2xl font-bold text-gray-900">{{ $submission->grade }}/100</p>
+                                <p class="mt-2 text-2xl font-bold text-gray-900">{{ $submission->score }}/100</p>
                             </div>
                         @endif
                     </div>

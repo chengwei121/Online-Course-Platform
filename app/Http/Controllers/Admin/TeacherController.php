@@ -15,14 +15,43 @@ class TeacherController extends Controller
     /**
      * Display a listing of teachers.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $teachers = Teacher::with('user')
-            ->withCount('courses')
-            ->latest()
-            ->paginate(15);
+        $query = Teacher::with('user')->withCount('courses');
 
-        return view('admin.teachers.index', compact('teachers'));
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            })->orWhere('department', 'like', "%{$search}%")
+              ->orWhere('qualification', 'like', "%{$search}%");
+        }
+
+        // Status filter
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // Department filter
+        if ($request->has('department') && !empty($request->department)) {
+            $query->where('department', $request->department);
+        }
+
+        $teachers = $query->latest()
+                         ->paginate(15)
+                         ->withQueryString();
+
+        // Statistics
+        $stats = [
+            'total' => Teacher::count(),
+            'active' => Teacher::where('status', 'active')->count(),
+            'inactive' => Teacher::where('status', 'inactive')->count(),
+            'with_courses' => Teacher::has('courses')->count(),
+        ];
+
+        return view('admin.teachers.index', compact('teachers', 'stats'));
     }
 
     /**
@@ -39,16 +68,28 @@ class TeacherController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|min:2|regex:/^[a-zA-Z\s]+$/',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone' => 'nullable|string|max:20',
-            'qualification' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
-            'bio' => 'nullable|string',
-            'hourly_rate' => 'nullable|numeric|min:0',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^(0[1-9][0-9]?|1[0-9])-[0-9]{3,4}-[0-9]{4}$/'
+            ],
+            'qualification' => 'required|in:Certificate,Diploma,Bachelor\'s Degree,Master\'s Degree,PhD/Doctorate,Professional Certification',
+            'department' => 'required|in:Computer Science & IT,Engineering,Business & Management,Mathematics & Statistics,Science & Technology,Arts & Design,Languages & Literature,Health & Medicine,Education & Training,Finance & Accounting,Marketing & Sales,Other',
+            'bio' => 'nullable|string|max:1000',
+            'hourly_rate' => 'nullable|numeric|min:0|max:1000',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:active,inactive'
+        ], [
+            'name.regex' => 'Name may only contain letters and spaces.',
+            'phone.required' => 'Malaysian phone number is required.',
+            'phone.regex' => 'Please enter a valid Malaysian phone number format (XX-XXX-XXXX).',
+            'qualification.in' => 'Please select a valid qualification.',
+            'department.in' => 'Please select a valid department.',
+            'hourly_rate.max' => 'Hourly rate cannot exceed RM 1000.',
+            'bio.max' => 'Biography cannot exceed 1000 characters.'
         ]);
 
         // Create user account
@@ -110,16 +151,28 @@ class TeacherController extends Controller
     public function update(Request $request, Teacher $teacher)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|min:2|regex:/^[a-zA-Z\s]+$/',
             'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->user_id,
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'phone' => 'nullable|string|max:20',
-            'qualification' => 'required|string|max:255',
-            'department' => 'required|string|max:255',
-            'bio' => 'nullable|string',
-            'hourly_rate' => 'nullable|numeric|min:0',
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^(0[1-9][0-9]?|1[0-9])-[0-9]{3,4}-[0-9]{4}$/'
+            ],
+            'qualification' => 'required|in:Certificate,Diploma,Bachelor\'s Degree,Master\'s Degree,PhD/Doctorate,Professional Certification',
+            'department' => 'required|in:Computer Science & IT,Engineering,Business & Management,Mathematics & Statistics,Science & Technology,Arts & Design,Languages & Literature,Health & Medicine,Education & Training,Finance & Accounting,Marketing & Sales,Other',
+            'bio' => 'nullable|string|max:1000',
+            'hourly_rate' => 'nullable|numeric|min:0|max:1000',
             'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'status' => 'required|in:active,inactive'
+        ], [
+            'name.regex' => 'Name may only contain letters and spaces.',
+            'phone.required' => 'Malaysian phone number is required.',
+            'phone.regex' => 'Please enter a valid Malaysian phone number format (XX-XXX-XXXX).',
+            'qualification.in' => 'Please select a valid qualification.',
+            'department.in' => 'Please select a valid department.',
+            'hourly_rate.max' => 'Hourly rate cannot exceed RM 1000.',
+            'bio.max' => 'Biography cannot exceed 1000 characters.'
         ]);
 
         // Update user account

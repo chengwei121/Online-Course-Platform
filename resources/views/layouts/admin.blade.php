@@ -114,15 +114,31 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.categories.index') }}">
                                 <i class="fas fa-folder me-2"></i>
                                 Categories
                             </a>
                         </li>
+                        
+                        <!-- FINANCIAL MANAGEMENT SECTION -->
+                        <li class="nav-section-header mt-3">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-dollar-sign me-2"></i>Financial Management
+                            </small>
+                        </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-file-alt me-2"></i>
-                                Lessons
+                            <a class="nav-link {{ request()->routeIs('admin.payments.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.payments.index') }}">
+                                <i class="fas fa-credit-card me-2"></i>
+                                Payments
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.payments.statistics') ? 'active' : '' }}" 
+                               href="{{ route('admin.payments.statistics') }}">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Revenue Analytics
                             </a>
                         </li>
                         
@@ -147,59 +163,10 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {{ request()->routeIs('admin.admins.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.admins.index') }}">
                                 <i class="fas fa-user-shield me-2"></i>
                                 Administrators
-                            </a>
-                        </li>
-                        
-                        <!-- ANALYTICS & REPORTS SECTION -->
-                        <li class="nav-section-header mt-3">
-                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
-                                <i class="fas fa-chart-line me-2"></i>Analytics & Reports
-                            </small>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-chart-bar me-2"></i>
-                                Performance Reports
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-chart-pie me-2"></i>
-                                User Analytics
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-download me-2"></i>
-                                Export Data
-                            </a>
-                        </li>
-                        
-                        <!-- SYSTEM SECTION -->
-                        <li class="nav-section-header mt-3">
-                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
-                                <i class="fas fa-cogs me-2"></i>System
-                            </small>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-sliders-h me-2"></i>
-                                Settings
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-shield-alt me-2"></i>
-                                Security
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-database me-2"></i>
-                                Backup
                             </a>
                         </li>
                     </ul>
@@ -691,6 +658,56 @@
         window.performAjaxRequest = performAjaxRequest;
         window.showErrorNotification = showErrorNotification;
         window.showSuccessNotification = showSuccessNotification;
+        
+        // Auto-close flash messages after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const flashMessages = document.querySelectorAll('.alert:not(.position-fixed)');
+            flashMessages.forEach(function(alert) {
+                // Add a progress bar to show remaining time
+                const progressBar = document.createElement('div');
+                progressBar.style.cssText = `
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    height: 3px;
+                    background-color: rgba(255,255,255,0.7);
+                    width: 100%;
+                    transform-origin: left;
+                    animation: alertProgress 5s linear forwards;
+                `;
+                
+                // Add CSS for the progress animation
+                if (!document.getElementById('alertProgressCSS')) {
+                    const style = document.createElement('style');
+                    style.id = 'alertProgressCSS';
+                    style.textContent = `
+                        @keyframes alertProgress {
+                            from { transform: scaleX(1); }
+                            to { transform: scaleX(0); }
+                        }
+                        .alert { position: relative; overflow: hidden; }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+                alert.appendChild(progressBar);
+                
+                // Auto-close after 5 seconds
+                setTimeout(function() {
+                    if (alert.parentNode) {
+                        // Fade out effect
+                        alert.style.transition = 'opacity 0.5s ease-out';
+                        alert.style.opacity = '0';
+                        
+                        setTimeout(function() {
+                            if (alert.parentNode) {
+                                alert.remove();
+                            }
+                        }, 500);
+                    }
+                }, 5000);
+            });
+        });
     </script>
     
     @stack('scripts')

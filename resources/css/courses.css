@@ -429,6 +429,7 @@
 /* Filter Section */
 .filter-section {
     border-bottom: 1px solid #e5e7eb;
+    padding: 1rem;
 }
 
 .filter-section:last-child {
@@ -440,144 +441,45 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1.5rem;
     cursor: pointer;
-    user-select: none;
+    padding: 0.5rem 0;
 }
 
 .filter-title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #374151;
+    color: #1f2937;
+}
+
+/* Chevron Icon */
+.chevron {
+    width: 1.25rem;
+    height: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chevron-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition: transform 0.3s ease;
+}
+
+.filter-header[aria-expanded="true"] .chevron-icon {
+    transform: rotate(180deg);
 }
 
 /* Filter Content */
 .filter-content {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease-out;
-    padding: 0 1.5rem;
+    transition: max-height 0.3s ease-in-out;
 }
 
 .filter-content.show {
-    max-height: 500px;
-    padding-bottom: 1rem;
-}
-
-/* Filter Items */
-.filter-item {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem 0;
-    cursor: pointer;
-}
-
-.filter-item:hover {
-    background-color: #f9fafb;
-}
-
-/* Custom Checkbox */
-.filter-checkbox {
-    width: 1rem;
-    height: 1rem;
-    border: 2px solid #d1d5db;
-    border-radius: 0.25rem;
-    margin-right: 0.75rem;
-    cursor: pointer;
-    position: relative;
-}
-
-.filter-checkbox:checked {
-    background-color: #4f46e5;
-    border-color: #4f46e5;
-}
-
-/* Filter Label */
-.filter-label {
-    flex: 1;
-    font-size: 0.875rem;
-    color: #4b5563;
-}
-
-/* Filter Count */
-.filter-count {
-    font-size: 0.75rem;
-    color: #6b7280;
-    background-color: #f3f4f6;
-    padding: 0.125rem 0.5rem;
-    border-radius: 9999px;
-    margin-left: 0.5rem;
-}
-
-/* Active Filters */
-.active-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 1rem 0;
-}
-
-.filter-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    background-color: #f3f4f6;
-    border-radius: 9999px;
-    font-size: 0.875rem;
-    color: #374151;
-}
-
-.remove-filter {
-    margin-left: 0.5rem;
-    color: #6b7280;
-    cursor: pointer;
-}
-
-.remove-filter:hover {
-    color: #ef4444;
-}
-
-/* Clear All Button */
-.clear-filters {
-    font-size: 0.875rem;
-    color: #4f46e5;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-.clear-filters:hover {
-    color: #4338ca;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 768px) {
-    .filter-drawer {
-        position: fixed;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100vh;
-        background-color: white;
-        z-index: 50;
-        transition: left 0.3s ease-in-out;
-        overflow-y: auto;
-    }
-
-    .filter-drawer.open {
-        left: 0;
-    }
-
-    .filter-drawer-header {
-        position: sticky;
-        top: 0;
-        background-color: white;
-        padding: 1rem;
-        border-bottom: 1px solid #e5e7eb;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        z-index: 10;
-    }
+    max-height: none;
+    margin-top: 0.75rem;
 }
 
 /* Filters Container */
@@ -592,10 +494,7 @@
     .filters-container {
         width: 280px;
         position: sticky;
-        /* Increasing top spacing to avoid header collision */
-        top: 5rem;
-        height: calc(100vh - 6rem);
-        overflow-y: auto;
+        top: 1rem;
     }
 }
 

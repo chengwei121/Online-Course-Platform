@@ -52,12 +52,13 @@ class DashboardController extends Controller
             return $this->getOptimizedRecentCourses();
         });
 
+        // Get fresh recent data (no cache for real-time accuracy)
+        $recentEnrollments = $this->getOptimizedRecentEnrollments();
+        
         // Get real-time chart data for the last 6 months (default)
-        $chartData = Cache::remember(self::CACHE_CHART_DATA . 'month', self::CACHE_DURATION_CHART, function () {
-            return $this->getOptimizedChartData('month');
-        });
+        $chartData = $this->getOptimizedChartData('month');
 
-        return view('admin.dashboard', compact('stats', 'recentTeachers', 'recentCourses', 'chartData', 'performanceMetrics', 'growthTrends'));
+        return view('admin.dashboard', compact('stats', 'recentTeachers', 'recentCourses', 'recentEnrollments', 'chartData', 'performanceMetrics', 'growthTrends'));
     }
 
     public function getRealtimeStats(Request $request)
@@ -76,11 +77,21 @@ class DashboardController extends Controller
                 $performanceMetrics = $this->getPerformanceMetrics($stats);
                 Cache::put(self::CACHE_PERFORMANCE, $performanceMetrics, self::CACHE_DURATION_PERFORMANCE);
             }
+
+            // Get fresh recent activity data
+            $recentEnrollments = $this->getOptimizedRecentEnrollments();
+            $recentTeachers = $this->getOptimizedRecentTeachers();
+            $recentCourses = $this->getOptimizedRecentCourses();
             
             return response()->json([
                 'success' => true,
                 'stats' => $stats,
                 'performanceMetrics' => $performanceMetrics,
+                'recentActivity' => [
+                    'enrollments' => $recentEnrollments,
+                    'teachers' => $recentTeachers,
+                    'courses' => $recentCourses
+                ],
                 'timestamp' => now()->toISOString(),
                 'lastUpdated' => now()->format('M d, Y H:i:s'),
                 'cached' => true
@@ -157,11 +168,9 @@ class DashboardController extends Controller
     {
         try {
             $period = $request->get('period', 'month');
-            $cacheKey = self::CACHE_CHART_DATA . $period;
             
-            $chartData = Cache::remember($cacheKey, self::CACHE_DURATION_CHART, function () use ($period) {
-                return $this->getOptimizedChartData($period);
-            });
+            // Always get fresh real-time data instead of cached data
+            $chartData = $this->getOptimizedChartData($period);
             
             return response()->json($chartData);
         } catch (\Exception $e) {
@@ -208,11 +217,12 @@ class DashboardController extends Controller
     }
 
     /**
-     * Optimized recent teachers query - select only needed columns
+     * Optimized recent teachers query - only from last 30 days
      */
     private function getOptimizedRecentTeachers()
     {
         return Teacher::select(['id', 'name', 'email', 'department', 'status', 'created_at'])
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->whereNotNull('created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -220,7 +230,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Optimized recent courses query - eager loading with selected columns
+     * Optimized recent courses query - only from last 30 days
      */
     private function getOptimizedRecentCourses()
     {
@@ -229,6 +239,24 @@ class DashboardController extends Controller
                 'instructor:id,name',
                 'category:id,name'
             ])
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
+            ->whereNotNull('created_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+    }
+
+    /**
+     * Optimized recent enrollments query - only from last 30 days
+     */
+    private function getOptimizedRecentEnrollments()
+    {
+        return Enrollment::select(['id', 'user_id', 'course_id', 'created_at'])
+            ->with([
+                'user:id,name',
+                'course:id,title,price'
+            ])
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->whereNotNull('created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -247,143 +275,55 @@ class DashboardController extends Controller
 
         switch ($period) {
             case 'week':
-                // Single query for all data in the last 7 days
-                $results = DB::select("
-                    SELECT 
-                        DATE(created_at) as date,
-                        'enrollment' as type,
-                        COUNT(*) as count
-                    FROM enrollments 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                    GROUP BY DATE(created_at), type
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        DATE(created_at) as date,
-                        'course' as type,
-                        COUNT(*) as count
-                    FROM courses 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                    GROUP BY DATE(created_at), type
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        DATE(created_at) as date,
-                        'teacher' as type,
-                        COUNT(*) as count
-                    FROM teachers 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                    GROUP BY DATE(created_at), type
-                    
-                    ORDER BY date, type
-                ");
-                
-                // Process results and fill in missing dates
+                // Real-time data for the last 7 days
                 for ($i = 6; $i >= 0; $i--) {
                     $date = Carbon::now()->subDays($i);
                     $labels[] = $date->format('M d');
                     $dateStr = $date->format('Y-m-d');
                     
-                    $enrollmentData[] = collect($results)->where('date', $dateStr)->where('type', 'enrollment')->sum('count');
-                    $courseData[] = collect($results)->where('date', $dateStr)->where('type', 'course')->sum('count');
-                    $teacherData[] = collect($results)->where('date', $dateStr)->where('type', 'teacher')->sum('count');
+                    // Get actual counts for each day
+                    $enrollmentData[] = Enrollment::whereDate('created_at', $dateStr)->count();
+                    $courseData[] = Course::whereDate('created_at', $dateStr)->count();
+                    $teacherData[] = Teacher::whereDate('created_at', $dateStr)->count();
                 }
                 break;
 
             case 'year':
-                // Optimized query for 12 months
-                $results = DB::select("
-                    SELECT 
-                        YEAR(created_at) as year,
-                        MONTH(created_at) as month,
-                        'enrollment' as type,
-                        COUNT(*) as count
-                    FROM enrollments 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-                    GROUP BY YEAR(created_at), MONTH(created_at), type
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        YEAR(created_at) as year,
-                        MONTH(created_at) as month,
-                        'course' as type,
-                        COUNT(*) as count
-                    FROM courses 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-                    GROUP BY YEAR(created_at), MONTH(created_at), type
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        YEAR(created_at) as year,
-                        MONTH(created_at) as month,
-                        'teacher' as type,
-                        COUNT(*) as count
-                    FROM teachers 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-                    GROUP BY YEAR(created_at), MONTH(created_at), type
-                    
-                    ORDER BY year, month, type
-                ");
-
+                // Real-time data for 12 months
                 for ($i = 11; $i >= 0; $i--) {
                     $date = Carbon::now()->subMonths($i);
                     $labels[] = $date->format('M Y');
                     
-                    $enrollmentData[] = collect($results)->where('year', $date->year)->where('month', $date->month)->where('type', 'enrollment')->sum('count');
-                    $courseData[] = collect($results)->where('year', $date->year)->where('month', $date->month)->where('type', 'course')->sum('count');
-                    $teacherData[] = collect($results)->where('year', $date->year)->where('month', $date->month)->where('type', 'teacher')->sum('count');
+                    // Get actual counts for each month
+                    $enrollmentData[] = Enrollment::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->count();
+                    $courseData[] = Course::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->count();
+                    $teacherData[] = Teacher::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->count();
                 }
                 break;
 
             case 'month':
             default:
-                // Optimized query for 6 months
-                $results = DB::select("
-                    SELECT 
-                        YEAR(created_at) as year,
-                        MONTH(created_at) as month,
-                        'enrollment' as type,
-                        COUNT(*) as count
-                    FROM enrollments 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-                    GROUP BY YEAR(created_at), MONTH(created_at), type
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        YEAR(created_at) as year,
-                        MONTH(created_at) as month,
-                        'course' as type,
-                        COUNT(*) as count
-                    FROM courses 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-                    GROUP BY YEAR(created_at), MONTH(created_at), type
-                    
-                    UNION ALL
-                    
-                    SELECT 
-                        YEAR(created_at) as year,
-                        MONTH(created_at) as month,
-                        'teacher' as type,
-                        COUNT(*) as count
-                    FROM teachers 
-                    WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
-                    GROUP BY YEAR(created_at), MONTH(created_at), type
-                    
-                    ORDER BY year, month, type
-                ");
-
+                // Real-time data for 6 months
                 for ($i = 5; $i >= 0; $i--) {
                     $date = Carbon::now()->subMonths($i);
                     $labels[] = $date->format('M Y');
                     
-                    $enrollmentData[] = collect($results)->where('year', $date->year)->where('month', $date->month)->where('type', 'enrollment')->sum('count');
-                    $courseData[] = collect($results)->where('year', $date->year)->where('month', $date->month)->where('type', 'course')->sum('count');
-                    $teacherData[] = collect($results)->where('year', $date->year)->where('month', $date->month)->where('type', 'teacher')->sum('count');
+                    // Get actual counts for each month
+                    $enrollmentData[] = Enrollment::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->count();
+                    $courseData[] = Course::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->count();
+                    $teacherData[] = Teacher::whereYear('created_at', $date->year)
+                        ->whereMonth('created_at', $date->month)
+                        ->count();
                 }
                 break;
         }

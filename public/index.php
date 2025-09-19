@@ -3,6 +3,10 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
+// Increase execution time and memory limits for dashboard operations
+ini_set('max_execution_time', 300); // 5 minutes
+ini_set('memory_limit', '1024M');   // 1GB memory
+
 define('LARAVEL_START', microtime(true));
 
 // Determine if the application is in maintenance mode...

@@ -68,22 +68,61 @@
                             <div class="relative w-full max-w-4xl mx-auto bg-black">
                                 <div class="relative w-full aspect-[16/9]">
                                     @if(Str::startsWith($lesson->video_url, ['http://', 'https://']))
-                                        <iframe 
-                                            src="{{ $lesson->video_url }}" 
-                                            class="absolute top-0 left-0 w-full h-full"
-                                            frameborder="0" 
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                            allowfullscreen>
-                                        </iframe>
+                                        {{-- External URL (YouTube, Vimeo, etc.) --}}
+                                        @if(Str::contains($lesson->video_url, 'youtube.com/watch'))
+                                            {{-- YouTube video - convert to embed URL --}}
+                                            @php
+                                                $videoId = null;
+                                                parse_str(parse_url($lesson->video_url, PHP_URL_QUERY), $query);
+                                                if (isset($query['v'])) {
+                                                    $videoId = $query['v'];
+                                                }
+                                                $embedUrl = $videoId ? "https://www.youtube.com/embed/{$videoId}" : $lesson->video_url;
+                                            @endphp
+                                            <iframe 
+                                                src="{{ $embedUrl }}" 
+                                                class="absolute top-0 left-0 w-full h-full"
+                                                frameborder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowfullscreen>
+                                            </iframe>
+                                        @elseif(Str::contains($lesson->video_url, 'youtu.be'))
+                                            {{-- YouTube short URL --}}
+                                            @php
+                                                $videoId = basename(parse_url($lesson->video_url, PHP_URL_PATH));
+                                                $embedUrl = "https://www.youtube.com/embed/{$videoId}";
+                                            @endphp
+                                            <iframe 
+                                                src="{{ $embedUrl }}" 
+                                                class="absolute top-0 left-0 w-full h-full"
+                                                frameborder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowfullscreen>
+                                            </iframe>
+                                        @else
+                                            {{-- Other external URLs --}}
+                                            <iframe 
+                                                src="{{ $lesson->video_url }}" 
+                                                class="absolute top-0 left-0 w-full h-full"
+                                                frameborder="0" 
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                allowfullscreen>
+                                            </iframe>
+                                        @endif
                                     @else
+                                        {{-- Uploaded video file --}}
                                         <video 
                                             id="lessonVideo" 
                                             class="absolute top-0 left-0 w-full h-full object-contain" 
                                             controls 
                                             playsinline
-                                            preload="metadata">
-                                            <source src="{{ asset('storage/' . $lesson->video_url) }}" type="video/mp4">
-                                            Your browser does not support the video tag.
+                                            preload="metadata"
+                                            crossorigin="anonymous">
+                                            <source src="{{ $lesson->getDisplayVideoUrl() }}" type="video/mp4">
+                                            <p class="text-white text-center p-4">
+                                                Your browser does not support the video tag. 
+                                                <a href="{{ $lesson->getDisplayVideoUrl() }}" class="text-blue-400 underline">Download the video</a>
+                                            </p>
                                         </video>
                                     @endif
                                 </div>
@@ -134,14 +173,36 @@
                             </div>
 
                             <!-- Mark as Complete Button -->
-                            <button type="button" 
-                                    onclick="markAsComplete()"
-                                    class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
-                                <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Mark as Complete
-                            </button>
+                            @php
+                                $lessonProgress = $progress ? $progress->where('lesson_id', $lesson->id)->first() : null;
+                                $isCompleted = $lessonProgress && $lessonProgress->completed;
+                            @endphp
+                            
+                            @if($isCompleted)
+                                <!-- Completed State -->
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                                    <div class="flex items-center justify-center text-green-700">
+                                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <div class="text-center">
+                                            <h3 class="text-lg font-semibold">Lesson Completed!</h3>
+                                            <p class="text-sm text-green-600 mt-1">You can rewatch this lesson anytime</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            @else
+                                <!-- Not Completed State -->
+                                <button type="button" 
+                                        id="markCompleteBtn"
+                                        onclick="markAsComplete()"
+                                        class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200">
+                                    <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Mark as Complete
+                                </button>
+                            @endif
 
                             @if(!$course->is_free && $lesson->assignments && $lesson->assignments->count() > 0)
                                 <!-- Assignments Section -->
@@ -241,12 +302,66 @@ let lastValidTime = 0;
 let skipAttempts = 0;
 const maxSkipAttempts = 3;
 const maxSeekAhead = 120; // Maximum seconds to skip ahead (2 minutes)
+let isCompleted = false; // Global variable for completion status
 
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.querySelector('[data-video-progress]');
     const videoProgress = parseInt(container.dataset.videoProgress);
     const lessonDuration = parseInt(container.dataset.lessonDuration);
-    const isCompleted = container.dataset.isCompleted === 'true';
+    isCompleted = container.dataset.isCompleted === 'true';
+    
+    // Initialize completion state
+    if (isCompleted) {
+        initializeCompletedLesson();
+    }
+    
+    // Initialize video progress display
+    updateProgressDisplay(isCompleted);
+    
+    console.log('Page loaded with data:', { videoProgress, lessonDuration, isCompleted });
+    
+    // Set initial progress display immediately
+    if (isCompleted) {
+        // For completed lessons, always show 100%
+        console.log('Setting progress to 100% for completed lesson');
+        
+        const progressBar = document.getElementById('progressBar');
+        const progressPercentage = document.getElementById('progressPercentage');
+        const currentTimeElement = document.getElementById('currentTime');
+        
+        if (progressBar) {
+            progressBar.style.width = '100%';
+            console.log('Initial progress bar set to: 100%');
+        }
+        if (progressPercentage) {
+            progressPercentage.textContent = '100%';
+            console.log('Initial progress percentage set to: 100%');
+        }
+        if (currentTimeElement && lessonDuration > 0) {
+            currentTimeElement.textContent = formatTime(lessonDuration);
+            console.log('Initial current time set to full duration:', formatTime(lessonDuration));
+        }
+    } else if (videoProgress > 0 && lessonDuration > 0) {
+        const initialPercentage = Math.min((videoProgress / lessonDuration) * 100, 100);
+        console.log('Setting initial progress:', initialPercentage + '%');
+        
+        const progressBar = document.getElementById('progressBar');
+        const progressPercentage = document.getElementById('progressPercentage');
+        const currentTimeElement = document.getElementById('currentTime');
+        
+        if (progressBar) {
+            progressBar.style.width = `${initialPercentage}%`;
+            console.log('Initial progress bar set to:', initialPercentage + '%');
+        }
+        if (progressPercentage) {
+            progressPercentage.textContent = `${Math.round(initialPercentage)}%`;
+            console.log('Initial progress percentage set to:', Math.round(initialPercentage) + '%');
+        }
+        if (currentTimeElement) {
+            currentTimeElement.textContent = formatTime(videoProgress);
+            console.log('Initial current time set to:', formatTime(videoProgress));
+        }
+    }
     
     // Set initial state
     if (isCompleted || videoProgress >= lessonDuration) {
@@ -256,7 +371,52 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize video player
     video = document.getElementById('lessonVideo');
+    
+    // Try to immediately get duration if video is ready
+    if (video) {
+        // Try multiple approaches to get duration immediately
+        setTimeout(function() {
+            console.log('Checking video duration on page load:', video.duration);
+            if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+                document.getElementById('totalTime').textContent = formatTime(video.duration);
+                document.getElementById('currentTime').textContent = formatTime(video.currentTime);
+                updateVideoProgress(video.currentTime, video.duration);
+            } else {
+                // Force video to load metadata
+                video.load();
+            }
+        }, 500);
+    }
+    
     initializeVideoPlayer();
+    
+    // Backup progress update - runs every 2 seconds to ensure progress is shown
+    setInterval(function() {
+        if (video && video.currentTime > 0) {
+            const currentTime = video.currentTime;
+            let duration = video.duration;
+            
+            // Try multiple ways to get duration
+            if (!duration || isNaN(duration)) {
+                const container = document.querySelector('[data-video-progress]');
+                const lessonDuration = parseInt(container.dataset.lessonDuration);
+                if (lessonDuration > 0) {
+                    duration = lessonDuration;
+                }
+            }
+            
+            if (duration && duration > 0) {
+                console.log('Backup progress update:', { currentTime, duration });
+                updateVideoProgress(currentTime, duration);
+            } else {
+                // At least update the current time
+                const currentTimeElement = document.getElementById('currentTime');
+                if (currentTimeElement) {
+                    currentTimeElement.textContent = formatTime(currentTime);
+                }
+            }
+        }
+    }, 2000);
 });
 
 function initializeVideoPlayer() {
@@ -271,40 +431,146 @@ function setupLocalVideo() {
     let lastUpdateTime = 0;
     const updateInterval = 1000;
 
-    // 初始化视频加载事件
+    // Initialize video loading events with multiple fallbacks
     video.addEventListener('loadedmetadata', function() {
-        updateVideoProgress(video.currentTime, video.duration);
+        console.log('Video metadata loaded - Duration:', video.duration);
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            updateVideoProgress(video.currentTime, video.duration);
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+        }
         lastValidTime = video.currentTime;
     });
 
-    // 监控进度更新
+    // Additional event listeners for duration detection
+    video.addEventListener('durationchange', function() {
+        console.log('Duration changed:', video.duration);
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+            updateVideoProgress(video.currentTime, video.duration);
+        }
+    });
+
+    video.addEventListener('canplay', function() {
+        console.log('Video can play - Duration:', video.duration);
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+            updateVideoProgress(video.currentTime, video.duration);
+        }
+    });
+
+    // Force duration check when video starts playing
+    video.addEventListener('play', function() {
+        console.log('Video started playing - Duration:', video.duration);
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+        }
+    });
+
+    // Initialize current progress from database
+    video.addEventListener('loadstart', function() {
+        const container = document.querySelector('[data-video-progress]');
+        const videoProgress = parseInt(container.dataset.videoProgress) || 0;
+        
+        console.log('Video load start - Setting progress to:', videoProgress);
+        if (videoProgress > 0) {
+            video.currentTime = videoProgress;
+        }
+    });
+
+    // Periodic duration check for stubborn videos
+    let durationCheckInterval = setInterval(function() {
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            console.log('Duration detected via interval:', video.duration);
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+            clearInterval(durationCheckInterval);
+        }
+    }, 500);
+
+    // Clear interval after 10 seconds to avoid infinite checking
+    setTimeout(() => {
+        if (durationCheckInterval) {
+            clearInterval(durationCheckInterval);
+        }
+    }, 10000);
+
+    // Monitor progress updates
     video.addEventListener('timeupdate', function() {
         const now = Date.now();
         if (now - lastUpdateTime >= updateInterval) {
             const currentTime = video.currentTime;
             const skipDistance = currentTime - lastValidTime;
             
-            // 检查是否有不正常的跳转
+            console.log('Video timeupdate:', { currentTime, duration: video.duration, skipDistance });
+            
+            // Update duration if it wasn't available before
+            if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+                updateVideoProgress(currentTime, video.duration);
+            } else {
+                // Just update current time if duration is still unknown
+                const currentTimeElement = document.getElementById('currentTime');
+                if (currentTimeElement) {
+                    currentTimeElement.textContent = formatTime(currentTime);
+                    console.log('Updated current time without duration:', formatTime(currentTime));
+                }
+            }
+            
+            // Check for abnormal seeking
             if (skipDistance > maxSeekAhead && !hasWatchedEntireVideo) {
                 skipAttempts++;
                 if (skipAttempts >= maxSkipAttempts) {
                     video.currentTime = lastValidTime;
-                    showWarningModal('您已多次尝试跳过视频。请按顺序观看课程内容。');
+                    showWarningModal('You have attempted to skip multiple times. Please watch the course content in order.');
                     skipAttempts = 0;
                 } else {
                     video.currentTime = lastValidTime;
-                    showWarningModal(`请不要跳过视频内容。剩余${maxSkipAttempts - skipAttempts}次警告。`);
+                    showWarningModal(`Please do not skip video content. ${maxSkipAttempts - skipAttempts} warnings remaining.`);
                 }
             } else if (skipDistance <= maxSeekAhead || hasWatchedEntireVideo) {
                 lastValidTime = currentTime;
-                skipAttempts = Math.max(0, skipAttempts - 1); // 正常观看时逐渐减少警告次数
+                skipAttempts = Math.max(0, skipAttempts - 1); // Gradually reduce warning count during normal viewing
             }
 
             lastUpdateTime = now;
-            updateVideoProgress(video.currentTime, video.duration);
+            
+            // Save progress every update
             saveProgress(video.currentTime);
         }
     });
+
+    // Manual duration check as fallback - outside timeupdate to avoid duplication
+    video.addEventListener('canplaythrough', function() {
+        console.log('Video can play through - Duration:', video.duration);
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+            updateVideoProgress(video.currentTime, video.duration);
+        }
+    });
+
+    // Force refresh of duration every second until we get it - only once per video
+    let durationCheckAttempts = 0;
+    const maxDurationChecks = 20;
+    
+    const forceCheckDuration = setInterval(function() {
+        durationCheckAttempts++;
+        
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            console.log('Duration finally detected:', video.duration);
+            document.getElementById('totalTime').textContent = formatTime(video.duration);
+            document.getElementById('currentTime').textContent = formatTime(video.currentTime);
+            updateVideoProgress(video.currentTime, video.duration);
+            clearInterval(forceCheckDuration);
+        } else if (durationCheckAttempts >= maxDurationChecks) {
+            console.log('Could not detect video duration after', maxDurationChecks, 'attempts');
+            clearInterval(forceCheckDuration);
+        }
+    }, 1000);
+
+    // Clear interval after 10 seconds to avoid infinite checking
+    setTimeout(() => {
+        if (forceCheckDuration) {
+            clearInterval(forceCheckDuration);
+        }
+    }, 10000);
 
     // 视频结束事件
     video.addEventListener('ended', function() {
@@ -438,14 +704,73 @@ function updateYoutubeProgress() {
 }
 
 function updateVideoProgress(currentTime, duration) {
-    if (typeof currentTime !== 'number' || typeof duration !== 'number' || duration <= 0) return;
+    console.log('updateVideoProgress called:', { currentTime, duration });
+    
+    // Don't update progress display if lesson is already completed
+    if (isCompleted) {
+        console.log('Lesson is completed, maintaining 100% progress display');
+        return;
+    }
+    
+    // Validate input parameters
+    if (typeof currentTime !== 'number' || isNaN(currentTime)) currentTime = 0;
+    if (typeof duration !== 'number' || isNaN(duration) || duration <= 0) {
+        // Try to get duration from video element if available
+        if (video && video.duration && !isNaN(video.duration)) {
+            duration = video.duration;
+        } else if (youtubePlayer && typeof youtubePlayer.getDuration === 'function') {
+            duration = youtubePlayer.getDuration();
+        } else {
+            // Default to show current time at least
+            const currentTimeElement = document.getElementById('currentTime');
+            const totalTimeElement = document.getElementById('totalTime');
+            const progressPercentageElement = document.getElementById('progressPercentage');
+            
+            if (currentTimeElement) currentTimeElement.textContent = formatTime(currentTime);
+            if (totalTimeElement) totalTimeElement.textContent = '--:--';
+            if (progressPercentageElement) progressPercentageElement.textContent = '0%';
+            console.log('Duration not available, showing current time only');
+            return;
+        }
+    }
     
     const percentage = Math.min((currentTime / duration) * 100, 100);
+    console.log('Progress calculation:', { currentTime, duration, percentage });
     
-    document.getElementById('progressBar').style.width = `${percentage}%`;
-    document.getElementById('progressPercentage').textContent = `${Math.round(percentage)}%`;
-    document.getElementById('currentTime').textContent = formatTime(currentTime);
-    document.getElementById('totalTime').textContent = formatTime(duration);
+    // Update progress bar
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentage = document.getElementById('progressPercentage');
+    const currentTimeElement = document.getElementById('currentTime');
+    const totalTimeElement = document.getElementById('totalTime');
+    
+    console.log('Progress elements found:', {
+        progressBar: !!progressBar,
+        progressPercentage: !!progressPercentage,
+        currentTimeElement: !!currentTimeElement,
+        totalTimeElement: !!totalTimeElement
+    });
+    
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+        console.log('Progress bar updated to:', percentage + '%');
+    }
+    if (progressPercentage) {
+        progressPercentage.textContent = `${Math.round(percentage)}%`;
+        console.log('Progress percentage updated to:', Math.round(percentage) + '%');
+    }
+    if (currentTimeElement) {
+        currentTimeElement.textContent = formatTime(currentTime);
+        console.log('Current time updated to:', formatTime(currentTime));
+    }
+    if (totalTimeElement) {
+        totalTimeElement.textContent = formatTime(duration);
+        console.log('Total time updated to:', formatTime(duration));
+    }
+    
+    // Save progress to database every 5 seconds
+    if (Math.floor(currentTime) % 5 === 0) {
+        saveProgress(currentTime);
+    }
     
     // Set hasWatchedEntireVideo to true if we've watched at least 95% of the video
     if (percentage >= 95) {
@@ -462,6 +787,12 @@ function formatTime(seconds) {
 }
 
 function saveProgress(currentTime) {
+    // Don't save progress if lesson is already completed
+    if (isCompleted) {
+        console.log('Lesson already completed, skipping progress save');
+        return;
+    }
+    
     if (typeof currentTime !== 'number' || isNaN(currentTime) || currentTime < 0) {
         console.error('Invalid currentTime value:', currentTime);
         return;
@@ -507,6 +838,9 @@ function showSuccessModal() {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
+    // Immediately update the UI to show completed state
+    updateCompletionUI();
+    
     // Hide modal after 3 seconds
     setTimeout(() => {
         modal.classList.remove('flex');
@@ -515,14 +849,102 @@ function showSuccessModal() {
     }, 3000);
 }
 
+function updateCompletionUI() {
+    // Update the global completion status
+    isCompleted = true;
+    
+    // Update progress display to show 100%
+    updateProgressDisplay(true);
+    
+    // Find the mark as complete button and replace it with completed state
+    const markCompleteBtn = document.getElementById('markCompleteBtn');
+    if (markCompleteBtn) {
+        const completedHTML = `
+            <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                <div class="flex items-center justify-center text-green-700">
+                    <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold">Lesson Completed!</h3>
+                        <p class="text-sm text-green-600 mt-1">You can rewatch this lesson anytime</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        markCompleteBtn.outerHTML = completedHTML;
+    }
+    
+    // Update the lesson title badge if it exists
+    const lessonTitle = document.querySelector('h1');
+    if (lessonTitle && !lessonTitle.nextElementSibling?.classList.contains('bg-green-100')) {
+        const badge = document.createElement('span');
+        badge.className = 'inline-flex items-center px-3.5 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800 ml-4';
+        badge.innerHTML = `
+            <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            Completed
+        `;
+        lessonTitle.parentNode.appendChild(badge);
+    }
+}
+
+function initializeCompletedLesson() {
+    // Set hasWatchedEntireVideo to true so skip prevention allows free navigation
+    hasWatchedEntireVideo = true;
+    
+    // Update any progress bars to show 100%
+    updateProgressDisplay(true);
+    
+    console.log('Lesson initialized as completed - free navigation enabled');
+}
+
+function updateProgressDisplay(isCompleted) {
+    // Update progress bars and displays to show 100% if completed
+    if (isCompleted) {
+        // Update the main progress bar
+        const progressBar = document.getElementById('progressBar');
+        if (progressBar) {
+            progressBar.style.width = '100%';
+        }
+        
+        // Update the progress percentage text
+        const progressPercentage = document.getElementById('progressPercentage');
+        if (progressPercentage) {
+            progressPercentage.textContent = '100%';
+        }
+        
+        // Update any additional progress indicators
+        const progressBars = document.querySelectorAll('.progress-bar, [data-progress]');
+        progressBars.forEach(bar => {
+            if (bar.style !== undefined) {
+                bar.style.width = '100%';
+            }
+            if (bar.dataset !== undefined) {
+                bar.dataset.progress = '100';
+            }
+        });
+        
+        // Update progress text displays
+        const progressTexts = document.querySelectorAll('.progress-text, [data-progress-text]');
+        progressTexts.forEach(text => {
+            text.textContent = '100%';
+        });
+        
+        console.log('Progress display updated to 100% for completed lesson');
+    }
+}
+
 function markAsComplete() {
     if (isAutoCompleting) return;
     isAutoCompleting = true;
 
     let currentProgress = 0;
     let duration = 0;
+    
     try {
-        if (video && !isNaN(video.currentTime)) {
+        if (video && !isNaN(video.currentTime) && !isNaN(video.duration)) {
             currentProgress = Math.floor(video.currentTime);
             duration = Math.floor(video.duration);
         } else if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
@@ -533,23 +955,36 @@ function markAsComplete() {
         console.error('Error getting current time:', error);
     }
 
-    // Calculate current progress percentage
-    const progressPercentage = (currentProgress / duration) * 100;
-    
-    // Allow completion if watched at least 95% of the video
-    if (progressPercentage < 95) {
-        alert('You must watch at least 95% of the video before marking it as complete.');
-        isAutoCompleting = false;
-        return;
+    // If we can't get duration from video, allow manual completion
+    if (duration <= 0) {
+        console.log('Duration not available, allowing manual completion');
+        currentProgress = Math.max(60, currentProgress); // Ensure minimum 60 seconds
+    } else {
+        // Calculate current progress percentage
+        const progressPercentage = (currentProgress / duration) * 100;
+        
+        // Allow completion if watched at least 70% OR has watched entire video OR at least 60 seconds
+        if (progressPercentage < 70 && !hasWatchedEntireVideo && currentProgress < 60) {
+            alert('You must watch more of the video before marking it as complete. Please watch at least 70% or 60 seconds minimum.');
+            isAutoCompleting = false;
+            return;
+        }
     }
-
-    // Get the lesson duration in seconds from the data attribute
-    const lessonDuration = parseInt(document.querySelector('[data-lesson-duration]').dataset.lessonDuration);
     
-    // Set the progress to the full lesson duration to ensure completion
+    // Set the progress to a reasonable value
+    // Use actual current progress, but ensure it's at least 60 seconds for completion
+    const finalProgress = Math.max(60, currentProgress);
+    
+    console.log('Marking as complete with progress:', {
+        originalCurrentProgress: currentProgress,
+        duration: duration,
+        finalProgress: finalProgress,
+        hasWatchedEntireVideo: hasWatchedEntireVideo
+    });
+    
     const formData = new FormData();
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-    formData.append('video_progress', lessonDuration);
+    formData.append('video_progress', finalProgress);
     formData.append('completed', 'true');
 
     fetch('{{ route("client.lessons.progress", ["course" => $course->slug, "lesson" => $lesson->id]) }}', {
@@ -567,20 +1002,19 @@ function markAsComplete() {
         if (data.success) {
             showSuccessModal();
         } else {
-            throw new Error(data.message || 'Failed to mark lesson as complete');
+            alert(data.message || 'Failed to mark lesson as complete');
+            isAutoCompleting = false;
         }
     })
     .catch(error => {
         console.error('Error marking lesson as complete:', error);
-        alert(error.message || 'Failed to mark lesson as complete. Please try again.');
-    })
-    .finally(() => {
+        alert('Failed to mark lesson as complete. Please try again.');
         isAutoCompleting = false;
     });
 }
 
-// 更新警告模态框显示函数
-function showWarningModal(message = '您不能跳过视频内容。') {
+// Update warning modal display function
+function showWarningModal(message = 'You cannot skip video content.') {
     const modal = document.getElementById('warningModal');
     if (modal) {
         const messageElement = modal.querySelector('p.text-gray-600');
