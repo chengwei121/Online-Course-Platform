@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'teacher' => \App\Http\Middleware\TeacherMiddleware::class,
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
+            'upload.size' => \App\Http\Middleware\HandleUploadSize::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

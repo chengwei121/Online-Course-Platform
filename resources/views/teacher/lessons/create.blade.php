@@ -94,11 +94,15 @@
                         </h5>
                     </div>
                     <div class="card-body">
+                        <div class="alert alert-success" role="alert">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Upload Limit: 500MB</strong> - You can now upload large MP4 videos directly!
+                        </div>
                         <div class="mb-3">
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="video_source" id="upload_video" value="upload" checked>
                                 <label class="form-check-label" for="upload_video">
-                                    <i class="fas fa-upload me-1"></i>Upload Video File
+                                    <i class="fas fa-upload me-1"></i>Upload Video File (Max 500MB)
                                 </label>
                             </div>
                             <div class="form-check form-check-inline">
@@ -121,7 +125,12 @@
                                     </button>
                                 </div>
                                 <div class="form-text">
-                                    Supported formats: MP4, AVI, MOV, WMV, FLV. Maximum size: 500MB
+                                    <i class="fas fa-info-circle me-1"></i>Supported formats: MP4, AVI, MOV, WMV, FLV. 
+                                    <strong>Maximum size: 500MB</strong><br>
+                                    <small class="text-warning">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>Large files may take several minutes to upload. 
+                                        Please ensure stable internet connection.
+                                    </small>
                                 </div>
                                 @error('video')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -144,11 +153,22 @@
                                        id="video_url" name="video_url" value="{{ old('video_url') }}" 
                                        placeholder="https://youtube.com/watch?v=... or https://vimeo.com/...">
                                 <div class="form-text">
-                                    Support for YouTube, Vimeo, and direct video URLs
+                                    <strong>Supported platforms:</strong> YouTube, Vimeo, and direct video URLs<br>
+                                    <small class="text-success">✅ This option bypasses the 10MB upload limit</small>
                                 </div>
                                 @error('video_url')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-lightbulb me-2"></i>Quick Video Hosting Options:</h6>
+                                <ul class="mb-0">
+                                    <li><strong>YouTube:</strong> Upload to YouTube and use the share URL</li>
+                                    <li><strong>Google Drive:</strong> Upload and get shareable link</li>
+                                    <li><strong>Dropbox:</strong> Upload and create public link</li>
+                                    <li><strong>Vimeo:</strong> Free hosting with direct URLs</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -313,6 +333,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('lessonForm');
     const submitBtn = document.getElementById('submitBtn');
 
+    // Initialize with upload section visible (since it's checked by default)
+    urlSection.style.display = 'none';
+    uploadSection.style.display = 'block';
+
     // Handle video source selection
     uploadRadio.addEventListener('change', function() {
         if (this.checked) {
@@ -331,16 +355,75 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Handle video file preview
+    // Handle video file preview with strict size checking
     videoInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
+            // Display file information immediately
+            const fileSizeInfo = document.getElementById('file-size-info');
+            if (fileSizeInfo) {
+                fileSizeInfo.remove();
+            }
+            
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            const maxSizeMB = 500; // Updated PHP limit
+            
+            let sizeClass = 'text-success';
+            let sizeMessage = `✅ File size: ${fileSizeMB}MB (OK)`;
+            
+            if (file.size > maxSizeMB * 1024 * 1024) {
+                sizeClass = 'text-danger';
+                sizeMessage = `❌ File size: ${fileSizeMB}MB (TOO LARGE!)`;
+                
+                // Show prominent error and force URL option
+                const errorHtml = `<div class="alert alert-danger mt-2" id="file-size-info">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>File Too Large!</h6>
+                    <p><strong>${sizeMessage}</strong></p>
+                    <p>Current limit: ${maxSizeMB}MB</p>
+                    <hr>
+                    <p class="mb-0"><strong>Solution:</strong> Use the "Video URL" option instead. Upload your video to YouTube, Google Drive, or Dropbox first.</p>
+                    <button type="button" class="btn btn-primary btn-sm mt-2" id="switch-to-url">
+                        <i class="fas fa-link me-1"></i>Switch to Video URL Option
+                    </button>
+                </div>`;
+                
+                this.parentNode.parentNode.insertAdjacentHTML('afterend', errorHtml);
+                
+                // Add click handler to switch to URL option
+                document.getElementById('switch-to-url').addEventListener('click', function() {
+                    urlRadio.click();
+                    document.getElementById('video_url').focus();
+                });
+                
+                // Clear the file input
+                this.value = '';
+                hideVideoPreview();
+                return;
+            } else if (file.size > 5 * 1024 * 1024) {
+                sizeClass = 'text-warning';
+                sizeMessage = `⚠️ File size: ${fileSizeMB}MB (Large file)`;
+            }
+            
+            const sizeText = `<div class="alert alert-info mt-2" id="file-size-info">
+                <strong>Video Information:</strong><br>
+                <span class="${sizeClass}"><strong>${sizeMessage}</strong></span><br>
+                <small>File name: ${file.name}</small><br>
+                <small>File type: ${file.type}</small>
+            </div>`;
+            
+            this.parentNode.parentNode.insertAdjacentHTML('afterend', sizeText);
+
+            // Only proceed with preview if file size is acceptable
             const url = URL.createObjectURL(file);
             const video = videoPreview.querySelector('video');
             video.src = url;
             videoPreviewBtn.style.display = 'inline-block';
         } else {
             hideVideoPreview();
+            const fileSizeInfo = document.getElementById('file-size-info');
+            if (fileSizeInfo) {
+                fileSizeInfo.remove();
+            }
         }
     });
 
@@ -359,17 +442,96 @@ document.addEventListener('DOMContentLoaded', function() {
         videoPreviewBtn.innerHTML = '<i class="fas fa-eye me-1"></i>Preview';
     }
 
-    // Form submission with loading state
-    form.addEventListener('submit', function() {
+    // Form submission with enhanced upload handling and size checking
+    form.addEventListener('submit', function(e) {
+        const videoFile = videoInput.files[0];
+        const isUploadMode = uploadRadio.checked;
+        
+        // Prevent submission if upload mode is selected and file is too large
+        if (isUploadMode && videoFile) {
+            const maxSizeMB = 500;
+            if (videoFile.size > maxSizeMB * 1024 * 1024) {
+                e.preventDefault();
+                alert(`Cannot submit! Your video file (${(videoFile.size / (1024 * 1024)).toFixed(2)}MB) exceeds the ${maxSizeMB}MB limit.\n\nPlease use a smaller file or contact support.`);
+                return false;
+            }
+        }
+        
+        // Prevent default submission for AJAX handling if video file is large but within limits
+        if (videoFile && videoFile.size > 100 * 1024 * 1024) { // 100MB+
+            e.preventDefault();
+            handleLargeFileUpload();
+            return;
+        }
+        
+        // Regular form submission for smaller files or URL mode
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Lesson...';
-        
-        // Show upload progress for large files
-        const videoFile = videoInput.files[0];
-        if (videoFile && videoFile.size > 50 * 1024 * 1024) { // 50MB
-            showUploadProgress();
-        }
     });
+
+    function handleLargeFileUpload() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+        
+        showUploadProgress();
+        
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+        .then(response => {
+            // Handle non-JSON responses (like 413 errors that return HTML)
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                if (response.status === 413) {
+                    throw new Error('File too large for upload. Please use the Video URL option instead.');
+                }
+                throw new Error(`Upload failed: Server returned ${response.status} ${response.statusText}`);
+            }
+            
+            if (!response.ok) {
+                throw new Error(`Upload failed: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                hideUploadProgress();
+                showSuccess('Lesson created successfully! Redirecting...');
+                setTimeout(() => {
+                    window.location.href = data.redirect || '{{ route("teacher.courses.lessons.index", $course) }}';
+                }, 1000);
+            } else {
+                throw new Error(data.message || 'Upload failed');
+            }
+        })
+        .catch(error => {
+            hideUploadProgress();
+            console.error('Upload error:', error);
+            
+            // Show specific error message with solution
+            let errorMessage = error.message;
+            if (errorMessage.includes('too large') || errorMessage.includes('413') || errorMessage.includes('Content Too Large')) {
+                errorMessage = 'File too large for upload! Please use the "Video URL" option instead.';
+                
+                // Automatically switch to URL option
+                setTimeout(() => {
+                    urlRadio.click();
+                    document.getElementById('video_url').focus();
+                }, 2000);
+            }
+            
+            showError(errorMessage);
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Create Lesson';
+        });
+    }
 
     function showUploadProgress() {
         const progressHtml = `
@@ -384,6 +546,40 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         form.insertAdjacentHTML('beforeend', progressHtml);
+    }
+
+    function hideUploadProgress() {
+        const progressDiv = document.getElementById('upload-progress');
+        if (progressDiv) {
+            progressDiv.remove();
+        }
+    }
+
+    function showError(message) {
+        const errorHtml = `
+            <div class="alert alert-danger mt-3" id="upload-error">
+                <strong>Upload Error:</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        form.insertAdjacentHTML('beforeend', errorHtml);
+        
+        // Remove error after 10 seconds
+        setTimeout(() => {
+            const errorDiv = document.getElementById('upload-error');
+            if (errorDiv) {
+                errorDiv.remove();
+            }
+        }, 10000);
+    }
+
+    function showSuccess(message) {
+        const successHtml = `
+            <div class="alert alert-success mt-3" id="upload-success">
+                <strong>Success!</strong> ${message}
+            </div>
+        `;
+        form.insertAdjacentHTML('beforeend', successHtml);
     }
 
     // Auto-generate lesson title suggestions based on course

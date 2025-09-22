@@ -51,18 +51,51 @@ class EnrollmentController extends Controller
      */
     public function index()
     {
-        // 获取统计数据
-        $stats = Enrollment::where('user_id', Auth::id())
-            ->selectRaw('COUNT(*) as total')
-            ->selectRaw('SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed')
-            ->selectRaw('SUM(CASE WHEN status = "in_progress" THEN 1 ELSE 0 END) as in_progress')
-            ->first();
-
-        // 获取分页数据
+        // Get enrollments with course data
         $enrollments = Enrollment::with(['course.category', 'course.instructor', 'course.lessons'])
             ->where('user_id', Auth::id())
             ->latest('enrolled_at')
-            ->simplePaginate(6);  // 使用simplePaginate来显示简单的"上一页/下一页"导航，每页6个课程
+            ->simplePaginate(6);
+
+        // Get all enrollments for stats calculation
+        $allEnrollments = Enrollment::with(['course.lessons'])
+            ->where('user_id', Auth::id())
+            ->get();
+
+        // Calculate proper statistics based on lesson progress
+        $totalEnrollments = $allEnrollments->count();
+        $completedCount = 0;
+        $inProgressCount = 0;
+        $notStartedCount = 0;
+
+        foreach ($allEnrollments as $enrollment) {
+            $totalLessons = $enrollment->course->lessons->count();
+            if ($totalLessons > 0) {
+                $completedLessons = \App\Models\LessonProgress::where('user_id', Auth::id())
+                    ->whereIn('lesson_id', $enrollment->course->lessons->pluck('id'))
+                    ->where('completed', true)
+                    ->count();
+                
+                $progressPercentage = round(($completedLessons / $totalLessons) * 100);
+                
+                if ($progressPercentage == 100) {
+                    $completedCount++;
+                } elseif ($progressPercentage > 0) {
+                    $inProgressCount++;
+                } else {
+                    $notStartedCount++;
+                }
+            } else {
+                $notStartedCount++;
+            }
+        }
+
+        $stats = (object) [
+            'total' => $totalEnrollments,
+            'completed' => $completedCount,
+            'in_progress' => $inProgressCount,
+            'not_started' => $notStartedCount
+        ];
 
         return view('client.enrollments.index', compact('enrollments', 'stats'));
     }

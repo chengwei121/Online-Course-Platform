@@ -77,9 +77,38 @@ class LessonController extends Controller
      */
     public function store(Request $request, Course $course)
     {
+        // Increase PHP limits for video uploads at runtime
+        ini_set('upload_max_filesize', '500M');
+        ini_set('post_max_size', '500M');
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
+        
         // Ensure the course belongs to the authenticated teacher
         if ($course->instructor_id !== Auth::user()->teacher->id) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access to this course.'
+                ], 403);
+            }
             abort(403, 'Unauthorized access to this course.');
+        }
+
+        // Check for upload errors first
+        if ($request->hasFile('video')) {
+            $video = $request->file('video');
+            if ($video->getError() !== UPLOAD_ERR_OK) {
+                $errorMessage = $this->getUploadErrorMessage($video->getError());
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMessage,
+                        'error_code' => $video->getError(),
+                        'suggestion' => 'Please use the Video URL option instead for large files.'
+                    ], 413);
+                }
+                return back()->withErrors(['video' => $errorMessage])->withInput();
+            }
         }
 
         $request->validate([
@@ -116,6 +145,16 @@ class LessonController extends Controller
             'content' => $request->content ?: '',
             'learning_objectives' => $request->learning_objectives ?: '',
         ]);
+
+        // Return JSON response for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lesson created successfully!',
+                'lesson' => $lesson,
+                'redirect' => route('teacher.courses.lessons.index', $course)
+            ]);
+        }
 
         return redirect()
             ->route('teacher.courses.lessons.index', $course)
@@ -274,5 +313,30 @@ class LessonController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Get user-friendly upload error message
+     */
+    private function getUploadErrorMessage($errorCode)
+    {
+        switch ($errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+                return 'The uploaded file exceeds the upload_max_filesize directive in php.ini. Maximum allowed size is ' . ini_get('upload_max_filesize') . '.';
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.';
+            case UPLOAD_ERR_PARTIAL:
+                return 'The uploaded file was only partially uploaded. Please try again.';
+            case UPLOAD_ERR_NO_FILE:
+                return 'No file was uploaded.';
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return 'Missing a temporary folder for file upload.';
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Failed to write file to disk.';
+            case UPLOAD_ERR_EXTENSION:
+                return 'A PHP extension stopped the file upload.';
+            default:
+                return 'Unknown upload error occurred. Please try with a smaller file or contact support.';
+        }
     }
 }

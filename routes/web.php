@@ -162,8 +162,9 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::post('courses/{course}/toggle-status', [App\Http\Controllers\Teacher\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
     
     // Lesson management
-    Route::resource('courses.lessons', App\Http\Controllers\Teacher\LessonController::class)->except(['index']);
+    Route::resource('courses.lessons', App\Http\Controllers\Teacher\LessonController::class)->except(['index', 'store']);
     Route::get('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'index'])->name('courses.lessons.index');
+    Route::post('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'store'])->name('courses.lessons.store')->middleware('upload.size');
     Route::post('courses/{course}/lessons/reorder', [App\Http\Controllers\Teacher\LessonController::class, 'reorder'])->name('courses.lessons.reorder');
     
     // Assignment management
