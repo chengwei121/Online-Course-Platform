@@ -3,21 +3,22 @@
 @section('title', 'Payment Statistics')
 
 @section('header')
-    <h1 class="h2">
-        <i class="fa                    <div class="table-responsive">
-                        <table class="table">fa-chart-line me-3"></i>
-        Payment Statistics & Analytics
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{{ route('admin.payments.index') }}" class="btn btn-sm btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>
-                Back to Payments
-            </a>
-            <button type="button" class="btn btn-sm btn-outline-success" onclick="exportStatistics()">
-                <i class="fas fa-download me-1"></i>
-                Export Report
-            </button>
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="h2 mb-0 fw-bold">
+            <i class="fas fa-chart-line me-2 text-primary"></i>
+            Payment Statistics & Analytics
+        </h1>
+        <div class="btn-toolbar">
+            <div class="btn-group">
+                <a href="{{ route('admin.payments.index') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>
+                    Back to Payments
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="exportStatistics()">
+                    <i class="fas fa-download me-1"></i>
+                    Export Report
+                </button>
+            </div>
         </div>
     </div>
 @endsection
@@ -135,13 +136,13 @@
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead class="table-light">
-                                <tr>
-                                    <th>Rank</th>
-                                    <th>Course Title</th>
-                                    <th>Enrollments</th>
-                                    <th>Revenue</th>
-                                    <th>Actions</th>
-                                </tr>
+                                    <tr>
+                                        <th class="text-center">Rank</th>
+                                        <th class="text-center">Course Title</th>
+                                        <th class="text-center">Enrollments</th>
+                                        <th class="text-center">Revenue</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
                             </thead>
                             <tbody>
                                 @foreach($topCourses as $index => $courseData)
@@ -221,13 +222,13 @@
                     <div class="table-responsive">
                         <table class="table">
                             <thead class="table-light">
-                                <tr>
-                                    <th>Rank</th>
-                                    <th>Student</th>
-                                    <th>Purchases</th>
-                                    <th>Total Spent</th>
-                                    <th>Actions</th>
-                                </tr>
+                                    <tr>
+                                        <th class="text-center">Rank</th>
+                                        <th class="text-center">Student</th>
+                                        <th class="text-center">Purchases</th>
+                                        <th class="text-center">Total Spent</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
                             </thead>
                             <tbody>
                                 @foreach($topUsers as $index => $userData)
@@ -295,38 +296,35 @@
 @push('styles')
 <style>
 /* Modern Grey Card Header */
-.modern-grey-header {
-    background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
-    border-bottom: 3px solid #1e293b;
-}
-
-.card {
-    border: 1px solid #e3e6f0;
-    border-radius: 0.75rem;
-}
-
-/* Custom Date Range Styles */
-.form-control:focus {
-    border-color: #4e73df;
-}
-
-.btn-primary {
-    background-color: #4e73df;
-    border-color: #4e73df;
-}
-
-.btn-primary:hover {
-    background-color: #2e59d9;
-    border-color: #2653d4;
-}
-
-.alert-info {
-    background-color: #d1ecf1;
-    border-color: #bee5eb;
-    color: #0c5460;
-}
-
-/* Custom Styles */
+    .modern-grey-header {
+        background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
+        border-bottom: 3px solid #1e293b;
+    }
+    .card {
+        border: 1px solid #e3e6f0;
+        border-radius: 0.75rem;
+    }
+    .form-control:focus {
+        border-color: #4e73df;
+    }
+    .btn-primary {
+        background-color: #4e73df;
+        border-color: #4e73df;
+    }
+    .btn-primary:hover {
+        background-color: #2e59d9;
+        border-color: #2653d4;
+    }
+    .alert-info {
+        background-color: #d1ecf1;
+        border-color: #bee5eb;
+        color: #0c5460;
+    }
+    /* Center table headers */
+    th.text-center {
+        vertical-align: middle !important;
+        text-align: center !important;
+    }
 </style>
 @endpush
 
