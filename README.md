@@ -252,7 +252,7 @@ This project is open-sourced software licensed under the [MIT license](https://o
 
 ## 🆘 Support
 
-For support, email support@example.com or create an issue in the GitHub repository.
+For support, email chengweishia@gmail.com or create an issue in the GitHub repository.
 
 ## 🙏 Acknowledgments
 
