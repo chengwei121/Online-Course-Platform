@@ -33,17 +33,24 @@ class EnrollmentController extends Controller
                 ->with('error', 'You are already enrolled in this course.');
         }
 
-        // Create enrollment
+        // Only allow free courses to be enrolled directly
+        if (!$course->is_free) {
+            return redirect()->route('client.courses.show', $course->slug)
+                ->with('error', 'This is a paid course. Please use PayPal to complete your payment.');
+        }
+
+        // Create enrollment for free course
         Enrollment::create([
             'user_id' => Auth::id(),
             'course_id' => $course->id,
-            'payment_status' => 'pending',
-            'amount_paid' => $course->price,
+            'payment_status' => 'completed', // Free courses are automatically completed
+            'amount_paid' => 0, // Free courses cost nothing
             'enrolled_at' => now(),
+            'status' => 'in_progress'
         ]);
 
-        return redirect()->route('client.enrollments.index')
-            ->with('success', 'Successfully enrolled in the course. You can now start learning!');
+        return redirect()->route('client.courses.learn', $course->slug)
+            ->with('success', 'Successfully enrolled in the free course. Start learning now!');
     }
 
     /**
@@ -51,15 +58,17 @@ class EnrollmentController extends Controller
      */
     public function index()
     {
-        // Get enrollments with course data
+        // Get enrollments with course data (only completed payment enrollments)
         $enrollments = Enrollment::with(['course.category', 'course.instructor', 'course.lessons'])
             ->where('user_id', Auth::id())
+            ->where('payment_status', 'completed') // Only show successful enrollments
             ->latest('enrolled_at')
-            ->simplePaginate(6);
+            ->paginate(6);
 
-        // Get all enrollments for stats calculation
+        // Get all completed enrollments for stats calculation
         $allEnrollments = Enrollment::with(['course.lessons'])
             ->where('user_id', Auth::id())
+            ->where('payment_status', 'completed')
             ->get();
 
         // Calculate proper statistics based on lesson progress

@@ -64,14 +64,43 @@ class Course extends Model
     public function getThumbnailUrlAttribute()
     {
         if (!$this->thumbnail) {
-            return asset('images/course-placeholder.jpg');
+            return asset('images/course-placeholder.svg');
         }
 
-        if (filter_var($this->thumbnail, FILTER_VALIDATE_URL)) {
-            return $this->thumbnail;
+        $thumbnail = $this->getOriginal('thumbnail');
+
+        // If it's already a full URL, extract just the filename and rebuild the URL properly
+        if (filter_var($thumbnail, FILTER_VALIDATE_URL)) {
+            // Extract the filename from the URL
+            $filename = basename(parse_url($thumbnail, PHP_URL_PATH));
+            
+            // Check if the file exists in the courses directory
+            if (Storage::disk('public')->exists('images/courses/' . $filename)) {
+                return Storage::url('images/courses/' . $filename);
+            }
+            
+            // If not found, return the placeholder
+            return asset('images/course-placeholder.svg');
         }
 
-        return Storage::url($this->thumbnail);
+        // Handle relative paths
+        $thumbnailPath = $thumbnail;
+        
+        // Clean up the path - remove any existing storage/ prefix
+        $thumbnailPath = str_replace('storage/', '', $thumbnailPath);
+        
+        // If the path doesn't start with images/courses, add it
+        if (!str_starts_with($thumbnailPath, 'images/courses/')) {
+            $thumbnailPath = 'images/courses/' . ltrim($thumbnailPath, '/');
+        }
+
+        // Check if file exists before returning URL
+        if (Storage::disk('public')->exists($thumbnailPath)) {
+            return Storage::url($thumbnailPath);
+        }
+
+        // Return placeholder if file doesn't exist
+        return asset('images/course-placeholder.svg');
     }
 
     public function instructor(): BelongsTo

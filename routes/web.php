@@ -156,6 +156,26 @@ Route::get('admin/dashboard/test-loading', [App\Http\Controllers\Admin\Dashboard
 Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middleware\TeacherMiddleware::class])->group(function () {
     Route::get('dashboard', [App\Http\Controllers\Teacher\DashboardController::class, 'index'])->name('dashboard');
     
+    // Debug route to check authentication
+    Route::get('debug-auth', function() {
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $teacher = $user ? $user->teacher : null;
+        
+        return response()->json([
+            'user' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role
+            ] : null,
+            'teacher' => $teacher ? [
+                'id' => $teacher->id,
+                'name' => $teacher->name
+            ] : null,
+            'courses_count' => $teacher ? App\Models\Course::where('instructor_id', $teacher->id)->count() : 0
+        ]);
+    })->name('debug-auth');
+    
     // Course management
     Route::get('courses/by-category', [App\Http\Controllers\Teacher\CourseController::class, 'getCoursesByCategory'])->name('courses.by-category');
     Route::resource('courses', App\Http\Controllers\Teacher\CourseController::class);
@@ -198,10 +218,17 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::post('courses/{course}/enroll', [EnrollmentController::class, 'store'])->name('enrollments.store');
         Route::get('my-courses', [EnrollmentController::class, 'index'])->name('enrollments.index');
 
+        // Student Dashboard Routes
+        Route::get('my-payments', [App\Http\Controllers\Client\StudentController::class, 'payments'])->name('payments.index');
+        Route::get('my-reviews', [App\Http\Controllers\Client\StudentController::class, 'reviews'])->name('reviews.index');
+
         // Course Learning Routes
         Route::get('courses/{course:slug}/learn/{lesson?}', [CourseController::class, 'learn'])->name('courses.learn');
         Route::post('courses/{course:slug}/lessons/{lesson}/progress', [CourseController::class, 'updateProgress'])->name('lessons.progress');
         Route::post('courses/{course:slug}/lessons/{lesson}/upload-video', [CourseController::class, 'uploadVideo'])->name('courses.upload-video');
+
+        // Course Review Routes
+        Route::post('courses/{course}/review', [CourseController::class, 'storeReview'])->name('courses.review');
 
         // Assignment Routes
         Route::get('assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');
@@ -211,5 +238,13 @@ Route::prefix('client')->name('client.')->group(function () {
         // Lesson routes
         Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
         Route::post('/lessons/{lesson}/upload-video', [LessonController::class, 'uploadVideo'])->name('lessons.upload-video');
+
+        // PayPal Payment Routes
+        Route::prefix('paypal')->name('paypal.')->group(function () {
+            Route::post('pay/{course}', [App\Http\Controllers\PayPalController::class, 'createPayment'])->name('pay');
+            Route::get('success', [App\Http\Controllers\PayPalController::class, 'success'])->name('success');
+            Route::get('cancel', [App\Http\Controllers\PayPalController::class, 'cancel'])->name('cancel');
+            Route::get('status/{payment}', [App\Http\Controllers\PayPalController::class, 'status'])->name('status');
+        });
     });
 });

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Enrollment;
 use App\Models\LessonProgress;
 use App\Models\AssignmentSubmission;
+use App\Models\CourseReview;
 use App\Models\Student;
 use App\Models\Teacher;
 
@@ -66,6 +67,11 @@ class User extends Authenticatable
     public function assignmentSubmissions()
     {
         return $this->hasMany(AssignmentSubmission::class);
+    }
+
+    public function courseReviews()
+    {
+        return $this->hasMany(CourseReview::class);
     }
 
     public function student()

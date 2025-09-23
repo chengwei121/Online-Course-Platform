@@ -1,72 +1,75 @@
 @if($payments->count() > 0)
 <div class="table-responsive">
-    <table class="table table-hover mb-0">
-        <thead class="table-light">
+    <table class="table table-hover align-middle mb-0 table-sm">
+        <thead>
             <tr>
-                <th>Payment ID</th>
-                <th>Student</th>
-                <th>Course</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <th class="py-2 px-3 text-center" style="width: 12%;">ID</th>
+                <th class="py-2 px-3 text-center" style="width: 20%;">Student</th>
+                <th class="py-2 px-3 text-center" style="width: 25%;">Course</th>
+                <th class="py-2 px-3 text-center" style="width: 12%;">Amount</th>
+                <th class="py-2 px-3 text-center" style="width: 10%;">Status</th>
+                <th class="py-2 px-3 text-center" style="width: 13%;">Date</th>
+                <th class="py-2 px-3 text-center" style="width: 8%;">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach($payments as $payment)
-            <tr class="payment-row" data-payment-id="{{ $payment->id }}">
-                <td>
-                    <strong>#{{ $payment->id }}</strong>
+            <tr class="payment-row border-bottom" data-payment-id="{{ $payment->id }}">
+                <td class="py-2 px-2">
+                    <div class="fw-bold text-primary">#{{ $payment->id }}</div>
                 </td>
-                <td>
-                    <div class="d-flex flex-column">
-                        <strong>{{ $payment->user->name }}</strong>
-                        <small class="text-muted">{{ $payment->user->email }}</small>
+                <td class="py-2 px-2">
+                    <div>
+                        <div class="fw-semibold text-dark small">{{ Str::limit($payment->user->name, 20) }}</div>
+                        <small class="text-muted">{{ Str::limit($payment->user->email, 25) }}</small>
                     </div>
                 </td>
-                <td>
-                    <div class="d-flex flex-column">
-                        <strong>{{ Str::limit($payment->course->title, 30) }}</strong>
-                        <small class="text-muted">
-                            by {{ $payment->course->instructor->name }}
-                        </small>
+                <td class="py-2 px-2">
+                    <div>
+                        <div class="fw-semibold text-dark small">{{ Str::limit($payment->course->title, 30) }}</div>
+                        <small class="text-muted">{{ Str::limit($payment->course->instructor->name, 20) }}</small>
                     </div>
                 </td>
-                <td>
-                    <strong class="text-success">
-                        ${{ number_format($payment->amount_paid, 2) }}
-                    </strong>
+                <td class="py-2 px-2">
+                    <div class="fw-bold text-success">${{ number_format($payment->amount_paid, 0) }}</div>
                 </td>
-                <td>
+                <td class="py-2 px-2">
                     @if($payment->payment_status == 'completed')
-                        <span class="badge bg-success">
-                            <i class="fas fa-check me-1"></i>
-                            Completed
+                        <span class="badge bg-success text-white px-2 py-1 small">
+                            <i class="fas fa-check fa-xs me-1"></i>Done
                         </span>
                     @elseif($payment->payment_status == 'pending')
-                        <span class="badge bg-warning">
-                            <i class="fas fa-clock me-1"></i>
-                            Pending
+                        <span class="badge bg-warning text-dark px-2 py-1 small">
+                            <i class="fas fa-clock fa-xs me-1"></i>Wait
                         </span>
                     @else
-                        <span class="badge bg-danger">
-                            <i class="fas fa-times me-1"></i>
-                            Failed
+                        <span class="badge bg-danger text-white px-2 py-1 small">
+                            <i class="fas fa-times fa-xs me-1"></i>Fail
                         </span>
                     @endif
                 </td>
-                <td>
-                    <div class="d-flex flex-column">
-                        <strong>{{ $payment->enrolled_at->format('M d, Y') }}</strong>
-                        <small class="text-muted">{{ $payment->enrolled_at->format('H:i') }}</small>
+                <td class="py-2 px-2">
+                    <div>
+                        <div class="fw-semibold text-dark small">{{ $payment->enrolled_at->format('M d') }}</div>
+                        <small class="text-muted">{{ $payment->enrolled_at->format('Y') }}</small>
                     </div>
                 </td>
-                <td>
-                    <a href="{{ route('admin.payments.show', $payment) }}" 
-                       class="btn btn-sm btn-outline-info" title="View Payment Details">
-                        <i class="fas fa-eye me-1"></i>
-                        View
-                    </a>
+                <td class="py-2 px-2 text-end">
+                    <div class="d-flex justify-content-end gap-1">
+                        <!-- View Button -->
+                        <a href="{{ route('admin.payments.show', $payment) }}" 
+                           class="btn btn-sm btn-outline-primary compact-btn" 
+                           title="View">
+                            <i class="fas fa-eye fa-xs"></i>
+                        </a>
+                        
+                        <!-- Download Button -->
+                        <button type="button" 
+                                class="btn btn-sm btn-outline-success compact-btn" 
+                                title="Download">
+                            <i class="fas fa-download fa-xs"></i>
+                        </button>
+                    </div>
                 </td>
             </tr>
             @endforeach
@@ -74,46 +77,67 @@
     </table>
 </div>
 
-<!-- Enhanced Pagination -->
-<div class="card-footer bg-light border-top">
+<!-- Enhanced Pagination Footer -->
+<div class="card-footer bg-light border-0">
     <div class="row align-items-center">
         <div class="col-md-6">
-            <div class="text-muted">
-                <i class="fas fa-info-circle me-1"></i>
-                Showing <strong>{{ $payments->firstItem() ?? 0 }}</strong> to <strong>{{ $payments->lastItem() ?? 0 }}</strong> 
-                of <strong>{{ $payments->total() }}</strong> payments
+            <div class="d-flex align-items-center text-muted">
+                <i class="fas fa-info-circle me-2 text-primary"></i>
+                <span>
+                    Showing <span class="fw-semibold text-dark">{{ $payments->firstItem() ?? 0 }}</span> to 
+                    <span class="fw-semibold text-dark">{{ $payments->lastItem() ?? 0 }}</span> of 
+                    <span class="fw-semibold text-dark">{{ $payments->total() }}</span> payments
+                </span>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="d-flex justify-content-end">
-                @if($payments->hasPages())
-                    <nav aria-label="Payments pagination">
-                        {{ $payments->appends(request()->query())->onEachSide(2)->links('pagination::bootstrap-4') }}
-                    </nav>
-                @endif
-            </div>
+            @if($payments->hasPages())
+                <nav aria-label="Payments pagination" class="d-flex justify-content-end">
+                    <div class="pagination-wrapper">
+                        {{ $payments->appends(request()->query())->onEachSide(1)->links('pagination::bootstrap-4') }}
+                    </div>
+                </nav>
+            @endif
         </div>
     </div>
 </div>
 @else
-<div class="text-center py-5">
-    <div class="mb-4">
-        <i class="fas fa-search fa-4x text-gray-300 mb-3"></i>
-        <h4 class="text-gray-600">No payments found</h4>
-        <p class="text-muted lead">
-            @if(request()->hasAny(['search', 'payment_status', 'date_from', 'date_to', 'amount_min', 'amount_max']))
-                Try adjusting your search criteria or filters.
-            @else
-                No course purchases have been made yet.
-            @endif
-        </p>
+<!-- Enhanced Empty State -->
+<div class="text-center py-5 my-5">
+    <div class="empty-state-icon bg-light rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+        <i class="fas fa-search fa-2x text-muted"></i>
     </div>
+    <h4 class="text-dark mb-2">No payments found</h4>
+    <p class="text-muted lead mb-4">
+        @if(request()->hasAny(['search', 'payment_status', 'date_from', 'date_to', 'amount_min', 'amount_max']))
+            We couldn't find any payments matching your current filters.<br>
+            Try adjusting your search criteria to see more results.
+        @else
+            No course purchases have been made yet.<br>
+            Payments will appear here once students start enrolling in courses.
+        @endif
+    </p>
     
     @if(request()->hasAny(['search', 'payment_status', 'date_from', 'date_to', 'amount_min', 'amount_max']))
-    <div class="mt-3">
-        <a href="{{ route('admin.payments.index') }}" class="btn btn-outline-primary btn-lg">
+    <div class="d-flex justify-content-center gap-2">
+        <a href="{{ route('admin.payments.index') }}" class="btn btn-primary">
             <i class="fas fa-times me-2"></i>
             Clear All Filters
+        </a>
+        <button onclick="window.history.back()" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Go Back
+        </button>
+    </div>
+    @else
+    <div class="mt-4">
+        <a href="{{ route('admin.courses.index') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-graduation-cap me-2"></i>
+            Manage Courses
+        </a>
+        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-info">
+            <i class="fas fa-users me-2"></i>
+            View Students
         </a>
     </div>
     @endif

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreReviewRequest;
 use App\Models\Course;
 use App\Models\Category;
 use App\Models\Lesson;
@@ -11,6 +12,7 @@ use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\User;
 use App\Models\Enrollment;
+use App\Models\CourseReview;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -129,6 +131,15 @@ class CourseController extends Controller
             ->where('status', 'published')
             ->firstOrFail();
 
+        // Load instructor's course count and total students
+        if ($course->instructor) {
+            $course->instructor->courses_count = $course->instructor->courses()->count();
+            $course->instructor->students_count = $course->instructor->courses()
+                ->withCount('enrollments')
+                ->get()
+                ->sum('enrollments_count');
+        }
+
         $reviews = $course->reviews()
             ->with('user')
             ->latest()
@@ -137,17 +148,58 @@ class CourseController extends Controller
         /** @var User|null $user */
         $user = Auth::user();
         $isEnrolled = false;
+        $hasCompletedCourse = false;
+        $existingReview = null;
+        $canReview = false;
+        
         if ($user) {
-            $isEnrolled = $user->enrollments()->where('course_id', $course->id)->exists();
+            // Check if user is enrolled
+            $enrollment = $user->enrollments()
+                ->where('course_id', $course->id)
+                ->where('payment_status', 'completed')
+                ->first();
+            
+            $isEnrolled = $enrollment !== null;
+            
+            if ($isEnrolled) {
+                // Check if user has completed the course
+                $totalLessons = $course->lessons()->count();
+                $completedLessons = LessonProgress::where('user_id', $user->id)
+                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
+                    ->where('completed', true)
+                    ->count();
+                
+                $hasCompletedCourse = $totalLessons > 0 && $completedLessons >= $totalLessons;
+                
+                // Check if user has already reviewed this course
+                $existingReview = CourseReview::where('course_id', $course->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+                
+                // User can review if they completed the course and haven't reviewed yet
+                $canReview = $hasCompletedCourse && !$existingReview;
+            }
         }
 
-        return view('client.courses.show', compact('course', 'reviews', 'isEnrolled'));
+        return view('client.courses.show', compact(
+            'course', 
+            'reviews', 
+            'isEnrolled', 
+            'hasCompletedCourse', 
+            'existingReview', 
+            'canReview'
+        ));
     }
 
     public function learn(Course $course, ?Lesson $lesson = null)
     {
         /** @var User $user */
         $user = Auth::user();
+        
+        // Load the instructor relationship if not already loaded
+        if (!$course->relationLoaded('instructor')) {
+            $course->load('instructor');
+        }
         
         if (!$user->enrollments()->where('course_id', $course->id)->exists()) {
             return redirect()->route('client.courses.show', $course->slug)
@@ -166,6 +218,14 @@ class CourseController extends Controller
             ->whereIn('lesson_id', $course->lessons->pluck('id'))
             ->get();
 
+        // Check if course is completed (all lessons completed)
+        $totalLessons = $course->lessons->count();
+        $completedLessons = $progress->where('completed', true)->count();
+        $isCourseCompleted = $totalLessons > 0 && $completedLessons === $totalLessons;
+
+        // Check if user has already reviewed this course
+        $hasReviewed = $user->courseReviews()->where('course_id', $course->id)->exists();
+
         $submissions = collect();
         if (!$course->is_free) {
             $submissions = $user->assignmentSubmissions()
@@ -173,7 +233,7 @@ class CourseController extends Controller
                 ->get();
         }
 
-        return view('client.courses.learn', compact('course', 'lesson', 'progress', 'submissions'));
+        return view('client.courses.learn', compact('course', 'lesson', 'progress', 'submissions', 'isCourseCompleted', 'hasReviewed'));
     }
 
     public function uploadVideo(Request $request, Course $course, Lesson $lesson)
@@ -377,5 +437,86 @@ class CourseController extends Controller
         ]);
 
         return back()->with('success', 'Submission graded successfully.');
+    }
+
+    /**
+     * Store a course review
+     */
+    public function storeReview(StoreReviewRequest $request, Course $course)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        // Verify user is enrolled in the course
+        $enrollment = $user->enrollments()
+            ->where('course_id', $course->id)
+            ->where('payment_status', 'completed')
+            ->first();
+            
+        if (!$enrollment) {
+            return redirect()->back()
+                ->with('error', 'You must be enrolled in this course to leave a review.');
+        }
+        
+        // Check if user has completed the course
+        $totalLessons = $course->lessons()->count();
+        $completedLessons = LessonProgress::where('user_id', $user->id)
+            ->whereIn('lesson_id', $course->lessons->pluck('id'))
+            ->where('completed', true)
+            ->count();
+            
+        $hasCompletedCourse = $totalLessons > 0 && $completedLessons >= $totalLessons;
+        
+        if (!$hasCompletedCourse) {
+            return redirect()->back()
+                ->with('error', 'You must complete all lessons before you can review this course.');
+        }
+        
+        // Check if user has already reviewed this course
+        $existingReview = CourseReview::where('course_id', $course->id)
+            ->where('user_id', $user->id)
+            ->first();
+            
+        if ($existingReview) {
+            return redirect()->back()
+                ->with('error', 'You have already reviewed this course.');
+        }
+        
+        // Create the review
+        $review = CourseReview::create([
+            'course_id' => $course->id,
+            'user_id' => $user->id,
+            'rating' => $request->validated()['rating'],
+            'comment' => $request->validated()['comment']
+        ]);
+        
+        // Update course average rating and total ratings
+        $this->updateCourseRating($course);
+        
+        Log::info('Course review created', [
+            'course_id' => $course->id,
+            'user_id' => $user->id,
+            'rating' => $review->rating,
+            'review_id' => $review->id
+        ]);
+        
+        return redirect()->back()
+            ->with('success', 'Thank you for your review! Your feedback helps other students make informed decisions.');
+    }
+    
+    /**
+     * Update course average rating and total ratings count
+     */
+    private function updateCourseRating(Course $course)
+    {
+        $reviews = CourseReview::where('course_id', $course->id)->get();
+        
+        $totalRatings = $reviews->count();
+        $averageRating = $totalRatings > 0 ? $reviews->avg('rating') : 0;
+        
+        $course->update([
+            'average_rating' => round($averageRating, 2),
+            'total_ratings' => $totalRatings
+        ]);
     }
 }

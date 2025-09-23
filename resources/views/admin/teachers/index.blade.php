@@ -163,120 +163,92 @@
                 <div class="table-responsive">
                     <table class="table table-bordered" id="dataTable">
                         <thead class="table-dark">
-                            <tr>
-                                <th width="5%">#</th>
+                                                            <tr>
+                                <th class="text-center" width="5%">#</th>
                                 <th width="15%">Teacher</th>
                                 <th width="20%">Contact</th>
-                                <th width="15%">Department</th>
-                                <th width="15%">Qualification</th>
-                                <th width="10%">Courses</th>
-                                <th width="10%">Status</th>
-                                <th width="10%">Actions</th>
+                                <th class="text-center" width="15%">Department</th>
+                                <th class="text-center" width="15%">Qualification</th>
+                                <th class="text-center" width="10%">Courses</th>
+                                <th class="text-center" width="10%">Status</th>
+                                <th class="text-center" width="10%">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($teachers as $teacher)
                                 <tr>
-                                    <td class="text-center">{{ $loop->iteration + ($teachers->currentPage() - 1) * $teachers->perPage() }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="teacher-avatar me-3">
-                                                @if($teacher->profile_picture)
-                                                    <img src="{{ Storage::url($teacher->profile_picture) }}" 
-                                                         class="rounded-circle" width="40" height="40" alt="Profile">
+                                        <td class="text-center align-middle">{{ $loop->iteration + ($teachers->currentPage() - 1) * $teachers->perPage() }}</td>
+                                        <td class="align-middle">
+                                            <div class="d-flex align-items-center">
+                                                <div class="teacher-avatar me-3">
+                                                    @if($teacher->profile_picture)
+                                                        <img src="{{ Storage::url($teacher->profile_picture) }}" class="rounded-circle border" width="40" height="40" alt="Profile">
+                                                    @else
+                                                        <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: bold; font-size: 14px;" title="{{ $teacher->name }}">
+                                                            @php
+                                                                $nameParts = explode(' ', trim($teacher->name));
+                                                                if (count($nameParts) >= 2) {
+                                                                    echo strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
+                                                                } else {
+                                                                    echo strtoupper(substr($teacher->name, 0, 2));
+                                                                }
+                                                            @endphp
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <div>
+                                                    <div class="fw-semibold text-dark">{{ $teacher->name }}</div>
+                                                    <small class="text-muted">ID: {{ $teacher->id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <div class="text-dark">{{ $teacher->email }}</div>
+                                            @if($teacher->phone)
+                                                <small class="text-muted d-block">{{ $teacher->phone }}</small>
+                                            @endif
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <span class="badge bg-info text-white px-2 py-1">{{ $teacher->department }}</span>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <small class="text-muted">{{ $teacher->qualification }}</small>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <span class="badge bg-primary px-2 py-1">{{ $teacher->courses_count }}</span>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <span class="badge bg-{{ $teacher->status === 'active' ? 'success' : 'secondary' }} px-2 py-1">
+                                                <i class="fas fa-{{ $teacher->status === 'active' ? 'check' : 'times' }} me-1"></i>
+                                                {{ ucfirst($teacher->status) }}
+                                            </span>
+                                        </td>
+                                        <td class="align-middle text-center">
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('admin.teachers.show', $teacher) }}" class="btn btn-sm btn-outline-info" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('admin.teachers.edit', $teacher) }}" class="btn btn-sm btn-outline-primary" title="Edit Teacher">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form action="{{ route('admin.teachers.toggle-status', $teacher) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit" class="btn btn-sm btn-outline-{{ $teacher->status === 'active' ? 'warning' : 'success' }}" title="{{ $teacher->status === 'active' ? 'Deactivate' : 'Activate' }} Teacher" onclick="return confirm('Are you sure you want to change this teacher status?')">
+                                                        <i class="fas fa-{{ $teacher->status === 'active' ? 'user-slash' : 'user-check' }}"></i>
+                                                    </button>
+                                                </form>
+                                                @if($teacher->courses_count == 0)
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="confirmDelete({{ $teacher->id }}, '{{ $teacher->name }}')" title="Delete Teacher">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
                                                 @else
-                                                    <div class="avatar-placeholder rounded-circle d-flex align-items-center justify-content-center" 
-                                                         style="width: 40px; height: 40px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: bold; font-size: 14px;"
-                                                         title="{{ $teacher->name }}">
-                                                        @php
-                                                            $nameParts = explode(' ', trim($teacher->name));
-                                                            if (count($nameParts) >= 2) {
-                                                                echo strtoupper(substr($nameParts[0], 0, 1) . substr(end($nameParts), 0, 1));
-                                                            } else {
-                                                                echo strtoupper(substr($teacher->name, 0, 2));
-                                                            }
-                                                        @endphp
-                                                    </div>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary disabled" title="Cannot delete teacher with courses" disabled>
+                                                        <i class="fas fa-lock"></i>
+                                                    </button>
                                                 @endif
                                             </div>
-                                            <div>
-                                                <div class="fw-medium text-dark">{{ $teacher->name }}</div>
-                                                <small class="text-muted">ID: {{ $teacher->id }}</small>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div>
-                                            <span class="text-dark">{{ $teacher->email }}</span>
-                                            @if($teacher->phone)
-                                                <br><small class="text-muted">{{ $teacher->phone }}</small>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-info text-white">{{ $teacher->department }}</span>
-                                    </td>
-                                    <td>
-                                        <small class="text-muted">{{ $teacher->qualification }}</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="badge bg-primary">{{ $teacher->courses_count }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ $teacher->status === 'active' ? 'success' : 'secondary' }}">
-                                            <i class="fas fa-{{ $teacher->status === 'active' ? 'check' : 'times' }} me-1"></i>
-                                            {{ ucfirst($teacher->status) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group" role="group">
-                                            <!-- View Button -->
-                                            <a href="{{ route('admin.teachers.show', $teacher) }}" 
-                                               class="btn btn-sm btn-outline-info" 
-                                               title="View Details">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            
-                                            <!-- Edit Button -->
-                                            <a href="{{ route('admin.teachers.edit', $teacher) }}" 
-                                               class="btn btn-sm btn-outline-primary" 
-                                               title="Edit Teacher">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            
-                                            <!-- Status Toggle Button -->
-                                            <form action="{{ route('admin.teachers.toggle-status', $teacher) }}" 
-                                                  method="POST" class="d-inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" 
-                                                        class="btn btn-sm btn-outline-{{ $teacher->status === 'active' ? 'warning' : 'success' }}" 
-                                                        title="{{ $teacher->status === 'active' ? 'Deactivate' : 'Activate' }} Teacher"
-                                                        onclick="return confirm('Are you sure you want to change this teacher status?')">
-                                                    <i class="fas fa-{{ $teacher->status === 'active' ? 'user-slash' : 'user-check' }}"></i>
-                                                </button>
-                                            </form>
-                                            
-                                            <!-- Delete Button -->
-                                            @if($teacher->courses_count == 0)
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-outline-danger" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#deleteModal"
-                                                        onclick="confirmDelete({{ $teacher->id }}, '{{ $teacher->name }}')"
-                                                        title="Delete Teacher">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            @else
-                                                <button type="button" 
-                                                        class="btn btn-sm btn-outline-secondary disabled" 
-                                                        title="Cannot delete teacher with courses" 
-                                                        disabled>
-                                                    <i class="fas fa-lock"></i>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </td>
+                                        </td>
                                 </tr>
                             @endforeach
                         </tbody>

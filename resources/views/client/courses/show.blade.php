@@ -3,6 +3,29 @@
 @section('title', $course->title)
 
 @section('content')
+<!-- Success/Error Messages -->
+@if(session('success'))
+    <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-green-700">{{ session('success') }}</p>
+        </div>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <p class="text-red-700">{{ session('error') }}</p>
+        </div>
+    </div>
+@endif
+
 <div class="bg-white shadow rounded-lg overflow-hidden">
     <!-- Course Header -->
     <div class="relative">
@@ -91,15 +114,15 @@
                     <div class="flex items-start">
                         <div class="flex-shrink-0">
                             <img class="h-24 w-24 rounded-full object-cover" 
-                                 src="{{ $course->instructor->profile_image 
-                                    ? asset('storage/' . $course->instructor->profile_image) 
+                                 src="{{ $course->instructor->profile_picture 
+                                    ? asset('storage/' . $course->instructor->profile_picture) 
                                     : 'https://ui-avatars.com/api/?name=' . urlencode($course->instructor->name) . '&size=96&background=random' }}" 
                                  alt="{{ $course->instructor->name }}">
                         </div>
                         <div class="ml-6">
                             <h3 class="text-xl font-semibold text-gray-900">{{ $course->instructor->name }}</h3>
-                            @if($course->instructor->title)
-                                <p class="text-indigo-600 font-medium mt-1">{{ $course->instructor->title }}</p>
+                            @if($course->instructor->qualification)
+                                <p class="text-indigo-600 font-medium mt-1">{{ $course->instructor->qualification }}</p>
                             @endif
                             @if($course->instructor->bio)
                                 <p class="text-gray-700 mt-3">{{ $course->instructor->bio }}</p>
@@ -155,7 +178,10 @@
                     <div>
                         @auth
                             @php
-                                $isEnrolled = auth()->user()->enrollments()->where('course_id', $course->id)->exists();
+                                $isEnrolled = auth()->user()->enrollments()
+                                    ->where('course_id', $course->id)
+                                    ->where('payment_status', 'completed')
+                                    ->exists();
                             @endphp
                             
                             @if($isEnrolled)
@@ -168,23 +194,40 @@
                                     Continue Learning
                                 </a>
                             @else
-                                <form action="{{ route('client.enrollments.store', $course) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" 
-                                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white {{ $course->is_free ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700' }} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                        @if($course->is_free)
+                                @if($course->is_free)
+                                    <form action="{{ route('client.enrollments.store', $course) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                             </svg>
                                             Start Free Course
-                                        @else
+                                        </button>
+                                    </form>
+                                @else
+                                    <!-- PayPal Payment Button -->
+                                    <form action="{{ route('client.paypal.pay', $course) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
                                             </svg>
-                                            Enroll Now for ${{ number_format($course->price, 2) }}
-                                        @endif
-                                    </button>
-                                </form>
+                                            Pay with PayPal - ${{ number_format($course->price, 2) }}
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Alternative Direct Enrollment (for testing or other payment methods) -->
+                                    <div class="mt-3">
+                                        <p class="text-sm text-gray-500 text-center">
+                                            Having trouble with PayPal? 
+                                            <a href="#" onclick="showDirectEnrollment()" class="text-indigo-600 hover:text-indigo-500">
+                                                Contact support
+                                            </a>
+                                        </p>
+                                    </div>
+                                @endif
                             @endif
                         @else
                             <a href="{{ route('login') }}" 
@@ -219,6 +262,84 @@
                     </div>
                 </div>
             @endif
+
+            <!-- Course Review Section (for completed courses) -->
+            @auth
+                @if($canReview)
+                    <div class="border-t border-gray-200 pt-8 mt-8">
+                        <div class="mb-6">
+                            <div class="flex items-center mb-4">
+                                <svg class="w-6 h-6 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <h2 class="text-2xl font-bold text-gray-900">Congratulations! You've completed this course</h2>
+                            </div>
+                            <p class="text-gray-600 mb-6">Share your experience to help other students make informed decisions about this course.</p>
+                        </div>
+                        @include('client.courses._review_form')
+                    </div>
+                @elseif($existingReview)
+                    <div class="border-t border-gray-200 pt-8 mt-8">
+                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Your Review</h2>
+                        <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <div class="flex items-center mr-4">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <svg class="w-5 h-5 {{ $i <= $existingReview->rating ? 'text-yellow-400' : 'text-gray-300' }}" 
+                                                     fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                                </svg>
+                                            @endfor
+                                        </div>
+                                        <span class="text-sm text-gray-500">Reviewed {{ $existingReview->created_at->diffForHumans() }}</span>
+                                    </div>
+                                    @if($existingReview->comment)
+                                        <p class="text-gray-700">{{ $existingReview->comment }}</p>
+                                    @else
+                                        <p class="text-gray-500 italic">No written review provided</p>
+                                    @endif
+                                </div>
+                                <div class="flex items-center text-blue-600 ml-4">
+                                    <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    <span class="text-sm font-medium">Thank you for your review!</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @elseif($hasCompletedCourse && !$canReview)
+                    <div class="border-t border-gray-200 pt-8 mt-8">
+                        <div class="bg-yellow-50 rounded-lg p-6 border border-yellow-200">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-yellow-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900">Course Completed!</h3>
+                                    <p class="text-gray-600 mt-1">You have successfully completed this course. You already submitted a review for this course.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @elseif($isEnrolled && !$hasCompletedCourse)
+                    <div class="border-t border-gray-200 pt-8 mt-8">
+                        <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                            <div class="flex items-center">
+                                <svg class="w-6 h-6 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900">Complete the course to leave a review</h3>
+                                    <p class="text-gray-600 mt-1">Finish all lessons to share your experience and help other students.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            @endauth
 
             <!-- Reviews Section -->
             <div class="border-t border-gray-200 pt-8 mt-8">
@@ -271,4 +392,12 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function showDirectEnrollment() {
+    alert('For payment issues, please contact our support team at support@example.com or call 1-800-123-4567');
+}
+</script>
+@endpush
 @endsection 

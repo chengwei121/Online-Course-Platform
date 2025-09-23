@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'paypal' => [
+        'client_id' => env('PAYPAL_CLIENT_ID'),
+        'client_secret' => env('PAYPAL_CLIENT_SECRET'),
+        'mode' => env('PAYPAL_MODE', 'sandbox'), // sandbox or live
+        'sandbox' => [
+            'base_uri' => 'https://api.sandbox.paypal.com',
+        ],
+        'live' => [
+            'base_uri' => 'https://api.paypal.com',
+        ],
+    ],
+
 ];

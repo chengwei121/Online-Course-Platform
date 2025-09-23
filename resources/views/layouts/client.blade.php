@@ -949,6 +949,22 @@
                                                 </div>
                                                 <span class="text-xs font-medium text-gray-700">My Learning</span>
                                             </a>
+                                            <a href="{{ route('client.payments.index') }}" 
+                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-100 text-green-600 mb-1">
+                                                    <i class="fas fa-credit-card text-sm"></i>
+                                                </div>
+                                                <span class="text-xs font-medium text-gray-700">My Payments</span>
+                                            </a>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2 mb-3">
+                                            <a href="{{ route('client.reviews.index') }}" 
+                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 mb-1">
+                                                    <i class="fas fa-star text-sm"></i>
+                                                </div>
+                                                <span class="text-xs font-medium text-gray-700">My Reviews</span>
+                                            </a>
                                             <a href="#" 
                                                class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-1">
@@ -967,6 +983,18 @@
                                                     <span class="text-sm font-medium text-purple-700">Admin Panel</span>
                                                 </a>
                                             @endif
+                                            <a href="{{ route('client.payments.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600">
+                                                    <i class="fas fa-credit-card text-sm"></i>
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">My Payments</span>
+                                            </a>
+                                            <a href="{{ route('client.reviews.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-600">
+                                                    <i class="fas fa-star text-sm"></i>
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">My Reviews</span>
+                                            </a>
                                             <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                                                     <i class="fas fa-user-circle text-sm"></i>
@@ -1052,6 +1080,16 @@
                    class="block py-2 px-3 text-base font-medium rounded-lg transition {{ request()->routeIs('client.enrollments.*') ? 'bg-primary-50 text-primary' : 'text-gray-700 hover:bg-gray-100' }}">
                     <i class="fas fa-bookmark mr-2"></i>
                     My Learning
+                </a>
+                <a href="{{ route('client.payments.index') }}"
+                   class="block py-2 px-3 text-base font-medium rounded-lg transition {{ request()->routeIs('client.payments.*') ? 'bg-primary-50 text-primary' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i class="fas fa-credit-card mr-2"></i>
+                    My Payments
+                </a>
+                <a href="{{ route('client.reviews.index') }}"
+                   class="block py-2 px-3 text-base font-medium rounded-lg transition {{ request()->routeIs('client.reviews.*') ? 'bg-primary-50 text-primary' : 'text-gray-700 hover:bg-gray-100' }}">
+                    <i class="fas fa-star mr-2"></i>
+                    My Reviews
                 </a>
             </div>
 

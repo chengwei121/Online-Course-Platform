@@ -60,13 +60,10 @@ class CourseSeeder extends Seeder
             );
         }
 
-        // Get the teacher from the teachers table (since courses reference teachers.id)
-        $teacher = \App\Models\Teacher::where('email', 'teacher@onlinecourse.com')->first();
-        
-        // Use the same teacher for all courses since we only have one
-        $webDevInstructor = $teacher;
-        $dataInstructor = $teacher;
-        $designInstructor = $teacher;
+        // Get all instructors
+        $webDevInstructor = Instructor::where('email', 'james.martinez@example.com')->first();
+        $dataInstructor = Instructor::where('email', 'sarah.chen@example.com')->first();
+        $designInstructor = Instructor::where('email', 'emily.rodriguez@example.com')->first();
 
         // Web Development courses (taught by James Martinez)
         $this->createWebDevelopmentCourses($webDevInstructor, $categoryImages['Web Development']);
