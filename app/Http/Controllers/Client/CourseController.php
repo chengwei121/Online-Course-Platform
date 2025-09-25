@@ -1,4 +1,4 @@
-<?php
+im<?php
 
 namespace App\Http\Controllers\Client;
 
@@ -102,24 +102,18 @@ class CourseController extends Controller
 
     public function show(string $slug): View
     {
-        $course = Course::with(['instructor', 'lessons'])
-            ->where('slug', $slug)
-            ->where('status', 'published')
-            ->firstOrFail();
-
-        // Load instructor's course count and total students
-        if ($course->instructor) {
-            $course->instructor->courses_count = $course->instructor->courses()->count();
-            $course->instructor->students_count = $course->instructor->courses()
-                ->withCount('enrollments')
-                ->get()
-                ->sum('enrollments_count');
+        // Use optimization service for course details
+        $course = $this->courseOptimizationService->getCourseWithDetails($slug);
+        
+        if (!$course) {
+            abort(404);
         }
 
         $reviews = $course->reviews()
-            ->with('user')
+            ->with('user:id,name')
             ->latest()
-            ->paginate(5);
+            ->limit(10)
+            ->get(); // Load reviews separately for better performance
 
         /** @var User|null $user */
         $user = Auth::user();
@@ -157,14 +151,43 @@ class CourseController extends Controller
             }
         }
 
-        return view('client.courses.show', compact(
+        // Use optimized view if available
+        $viewName = view()->exists('client.courses.show_optimized') ? 'client.courses.show_optimized' : 'client.courses.show';
+        
+        return view($viewName, compact(
             'course', 
             'reviews', 
             'isEnrolled', 
             'hasCompletedCourse', 
             'existingReview', 
             'canReview'
-        ));
+        ))->with('enrolled', $isEnrolled);
+    }
+
+    /**
+     * Get course reviews via API for lazy loading
+     */
+    public function getReviews(Course $course)
+    {
+        $reviews = $course->reviews()
+            ->with('user:id,name')
+            ->latest()
+            ->limit(20)
+            ->get();
+
+        return response()->json([
+            'reviews' => $reviews->map(function($review) {
+                return [
+                    'id' => $review->id,
+                    'rating' => $review->rating,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at,
+                    'user' => [
+                        'name' => $review->user->name
+                    ]
+                ];
+            })
+        ]);
     }
 
     public function learn(Course $course, ?Lesson $lesson = null)
@@ -209,7 +232,10 @@ class CourseController extends Controller
                 ->get();
         }
 
-        return view('client.courses.learn', compact('course', 'lesson', 'progress', 'submissions', 'isCourseCompleted', 'hasReviewed'));
+        // Use optimized view if available
+        $viewName = view()->exists('client.courses.learn_optimized') ? 'client.courses.learn_optimized' : 'client.courses.learn';
+        
+        return view($viewName, compact('course', 'lesson', 'progress', 'submissions', 'isCourseCompleted', 'hasReviewed'));
     }
 
     public function uploadVideo(Request $request, Course $course, Lesson $lesson)

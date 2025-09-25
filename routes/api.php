@@ -22,3 +22,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['auth', 'web'])->group(function () {
     Route::post('/lessons/{lesson}/progress', [App\Http\Controllers\Client\LessonController::class, 'updateProgress'])->name('api.lessons.progress');
 });
+
+// Course reviews API
+Route::get('/courses/{course}/reviews', [App\Http\Controllers\Client\CourseController::class, 'getReviews'])->name('api.courses.reviews');

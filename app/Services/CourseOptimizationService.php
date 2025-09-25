@@ -40,6 +40,26 @@ class CourseOptimizationService
     }
 
     /**
+     * Get course with optimized details for show page
+     */
+    public function getCourseWithDetails($slug)
+    {
+        $cacheKey = "course_details_{$slug}";
+        
+        return Cache::remember($cacheKey, config('performance.cache_duration.courses'), function() use ($slug) {
+            return Course::with([
+                'instructor:id,name,profile_picture',
+                'lessons:id,course_id,title,duration,video_url',
+                'category:id,name',
+                'enrollments:id,course_id'
+            ])
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->first();
+        });
+    }
+
+    /**
      * Get cached categories with course counts
      */
     public function getCachedCategories()
