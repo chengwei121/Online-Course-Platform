@@ -52,7 +52,7 @@ Route::get('/test-admin-chart', function () {
 
 // Home Route (Welcome Page)
 Route::get('/', function () {
-    $featuredCourses = Course::with(['instructor', 'category'])
+    $featuredCourses = Course::with(['teacher', 'category'])
         ->where('status', 'published')
         ->latest()
         ->take(6)
@@ -64,12 +64,13 @@ Route::get('/', function () {
         ->take(3)
         ->get();
 
-    $trendingCourses = Course::with(['category', 'instructor'])
+    $trendingCourses = Course::with(['category', 'teacher'])
         ->where('status', 'published')
         ->withCount('enrollments')
-        ->orderBy('enrollments_count', 'desc')
-        ->orderBy('average_rating', 'desc')
-        ->take(6)
+        ->orderByDesc('enrollments_count')
+        ->orderByDesc('average_rating')
+        ->orderByDesc('created_at')
+        ->take(8)
         ->get();
     
     return view('welcome', [

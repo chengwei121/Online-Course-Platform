@@ -242,31 +242,69 @@
                 <!-- Course Cards Container -->
                 <div class="overflow-hidden">
                     <div class="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
-                        @foreach($trendingCourses as $course)
+                        @forelse($trendingCourses as $course)
                         <div class="flex-none w-[300px] snap-start">
-                            <div class="bg-white rounded-xl overflow-hidden">
+                            <div class="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300">
                                 <!-- Course Image -->
                                 <div class="relative aspect-[4/3]">
-                                    @if($course->is_free)
+                                    <!-- Free/Paid Badge -->
                                     <div class="absolute top-3 left-3 z-10">
-                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-white shadow-sm">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                            </svg>
-                                            FREE
-                                        </span>
+                                        @if($course->is_free || $course->price == 0)
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-green-100 text-green-800">
+                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                </svg>
+                                                FREE
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                ${{ number_format($course->price, 2) }}
+                                            </span>
+                                        @endif
                                     </div>
+                                    
+                                    <!-- Course Thumbnail -->
+                                    @if($course->thumbnail)
+                                        <img src="{{ filter_var($course->thumbnail, FILTER_VALIDATE_URL) ? $course->thumbnail : asset('storage/' . $course->thumbnail) }}" 
+                                             alt="{{ $course->title }}" 
+                                             class="w-full h-full object-cover"
+                                             loading="lazy"
+                                             onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';">
+                                    @else
+                                        <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                                            <svg class="w-16 h-16 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                            </svg>
+                                        </div>
                                     @endif
-                                    <img src="{{ $course->thumbnail }}" 
-                                         alt="{{ $course->title }}" 
-                                         class="w-full h-full object-cover"
-                                         loading="lazy">
                                 </div>
 
                                 <!-- Course Info -->
                                 <div class="p-5">
-                                    <!-- Rating and Learners -->
-                                    <div class="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                                    <!-- Category -->
+                                    @if($course->category)
+                                    <div class="mb-2">
+                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            {{ $course->category->name }}
+                                        </span>
+                                    </div>
+                                    @endif
+
+                                    <!-- Course Title -->
+                                    <h3 class="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
+                                        {{ $course->title }}
+                                    </h3>
+
+                                    <!-- Instructor -->
+                                    @if($course->teacher)
+                                    <p class="text-sm text-gray-600 mb-3">
+                                        By {{ $course->teacher->name }}
+                                    </p>
+                                    @endif
+
+                                    <!-- Rating and Stats -->
+                                    <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
+                                        @if($course->average_rating > 0)
                                         <div class="flex items-center gap-1">
                                             <svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
@@ -274,28 +312,45 @@
                                             <span>{{ number_format($course->average_rating, 1) }}</span>
                                         </div>
                                         <span class="text-gray-400">•</span>
-                                        <span>{{ number_format($course->total_ratings) }}K+ learners</span>
+                                        @endif
+                                        <span>{{ $course->enrollments_count ?? 0 }} enrolled</span>
+                                        @if($course->duration)
+                                        <span class="text-gray-400">•</span>
+                                        <span>{{ $course->duration }} hrs</span>
+                                        @endif
                                     </div>
 
-                                    <!-- Course Title -->
-                                    <h3 class="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
-                                        {{ $course->title }}
-                                    </h3>
-
-                                    <!-- Duration -->
-                                    <div class="text-sm text-gray-600 mb-4">
-                                        {{ $course->duration }} hrs
+                                    <!-- Action Button -->
+                                    <div class="flex items-center justify-between">
+                                        <a href="{{ route('client.courses.show', $course->id) }}" 
+                                           class="inline-flex items-center text-indigo-600 hover:text-indigo-700 font-medium text-sm group">
+                                            View Course
+                                            <svg class="ml-1 w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                            </svg>
+                                        </a>
+                                        
+                                        @if(!$course->is_free && $course->price > 0)
+                                        <span class="text-lg font-bold text-gray-900">
+                                            ${{ number_format($course->price, 2) }}
+                                        </span>
+                                        @endif
                                     </div>
-
-                                    <!-- View Course Link -->
-                                    <a href="{{ route('client.courses.show', $course->slug) }}" 
-                                       class="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                                        View Course
-                                    </a>
                                 </div>
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                        <!-- No courses message -->
+                        <div class="flex-none w-full">
+                            <div class="bg-white rounded-xl overflow-hidden shadow-sm p-8 text-center">
+                                <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                                <h3 class="text-lg font-medium text-gray-900 mb-2">No trending courses available</h3>
+                                <p class="text-gray-600">Check back later for popular courses.</p>
+                            </div>
+                        </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -487,7 +542,7 @@
                         </div>
                         <div class="p-6">
                             <h3 class="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">{{ $instructor->name }}</h3>
-                            <p class="text-indigo-600 text-base font-medium mb-3">{{ $instructor->title }}</p>
+                            <p class="text-indigo-600 text-base font-medium mb-3">{{ $instructor->qualification ?? 'Instructor' }}</p>
                             <p class="text-gray-600 text-sm mb-4 line-clamp-2">
                                 {{ $instructor->bio }}
                             </p>
