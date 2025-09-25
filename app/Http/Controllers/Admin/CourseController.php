@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Category;
-use App\Models\Instructor;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,14 +36,14 @@ class CourseController extends Controller
         
         // Filter by instructor
         if ($request->has('instructor') && $request->instructor) {
-            $query->where('instructor_id', $request->instructor);
+            $query->where('teacher_id', $request->instructor);
         }
         
         $courses = $query->orderBy('created_at', 'desc')->paginate(10);
         
         // Get filter options
         $categories = Category::orderBy('name')->get();
-        $instructors = Instructor::orderBy('name')->get();
+        $instructors = Teacher::orderBy('name')->get();
         
         return view('admin.courses.index', compact('courses', 'categories', 'instructors'));
     }

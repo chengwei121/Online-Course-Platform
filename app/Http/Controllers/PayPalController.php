@@ -21,6 +21,37 @@ class PayPalController extends Controller
     }
 
     /**
+     * Show payment confirmation page
+     */
+    public function confirm($courseId)
+    {
+        try {
+            $course = Course::findOrFail($courseId);
+            $user = Auth::user();
+
+            // Check if user is already enrolled
+            $existingEnrollment = Enrollment::where('user_id', $user->id)
+                ->where('course_id', $course->id)
+                ->where('payment_status', 'completed')
+                ->first();
+
+            if ($existingEnrollment) {
+                return redirect()->route('client.courses.show', $course->slug)
+                    ->with('info', 'You are already enrolled in this course.');
+            }
+
+            // Load course with instructor and category for display
+            $course->load(['instructor', 'category', 'lessons']);
+
+            return view('client.courses.payment-confirm', compact('course'));
+
+        } catch (\Exception $e) {
+            Log::error('Payment Confirmation Error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Course not found.');
+        }
+    }
+
+    /**
      * Initiate PayPal payment for a course
      */
     public function createPayment(Request $request, $courseId)
@@ -122,8 +153,9 @@ class PayPalController extends Controller
                     DB::commit();
 
                     $course = Course::find($courseId);
-                    return redirect()->route('client.courses.show', $course->slug)
-                        ->with('success', 'Payment successful! You are now enrolled in the course.');
+                    return redirect()->route('client.paypal.confirm', $course->id)
+                        ->with('payment_success', 'Successfully purchased the course! You can learn the course now.')
+                        ->with('course_purchased', true);
 
                 } catch (\Exception $e) {
                     DB::rollback();

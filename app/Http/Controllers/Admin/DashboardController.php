@@ -7,6 +7,7 @@ use App\Models\Teacher;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\Enrollment;
+use App\Models\CourseReview;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,7 @@ class DashboardController extends Controller
     const CACHE_STATS = 'dashboard_stats';
     const CACHE_RECENT_TEACHERS = 'dashboard_recent_teachers';
     const CACHE_RECENT_COURSES = 'dashboard_recent_courses';
+    const CACHE_RECENT_REVIEWS = 'dashboard_recent_reviews';
     const CACHE_CHART_DATA = 'dashboard_chart_data_';
     const CACHE_PERFORMANCE = 'dashboard_performance';
     const CACHE_GROWTH = 'dashboard_growth';
@@ -52,13 +54,16 @@ class DashboardController extends Controller
             return $this->getOptimizedRecentCourses();
         });
 
+        // Get fresh recent reviews data (no cache for real-time accuracy)
+        $recentReviews = $this->getOptimizedRecentReviews();
+
         // Get fresh recent data (no cache for real-time accuracy)
         $recentEnrollments = $this->getOptimizedRecentEnrollments();
         
         // Get real-time chart data for the last 6 months (default)
         $chartData = $this->getOptimizedChartData('month');
 
-        return view('admin.dashboard', compact('stats', 'recentTeachers', 'recentCourses', 'recentEnrollments', 'chartData', 'performanceMetrics', 'growthTrends'));
+        return view('admin.dashboard', compact('stats', 'recentTeachers', 'recentCourses', 'recentEnrollments', 'recentReviews', 'chartData', 'performanceMetrics', 'growthTrends'));
     }
 
     public function getRealtimeStats(Request $request)
@@ -82,6 +87,7 @@ class DashboardController extends Controller
             $recentEnrollments = $this->getOptimizedRecentEnrollments();
             $recentTeachers = $this->getOptimizedRecentTeachers();
             $recentCourses = $this->getOptimizedRecentCourses();
+            $recentReviews = $this->getOptimizedRecentReviews();
             
             return response()->json([
                 'success' => true,
@@ -90,7 +96,8 @@ class DashboardController extends Controller
                 'recentActivity' => [
                     'enrollments' => $recentEnrollments,
                     'teachers' => $recentTeachers,
-                    'courses' => $recentCourses
+                    'courses' => $recentCourses,
+                    'reviews' => $recentReviews
                 ],
                 'timestamp' => now()->toISOString(),
                 'lastUpdated' => now()->format('M d, Y H:i:s'),
@@ -234,7 +241,7 @@ class DashboardController extends Controller
      */
     private function getOptimizedRecentCourses()
     {
-        return Course::select(['id', 'title', 'status', 'instructor_id', 'category_id', 'created_at'])
+        return Course::select(['id', 'title', 'status', 'teacher_id', 'category_id', 'created_at'])
             ->with([
                 'instructor:id,name',
                 'category:id,name'
@@ -255,6 +262,24 @@ class DashboardController extends Controller
             ->with([
                 'user:id,name',
                 'course:id,title,price'
+            ])
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
+            ->whereNotNull('created_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
+    }
+
+    /**
+     * Optimized recent reviews query - only from last 30 days
+     */
+    private function getOptimizedRecentReviews()
+    {
+        return CourseReview::select(['id', 'user_id', 'course_id', 'rating', 'comment', 'created_at'])
+            ->with([
+                'user:id,name',
+                'course:id,title,teacher_id',
+                'course.instructor:id,name'
             ])
             ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->whereNotNull('created_at')
@@ -442,6 +467,7 @@ class DashboardController extends Controller
         Cache::forget(self::CACHE_STATS);
         Cache::forget(self::CACHE_RECENT_TEACHERS);
         Cache::forget(self::CACHE_RECENT_COURSES);
+        Cache::forget(self::CACHE_RECENT_REVIEWS);
         Cache::forget(self::CACHE_PERFORMANCE);
         Cache::forget(self::CACHE_GROWTH);
         

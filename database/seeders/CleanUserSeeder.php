@@ -107,24 +107,19 @@ class CleanUserSeeder extends Seeder
             ]
         );
         
-        // Create or update student profile (only if Student model exists)
-        try {
-            if (class_exists('\App\Models\Student')) {
-                Student::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'name' => 'John Doe',
-                        'email' => $studentEmail,
-                        'phone' => '+1-555-0201',
-                        'date_of_birth' => '1995-03-15',
-                        'address' => '456 Student Lane, College Town, CA 90211'
-                    ]
-                );
-            }
-        } catch (\Exception $e) {
-            // Student model doesn't exist or has different structure, skip
-            $this->command->info('   ℹ️  Student profile creation skipped (model not compatible)');
-        }
+        // Create or update student profile in students table
+        Student::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'name' => 'John Doe',
+                'email' => $studentEmail,
+                'phone' => '+1-555-0201',
+                'bio' => 'Enthusiastic learner passionate about technology and personal development.',
+                'date_of_birth' => '1995-03-15',
+                'address' => '456 Student Lane, College Town, CA 90211',
+                'status' => 'active'
+            ]
+        );
         
         $this->command->info('✅ Student user: ' . $user->name);
         $this->command->info('   📧 Email: ' . $studentEmail);

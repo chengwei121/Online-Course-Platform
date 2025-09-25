@@ -194,6 +194,123 @@ The platform uses PayPal for secure payment processing:
 - **File Storage**: Local/Cloud storage support
 - **Build Tools**: Vite, NPM
 
+## 🗄️ Database Schema - User Management
+
+### 👤 User Types & Storage Locations
+
+Your platform uses a **multi-table approach** for user management with role-based access control:
+
+#### 📊 **Primary Users Table**: `users`
+**Location**: All users are stored here with role identification
+```sql
+users table columns:
+├── id (Primary Key)
+├── name
+├── email (Unique)
+├── password (Hashed)
+├── role (enum: 'student', 'instructor', 'admin') ← **KEY COLUMN**
+├── email_verified_at
+├── remember_token
+└── timestamps (created_at, updated_at)
+```
+
+#### 🎓 **Students**: `users` table + `students` table
+- **Primary Storage**: `users.role = 'student'`
+- **Extended Info**: `students` table (linked via user_id foreign key)
+```sql
+students table columns:
+├── id (Primary Key)
+├── user_id (Foreign Key → users.id) ← **MAIN LINK**
+├── name
+├── email
+├── avatar
+├── phone
+├── bio
+├── date_of_birth
+├── address
+├── status (enum: 'active', 'inactive')
+└── timestamps
+```
+
+#### 👨‍🏫 **Teachers/Instructors**: `users` table + `teachers` table
+- **Primary Storage**: `users.role = 'instructor'`
+- **Extended Info**: `teachers` table (linked via user_id foreign key)
+
+```sql
+teachers table columns:
+├── id (Primary Key)
+├── user_id (Foreign Key → users.id) ← **MAIN LINK**
+├── name
+├── email (Unique)
+├── phone
+├── qualification
+├── bio
+├── profile_picture
+├── department
+├── date_of_birth  
+├── address
+├── hourly_rate
+├── status (enum: 'active', 'inactive')
+└── timestamps
+```
+
+#### 👨‍💼 **Admins**: `users` table only
+- **Storage**: `users.role = 'admin'`
+- **No additional table** - admin info stored directly in users table
+
+### 🔍 **How to Query Each User Type**
+
+#### Find Students:
+```php
+// Method 1: From users table
+$students = User::where('role', 'student')->get();
+
+// Method 2: Using relationship
+$user = User::find(1);
+$studentInfo = $user->student; // Gets from students table
+
+// Method 3: Direct from students table
+$student = Student::with('user')->find(1);
+```
+
+#### Find Teachers/Instructors:
+```php
+// Method 1: From users table
+$teachers = User::where('role', 'instructor')->get();
+
+// Method 2: Using relationship 
+$user = User::find(1);
+$teacherInfo = $user->teacher; // Gets from teachers table
+
+// Method 3: Direct from teachers table
+$teacher = Teacher::with('user')->find(1);
+```
+
+#### Find Admins:
+```php
+$admins = User::where('role', 'admin')->get();
+```
+
+### 🎯 **Key Relationships**
+
+```
+users (Primary)
+├── role = 'student' → students table (by user_id FK)
+├── role = 'instructor' → teachers table (by user_id FK)
+└── role = 'admin' → (no additional table)
+
+courses table
+└── teacher_id → teachers table (by teacher_id FK)
+```
+
+### 📋 **Summary Table**
+
+| User Type | Primary Location | Extended Data | Key Column | Relationship |
+|-----------|------------------|---------------|------------|--------------|
+| **👨‍🎓 Students** | `users.role = 'student'` | `students` table | `students.user_id` | Foreign Key |
+| **👨‍🏫 Teachers** | `users.role = 'instructor'` | `teachers` table | `teachers.user_id` | Foreign Key |
+| **👨‍💼 Admins** | `users.role = 'admin'` | None | `users.role` | Direct storage |
+
 ## 📁 Project Structure
 
 ```

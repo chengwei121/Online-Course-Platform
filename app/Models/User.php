@@ -15,6 +15,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\CourseReview;
 use App\Models\Student;
 use App\Models\Teacher;
+use App\Models\Notification;
 
 class User extends Authenticatable
 {
@@ -82,6 +83,16 @@ class User extends Authenticatable
     public function teacher()
     {
         return $this->hasOne(Teacher::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function sentNotifications()
+    {
+        return $this->hasMany(Notification::class, 'sender_id');
     }
 
     public function isInstructor(): bool

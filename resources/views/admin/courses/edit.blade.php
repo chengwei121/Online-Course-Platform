@@ -150,20 +150,20 @@
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="instructor_id" class="form-label">
+                                <label for="teacher_id" class="form-label">
                                     Instructor <span class="required-asterisk">*</span>
                                 </label>
-                                <select class="form-select @error('instructor_id') is-invalid @enderror" 
-                                        id="instructor_id" name="instructor_id">
+                                <select class="form-select @error('teacher_id') is-invalid @enderror" 
+                                        id="teacher_id" name="teacher_id">
                                     <option value="">Select an instructor</option>
                                     @foreach($instructors as $instructor)
                                         <option value="{{ $instructor->id }}" 
-                                                {{ old('instructor_id', $course->instructor_id) == $instructor->id ? 'selected' : '' }}>
+                                                {{ old('teacher_id', $course->teacher_id) == $instructor->id ? 'selected' : '' }}>
                                             {{ $instructor->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('instructor_id')
+                                @error('teacher_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

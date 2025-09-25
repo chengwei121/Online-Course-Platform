@@ -243,6 +243,9 @@
                             <li><a class="dropdown-item" href="#" onclick="filterActivity('enrollments')">
                                 <i class="fas fa-user-graduate me-2"></i>Enrollments Only
                             </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="filterActivity('reviews')">
+                                <i class="fas fa-star me-2"></i>Reviews Only
+                            </a></li>
                         </ul>
                     </div>
                 </div>
@@ -258,7 +261,7 @@
                                     <div class="timeline-icon bg-primary">
                                         <i class="fas fa-user-graduate"></i>
                                     </div>
-                                    @if(!$loop->last || !empty($recentTeachers) || !empty($recentCourses))
+                                    @if(!$loop->last || !empty($recentReviews) || !empty($recentTeachers) || !empty($recentCourses))
                                     <div class="timeline-line"></div>
                                     @endif
                                 </div>
@@ -282,6 +285,52 @@
                                             <span class="text-muted ms-3">
                                                 <i class="fas fa-dollar-sign me-1"></i>
                                                 ${{ $enrollment->course->price ?? '0' }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+
+                        <!-- Recent Reviews Timeline - Only show if there are reviews -->
+                        @if(!empty($recentReviews) && count($recentReviews) > 0)
+                        <div class="timeline-section" data-category="reviews">
+                            @foreach($recentReviews as $index => $review)
+                            <div class="timeline-item">
+                                <div class="timeline-marker">
+                                    <div class="timeline-icon bg-warning">
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    @if(!$loop->last || !empty($recentTeachers) || !empty($recentCourses))
+                                    <div class="timeline-line"></div>
+                                    @endif
+                                </div>
+                                <div class="timeline-content">
+                                    <div class="timeline-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="timeline-title mb-1">New Review</h6>
+                                            <span class="timeline-badge badge bg-warning">
+                                                <i class="fas fa-star me-1"></i>
+                                                {{ $review->rating }}/5 Stars
+                                            </span>
+                                        </div>
+                                        <p class="timeline-description">
+                                            <strong>{{ $review->user->name ?? 'Student' }}</strong> reviewed 
+                                            <em>{{ Str::limit($review->course->title ?? 'Course', 25) }}</em>
+                                            @if($review->comment)
+                                            <br><small class="text-muted">"{{ Str::limit($review->comment, 50) }}"</small>
+                                            @endif
+                                        </p>
+                                        <div class="timeline-meta">
+                                            <span class="text-muted">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ $review->created_at ? $review->created_at->diffForHumans() : 'Recently' }}
+                                            </span>
+                                            <span class="text-muted ms-3">
+                                                <i class="fas fa-chalkboard-teacher me-1"></i>
+                                                {{ $review->course->instructor->name ?? 'Unknown Instructor' }}
                                             </span>
                                         </div>
                                     </div>
@@ -397,13 +446,14 @@
 
                         <!-- No Recent Activity Message - Show when no sections have data -->
                         @if((empty($recentEnrollments) || count($recentEnrollments) == 0) && 
+                            (empty($recentReviews) || count($recentReviews) == 0) && 
                             (empty($recentTeachers) || count($recentTeachers) == 0) && 
                             (empty($recentCourses) || count($recentCourses) == 0))
                         <div class="text-center py-5 no-activity-message">
                             <div class="text-muted">
                                 <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
                                 <h5 class="text-muted mb-2">No Recent Activity</h5>
-                                <p class="mb-0">New enrollments, teachers, and courses will appear here when available.</p>
+                                <p class="mb-0">New enrollments, reviews, teachers, and courses will appear here when available.</p>
                             </div>
                         </div>
                         @endif
@@ -411,9 +461,10 @@
                         <!-- Load More Button - Only show if there might be more data -->
                         @php
                             $hasMoreEnrollments = !empty($recentEnrollments) && count($recentEnrollments) >= 5;
+                            $hasMoreReviews = !empty($recentReviews) && count($recentReviews) >= 5;
                             $hasMoreTeachers = !empty($recentTeachers) && count($recentTeachers) >= 5;
                             $hasMoreCourses = !empty($recentCourses) && count($recentCourses) >= 5;
-                            $showLoadMore = $hasMoreEnrollments || $hasMoreTeachers || $hasMoreCourses;
+                            $showLoadMore = $hasMoreEnrollments || $hasMoreReviews || $hasMoreTeachers || $hasMoreCourses;
                         @endphp
                         
                         @if($showLoadMore)
@@ -2612,6 +2663,13 @@ function updateRecentActivity(recentActivity) {
         timeline.insertBefore(enrollmentSection, timeline.querySelector('.timeline-item.text-center') || null);
     }
     
+    // Add reviews if any
+    if (recentActivity.reviews && recentActivity.reviews.length > 0) {
+        hasAnyActivity = true;
+        const reviewSection = createReviewSection(recentActivity.reviews);
+        timeline.insertBefore(reviewSection, timeline.querySelector('.timeline-item.text-center') || null);
+    }
+    
     // Add teachers if any
     if (recentActivity.teachers && recentActivity.teachers.length > 0) {
         hasAnyActivity = true;
@@ -2634,7 +2692,7 @@ function updateRecentActivity(recentActivity) {
             <div class="text-muted">
                 <i class="fas fa-history fa-3x mb-3 opacity-50"></i>
                 <h5 class="text-muted mb-2">No Recent Activity</h5>
-                <p class="mb-0">New enrollments, teachers, and courses will appear here when available.</p>
+                <p class="mb-0">New enrollments, reviews, teachers, and courses will appear here when available.</p>
             </div>
         `;
         timeline.insertBefore(noActivityDiv, timeline.querySelector('.timeline-item.text-center') || null);
@@ -2682,6 +2740,58 @@ function createEnrollmentSection(enrollments) {
                         <span class="text-muted ms-3">
                             <i class="fas fa-dollar-sign me-1"></i>
                             $${enrollment.course?.price || '0'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        section.appendChild(timelineItem);
+    });
+    
+    return section;
+}
+
+function createReviewSection(reviews) {
+    const section = document.createElement('div');
+    section.className = 'timeline-section';
+    section.setAttribute('data-category', 'reviews');
+    
+    reviews.forEach((review, index) => {
+        const timelineItem = document.createElement('div');
+        timelineItem.className = 'timeline-item';
+        
+        const hasMore = index < reviews.length - 1 || document.querySelector('[data-category="teachers"], [data-category="courses"]');
+        
+        timelineItem.innerHTML = `
+            <div class="timeline-marker">
+                <div class="timeline-icon bg-warning">
+                    <i class="fas fa-star"></i>
+                </div>
+                ${hasMore ? '<div class="timeline-line"></div>' : ''}
+            </div>
+            <div class="timeline-content">
+                <div class="timeline-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="timeline-title mb-1">New Review</h6>
+                        <span class="timeline-badge badge bg-warning">
+                            <i class="fas fa-star me-1"></i>
+                            ${review.rating}/5 Stars
+                        </span>
+                    </div>
+                    <p class="timeline-description">
+                        <strong>${review.user?.name || 'Student'}</strong> reviewed 
+                        <em>${review.course?.title?.substring(0, 25) || 'Course'}${(review.course?.title?.length || 0) > 25 ? '...' : ''}</em>
+                        ${review.comment ? `<br><small class="text-muted">"${review.comment.substring(0, 50)}${review.comment.length > 50 ? '...' : ''}"</small>` : ''}
+                    </p>
+                    <div class="timeline-meta">
+                        <span class="text-muted">
+                            <i class="fas fa-clock me-1"></i>
+                            ${formatTimeAgo(review.created_at)}
+                        </span>
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-chalkboard-teacher me-1"></i>
+                            ${review.course?.instructor?.name || 'Unknown Instructor'}
                         </span>
                     </div>
                 </div>
@@ -2903,7 +3013,7 @@ function filterActivity(category) {
         }
     });
     
-    // Special handling for enrollments filter
+    // Special handling for specific filters
     if (category === 'enrollments') {
         const enrollmentSection = document.querySelector('.timeline-section[data-category="enrollments"]');
         const hasEnrollments = enrollmentSection && enrollmentSection.children.length > 0;
@@ -2916,6 +3026,34 @@ function filterActivity(category) {
             if (noEnrollmentsMessage) {
                 noEnrollmentsMessage.style.display = 'block';
             }
+        }
+    } else if (category === 'reviews') {
+        const reviewSection = document.querySelector('.timeline-section[data-category="reviews"]');
+        const hasReviews = reviewSection && reviewSection.children.length > 0;
+        
+        if (!hasReviews) {
+            // Hide all sections and show no reviews message
+            sections.forEach(section => {
+                section.classList.add('filtered-out');
+            });
+            // Create and show no reviews message if it doesn't exist
+            let noReviewsMessage = document.querySelector('.no-reviews-message');
+            if (!noReviewsMessage) {
+                noReviewsMessage = document.createElement('div');
+                noReviewsMessage.className = 'text-center py-5 no-reviews-message';
+                noReviewsMessage.innerHTML = `
+                    <div class="text-muted">
+                        <i class="fas fa-star fa-3x mb-3 opacity-50"></i>
+                        <h5 class="text-muted mb-2">No Recent Reviews</h5>
+                        <p class="mb-0">When students review courses, their reviews will appear here.</p>
+                    </div>
+                `;
+                const timeline = document.querySelector('.activity-timeline');
+                if (timeline) {
+                    timeline.appendChild(noReviewsMessage);
+                }
+            }
+            noReviewsMessage.style.display = 'block';
         }
     } else {
         // For other filters, handle normally
@@ -2934,7 +3072,8 @@ function filterActivity(category) {
         'all': 'All Activity',
         'teachers': 'Teachers Only',
         'courses': 'Courses Only',
-        'enrollments': 'Enrollments Only'
+        'enrollments': 'Enrollments Only',
+        'reviews': 'Reviews Only'
     };
     
     if (filterBtn) {

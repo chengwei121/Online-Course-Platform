@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Diagnostic Test</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .test-card {
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .test-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+        
+        .test-gradient {
+            background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+        }
+        
+        .test-step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #4f46e5;
+            color: white;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f6f7ff 0%, #ffffff 100%);
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- CSS Test Header -->
+                <div class="test-card card mb-4">
+                    <div class="card-header test-gradient text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-palette me-2"></i>
+                            CSS Diagnostic Test
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            This page tests if CSS is loading properly in your Laravel application.
+                        </div>
+                        
+                        <!-- Step Circles Test -->
+                        <h5>Step Progress Test:</h5>
+                        <div class="d-flex justify-content-center align-items-center mb-4">
+                            <div class="test-step-circle me-3">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div style="height: 2px; background: #e5e7eb; flex: 1;"></div>
+                            <div class="test-step-circle mx-3">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div style="height: 2px; background: #e5e7eb; flex: 1;"></div>
+                            <div class="test-step-circle ms-3">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Bootstrap Test -->
+                        <h5>Bootstrap Components Test:</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100">Primary Button</button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-success w-100">Success Button</button>
+                            </div>
+                            <div class="col-md-4">
+                                <button class="btn btn-warning w-100">Warning Button</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Font Awesome Test -->
+                        <h5>Font Awesome Icons Test:</h5>
+                        <div class="d-flex gap-3 mb-3">
+                            <i class="fas fa-home fa-2x text-primary"></i>
+                            <i class="fas fa-user fa-2x text-success"></i>
+                            <i class="fas fa-cog fa-2x text-warning"></i>
+                            <i class="fas fa-heart fa-2x text-danger"></i>
+                        </div>
+                        
+                        <!-- CSS Animation Test -->
+                        <h5>CSS Animation Test:</h5>
+                        <p>The step circles above should have a pulsing animation.</p>
+                        
+                        <!-- Hover Effect Test -->
+                        <h5>Hover Effects Test:</h5>
+                        <p>This card should lift up when you hover over it.</p>
+                        
+                        <div class="mt-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="text-success">✅ If you can see:</h6>
+                                    <ul class="text-success">
+                                        <li>Gradient backgrounds</li>
+                                        <li>Rounded cards with shadows</li>
+                                        <li>Pulsing animation on circles</li>
+                                        <li>Font Awesome icons</li>
+                                        <li>Bootstrap buttons and grid</li>
+                                        <li>Hover effects on this card</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6 class="text-danger">❌ If you don't see these:</h6>
+                                    <ul class="text-danger">
+                                        <li>CSS is not loading properly</li>
+                                        <li>There may be a CDN issue</li>
+                                        <li>Browser cache needs clearing</li>
+                                        <li>CSS syntax errors exist</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 text-center">
+                            <a href="http://127.0.0.1:8000" class="btn btn-primary me-2">
+                                <i class="fas fa-home me-2"></i>Go to Laravel App
+                            </a>
+                            <a href="http://127.0.0.1:8000/client/courses" class="btn btn-success">
+                                <i class="fas fa-book me-2"></i>Go to Courses
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        console.log('CSS Test Page Loaded');
+        console.log('Bootstrap CSS:', document.querySelector('link[href*="bootstrap"]') ? 'Loaded' : 'Not Found');
+        console.log('Font Awesome CSS:', document.querySelector('link[href*="font-awesome"]') ? 'Loaded' : 'Not Found');
+        
+        // Test if CSS is working
+        const testCard = document.querySelector('.test-card');
+        if (testCard) {
+            const computedStyle = window.getComputedStyle(testCard);
+            console.log('Card border-radius:', computedStyle.borderRadius);
+            console.log('Card box-shadow:', computedStyle.boxShadow);
+        }
+    </script>
+</body>
+</html>

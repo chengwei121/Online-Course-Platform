@@ -24,7 +24,7 @@ class LessonController extends Controller
     public function index(Course $course)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -62,7 +62,7 @@ class LessonController extends Controller
     public function create(Course $course)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -84,7 +84,7 @@ class LessonController extends Controller
         ini_set('memory_limit', '512M');
         
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
@@ -167,7 +167,7 @@ class LessonController extends Controller
     public function show(Course $course, Lesson $lesson)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -187,7 +187,7 @@ class LessonController extends Controller
     public function edit(Course $course, Lesson $lesson)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -205,7 +205,7 @@ class LessonController extends Controller
     public function update(Request $request, Course $course, Lesson $lesson)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -266,7 +266,7 @@ class LessonController extends Controller
     public function destroy(Course $course, Lesson $lesson)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -297,7 +297,7 @@ class LessonController extends Controller
     public function reorder(Request $request, Course $course)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 

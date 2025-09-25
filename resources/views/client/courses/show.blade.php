@@ -206,17 +206,14 @@
                                         </button>
                                     </form>
                                 @else
-                                    <!-- PayPal Payment Button -->
-                                    <form action="{{ route('client.paypal.pay', $course) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" 
-                                                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
-                                            </svg>
-                                            Pay with PayPal - ${{ number_format($course->price, 2) }}
-                                        </button>
-                                    </form>
+                                    <!-- Payment Confirmation Button -->
+                                    <a href="{{ route('client.paypal.confirm', $course) }}" 
+                                       class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                                        </svg>
+                                        Enroll Now - ${{ number_format($course->price, 2) }}
+                                    </a>
                                     
                                     <!-- Alternative Direct Enrollment (for testing or other payment methods) -->
                                     <div class="mt-3">

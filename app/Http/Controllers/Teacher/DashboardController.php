@@ -25,26 +25,26 @@ class DashboardController extends Controller
         }
 
         // Get teacher's courses
-        $courses = Course::where('instructor_id', $teacher->id)
+        $courses = Course::where('teacher_id', $teacher->id)
             ->withCount(['enrollments', 'lessons'])
             ->latest()
             ->take(5)
             ->get();
 
         // Get total stats
-        $totalCourses = Course::where('instructor_id', $teacher->id)->count();
+        $totalCourses = Course::where('teacher_id', $teacher->id)->count();
         $totalStudents = Enrollment::whereIn('course_id', 
-            Course::where('instructor_id', $teacher->id)->pluck('id')
+            Course::where('teacher_id', $teacher->id)->pluck('id')
         )->distinct('user_id')->count();
         
         // Get total assignments (assignments are linked to lessons, not directly to courses)
         $totalAssignments = Assignment::whereIn('lesson_id',
-            Lesson::whereIn('course_id', Course::where('instructor_id', $teacher->id)->pluck('id'))->pluck('id')
+            Lesson::whereIn('course_id', Course::where('teacher_id', $teacher->id)->pluck('id'))->pluck('id')
         )->count();
 
         // Get recent enrollments
         $recentEnrollments = Enrollment::with(['user', 'course'])
-            ->whereIn('course_id', Course::where('instructor_id', $teacher->id)->pluck('id'))
+            ->whereIn('course_id', Course::where('teacher_id', $teacher->id)->pluck('id'))
             ->latest()
             ->take(5)
             ->get();
@@ -54,7 +54,7 @@ class DashboardController extends Controller
             ->whereIn('assignment_id', 
                 Assignment::whereIn('lesson_id', 
                     Lesson::whereIn('course_id', 
-                        Course::where('instructor_id', $teacher->id)->pluck('id')
+                        Course::where('teacher_id', $teacher->id)->pluck('id')
                     )->pluck('id')
                 )->pluck('id')
             )

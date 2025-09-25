@@ -80,7 +80,7 @@
                                 Total Instructors
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $category->courses->pluck('instructor_id')->unique()->count() }}
+                                {{ $category->courses->pluck('teacher_id')->unique()->count() }}
                             </div>
                         </div>
                         <div class="col-auto">

@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Course;
 use App\Models\Category;
-use App\Models\Instructor;
+use App\Models\Teacher;
 use App\Models\CourseReview;
 use App\Models\User;
 use App\Models\Enrollment;
@@ -334,7 +334,7 @@ class CourseSeeder extends Seeder
             'price' => $courseData['price'],
             'thumbnail' => $image,
             'slug' => Str::slug($courseData['title']),
-            'instructor_id' => $instructor->id,
+            'teacher_id' => $instructor->id,
             'category_id' => $category->id,
             'status' => 'published',
             'duration' => $courseData['duration'],

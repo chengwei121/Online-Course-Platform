@@ -8,7 +8,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Client\AssignmentController;
 use App\Models\Course;
 use App\Http\Controllers\Client\LessonController;
-use App\Models\Instructor;
+use App\Models\Teacher;
 use Illuminate\Support\Facades\Artisan;
 
 /*
@@ -58,7 +58,7 @@ Route::get('/', function () {
         ->take(6)
         ->get();
     
-    $instructors = Instructor::select('id', 'name', 'title', 'bio', 'profile_picture')
+    $instructors = Teacher::select('id', 'name', 'qualification', 'bio', 'profile_picture')
         ->withCount('courses')
         ->orderByDesc('courses_count')
         ->take(3)
@@ -130,6 +130,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Administrator Management
     Route::resource('admins', App\Http\Controllers\Admin\AdminController::class)->except(['create', 'store']);
     Route::patch('admins/{admin}/toggle-verification', [App\Http\Controllers\Admin\AdminController::class, 'toggleVerification'])->name('admins.toggle-verification');
+    
+    // Notification Management
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('create', [App\Http\Controllers\Admin\NotificationController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('store');
+        Route::post('test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])->name('test');
+    });
 });
 
 // Temporary chart data route outside middleware for debugging
@@ -172,7 +179,7 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
                 'id' => $teacher->id,
                 'name' => $teacher->name
             ] : null,
-            'courses_count' => $teacher ? App\Models\Course::where('instructor_id', $teacher->id)->count() : 0
+            'courses_count' => $teacher ? App\Models\Course::where('teacher_id', $teacher->id)->count() : 0
         ]);
     })->name('debug-auth');
     
@@ -222,6 +229,16 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::get('my-payments', [App\Http\Controllers\Client\StudentController::class, 'payments'])->name('payments.index');
         Route::get('my-reviews', [App\Http\Controllers\Client\StudentController::class, 'reviews'])->name('reviews.index');
 
+        // Notification Routes
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Client\NotificationController::class, 'index'])->name('index');
+            Route::get('api/get', [App\Http\Controllers\Client\NotificationController::class, 'getNotifications'])->name('get');
+            Route::get('api/count', [App\Http\Controllers\Client\NotificationController::class, 'getUnreadCount'])->name('count');
+            Route::post('{notification}/read', [App\Http\Controllers\Client\NotificationController::class, 'markAsRead'])->name('read');
+            Route::post('mark-all-read', [App\Http\Controllers\Client\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('{notification}', [App\Http\Controllers\Client\NotificationController::class, 'destroy'])->name('destroy');
+        });
+
         // Course Learning Routes
         Route::get('courses/{course:slug}/learn/{lesson?}', [CourseController::class, 'learn'])->name('courses.learn');
         Route::post('courses/{course:slug}/lessons/{lesson}/progress', [CourseController::class, 'updateProgress'])->name('lessons.progress');
@@ -241,6 +258,7 @@ Route::prefix('client')->name('client.')->group(function () {
 
         // PayPal Payment Routes
         Route::prefix('paypal')->name('paypal.')->group(function () {
+            Route::get('confirm/{course}', [App\Http\Controllers\PayPalController::class, 'confirm'])->name('confirm');
             Route::post('pay/{course}', [App\Http\Controllers\PayPalController::class, 'createPayment'])->name('pay');
             Route::get('success', [App\Http\Controllers\PayPalController::class, 'success'])->name('success');
             Route::get('cancel', [App\Http\Controllers\PayPalController::class, 'cancel'])->name('cancel');

@@ -119,7 +119,7 @@ class PayPalTestCourseSeeder extends Seeder
                     ['title' => $courseData['title']],
                     array_merge($courseData, [
                         'slug' => Str::slug($courseData['title']),
-                        'instructor_id' => $teacher->id,
+                        'teacher_id' => $teacher->id,
                         'category_id' => $category->id,
                         'average_rating' => rand(40, 50) / 10, // 4.0 to 5.0
                         'total_ratings' => rand(10, 100),

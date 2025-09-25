@@ -116,19 +116,19 @@
                                 @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="instructor_id" class="form-label">Instructor <span class="text-danger">*</span></label>
-                                <select class="form-select @error('instructor_id') is-invalid @enderror" 
-                                        id="instructor_id" 
-                                        name="instructor_id" 
+                                <label for="teacher_id" class="form-label">Instructor <span class="text-danger">*</span></label>
+                                <select class="form-select @error('teacher_id') is-invalid @enderror" 
+                                        id="teacher_id" 
+                                        name="teacher_id" 
                                         required>
                                     <option value="">Select an instructor</option>
                                     @foreach($instructors as $instructor)
-                                        <option value="{{ $instructor->id }}" {{ old('instructor_id') == $instructor->id ? 'selected' : '' }}>
+                                        <option value="{{ $instructor->id }}" {{ old('teacher_id') == $instructor->id ? 'selected' : '' }}>
                                             {{ $instructor->name }}
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('instructor_id')
+                                @error('teacher_id')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('courseForm');
     form.addEventListener('submit', function(e) {
         let isValid = true;
-        const requiredFields = ['title', 'description', 'category_id', 'instructor_id', 'level'];
+        const requiredFields = ['title', 'description', 'category_id', 'teacher_id', 'level'];
         
         requiredFields.forEach(fieldName => {
             const field = document.getElementById(fieldName);

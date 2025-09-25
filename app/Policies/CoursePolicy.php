@@ -21,7 +21,7 @@ class CoursePolicy
      */
     public function view(User $user, Course $course): bool
     {
-        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->instructor_id;
+        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->teacher_id;
     }
 
     /**
@@ -37,7 +37,7 @@ class CoursePolicy
      */
     public function update(User $user, Course $course): bool
     {
-        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->instructor_id;
+        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->teacher_id;
     }
 
     /**
@@ -45,7 +45,7 @@ class CoursePolicy
      */
     public function delete(User $user, Course $course): bool
     {
-        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->instructor_id;
+        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->teacher_id;
     }
 
     /**
@@ -53,7 +53,7 @@ class CoursePolicy
      */
     public function restore(User $user, Course $course): bool
     {
-        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->instructor_id;
+        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->teacher_id;
     }
 
     /**
@@ -61,6 +61,6 @@ class CoursePolicy
      */
     public function forceDelete(User $user, Course $course): bool
     {
-        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->instructor_id;
+        return $user->isTeacher() && $user->teacher && $user->teacher->id === $course->teacher_id;
     }
 }

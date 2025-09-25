@@ -13,6 +13,9 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
     
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -71,12 +74,6 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
-            transition: all 0.3s ease;
-        }
-
-        .logo-icon:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 12px rgba(79, 70, 229, 0.3);
         }
 
         .logo-icon svg {
@@ -87,113 +84,36 @@
 
         /* Modern Glassmorphism Header */
         .header-wrapper {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 50;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .header-wrapper.scrolled {
-            background: rgba(255, 255, 255, 0.95);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
-            border-bottom: 1px solid rgba(229, 231, 235, 0.8);
-        }
-
-        /* Logo Animation */
-        .logo-wrapper {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .logo-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
-            transition: 0.5s;
-        }
-
-        .logo-wrapper:hover::before {
-            left: 100%;
         }
 
         .logo-icon {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            position: relative;
-            overflow: hidden;
-        }
-
-        .logo-icon::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-            transform: rotate(45deg);
-            transition: 0.5s;
-        }
-
-        .logo-icon:hover::after {
-            transform: rotate(45deg) translate(50%, 50%);
         }
 
         /* Navigation Links */
         .nav-link {
-            position: relative;
             color: #1F2937;
             font-weight: 500;
             padding: 0.5rem 1rem;
             border-radius: 0.75rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-            z-index: 1;
-        }
-
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(-50%);
-            z-index: -1;
-        }
-
-        .nav-link:hover::before {
-            width: 100%;
         }
 
         .nav-link:hover {
             color: var(--primary);
-            transform: translateY(-1px);
         }
 
         .nav-link.active {
             color: var(--primary);
             background: rgba(79, 70, 229, 0.1);
-            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);
-        }
-
-        .nav-link.active::before {
-            width: 100%;
         }
 
         /* Search Bar */
@@ -310,32 +230,9 @@
 
         /* Mobile Menu Button */
         .mobile-menu-button {
-            position: relative;
             width: 2.5rem;
             height: 2.5rem;
             border-radius: 0.75rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-
-        .mobile-menu-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(79, 70, 229, 0.1),
-                transparent
-            );
-            transition: 0.5s;
-        }
-
-        .mobile-menu-button:hover::before {
-            left: 100%;
         }
 
         .mobile-menu-button:hover {
@@ -831,26 +728,192 @@
             animation: avatar-ring-pulse 2s infinite;
         }
     </style>
+    
+    <!-- Loading Styles -->
+    <style>
+        /* Loading Spinner Styles */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #f6f7ff 0%, #ffffff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .page-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loader-content {
+            text-align: center;
+            animation: fadeInUp 0.6s ease;
+        }
+        
+        .spinner-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+        }
+        
+        .spinner {
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(79, 70, 229, 0.1);
+            border-top: 4px solid #4F46E5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        .spinner-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #4F46E5, #0EA5E9);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .spinner-logo i {
+            color: white;
+            font-size: 14px;
+        }
+        
+        .loader-text {
+            color: #4F46E5;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+        
+        .loader-subtext {
+            color: #6B7280;
+            font-size: 0.875rem;
+        }
+        
+        .progress-bar-container {
+            width: 200px;
+            height: 4px;
+            background: rgba(79, 70, 229, 0.1);
+            border-radius: 2px;
+            margin: 1rem auto 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4F46E5, #0EA5E9);
+            border-radius: 2px;
+            animation: progress 2s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+        
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes progress {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* Page transition loading */
+        .page-transition {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .page-transition.loaded {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+
     @stack('styles')
 </head>
 <body class="bg-gray-50 min-h-screen flex flex-col" 
       x-data="{ 
           mobileMenuOpen: false, 
           userMenuOpen: false,
-          scrolled: false,
+          pageLoaded: false,
           init() {
-              window.addEventListener('scroll', () => {
-                  this.scrolled = window.pageYOffset > 20
-              });
               AOS.init({
                   duration: 800,
                   easing: 'ease-in-out',
                   once: true
               });
+              
+              // Show page loader
+              this.showLoader();
+          },
+          showLoader() {
+              // Simulate loading time
+              setTimeout(() => {
+                  this.hideLoader();
+              }, 1500);
+          },
+          hideLoader() {
+              document.querySelector('.page-loader').classList.add('hidden');
+              document.querySelector('main').classList.add('loaded');
+              this.pageLoaded = true;
           }
       }">
+
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-content">
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <div class="spinner-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+            </div>
+            <div class="loader-text">Loading LearnHub</div>
+            <div class="loader-subtext">Preparing your learning experience...</div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill"></div>
+            </div>
+        </div>
+    </div>
     <!-- Header -->
-    <header class="header-wrapper" :class="{ 'scrolled': scrolled }">
+    <header class="header-wrapper">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 lg:h-20">
                 <!-- Logo -->
@@ -886,8 +949,8 @@
                     @auth
                         <!-- Notifications -->
                         <div class="relative hidden sm:block">
-                            <button class="p-2 rounded-xl hover:bg-gray-100 transition relative group">
-                                <i class="fas fa-bell text-gray-600 group-hover:text-primary transition-colors"></i>
+                            <button class="p-2 rounded-xl hover:bg-gray-100 relative group">
+                                <i class="fas fa-bell text-gray-600 group-hover:text-primary"></i>
                                 <span class="notification-badge">2</span>
                             </button>
                         </div>
@@ -896,7 +959,7 @@
                         <div class="relative hidden sm:block" x-data="{ open: false }">
                             <button @click="open = !open"
                                     @keydown.escape.window="open = false"
-                                    class="flex items-center gap-3 p-1.5 pl-2 pr-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-all duration-200">
+                                    class="flex items-center gap-3 p-1.5 pl-2 pr-3 rounded-xl hover:bg-gray-50 active:bg-gray-100">
                                 <div class="relative">
                                     <img class="w-9 h-9 rounded-lg object-cover ring-2 ring-white" 
                                          src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=random" 
@@ -907,19 +970,13 @@
                                     <p class="text-sm font-semibold text-gray-800 leading-none mb-0.5">{{ auth()->user()->name }}</p>
                                     <p class="text-xs text-gray-500 leading-none">Student</p>
                                 </div>
-                                <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-200 hidden sm:block"
+                                <i class="fas fa-chevron-down text-gray-400 text-xs hidden sm:block"
                                    :class="{ 'transform rotate-180': open }"></i>
                             </button>
 
                             <div x-show="open"
                                  x-cloak
                                  @click.away="open = false"
-                                 x-transition:enter="transition ease-out duration-200"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-150"
-                                 x-transition:leave-start="opacity-100 scale-100"
-                                 x-transition:leave-end="opacity-0 scale-95"
                                  class="absolute right-0 mt-3 w-72 origin-top-right">
                                 <div class="rounded-2xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 overflow-hidden">
                                     <!-- User Info -->
@@ -1063,12 +1120,6 @@
         <!-- Mobile Menu -->
         <div class="lg:hidden"
              x-show="mobileMenuOpen"
-             x-transition:enter="transition ease-out duration-200"
-             x-transition:enter-start="opacity-0 -translate-y-1"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-150"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-1"
              x-cloak>
             <div class="pt-2 pb-3 space-y-1 px-4 sm:px-6">
                 <a href="{{ route('client.courses.index') }}"
@@ -1153,7 +1204,8 @@
     </header>
 
     <!-- Main Content -->
-    <main>
+    <main class="page-transition">
+        <div class="container-fluid p-0">
             @if(session('success'))
                 <div class="alert bg-green-50 border-l-4 border-green-500 mb-6" 
                      x-data="{ show: true }" 
@@ -1301,13 +1353,138 @@
         </div>
     </footer>
 
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     @stack('scripts')
+    
+    <!-- Loading Scripts -->
     <script>
         // Initialize AOS
         AOS.init({
             duration: 800,
             easing: 'ease-in-out',
             once: true
+        });
+
+        // Loading functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show mini loader for form submissions
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn && !submitBtn.disabled) {
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        
+                        // Re-enable after 5 seconds as fallback
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }, 5000);
+                    }
+                });
+            });
+
+            // Show mini loader for navigation links
+            const navLinks = document.querySelectorAll('a[href]:not([href^="#"]):not([target="_blank"]):not([href^="mailto:"]):not([href^="tel:"])');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Skip if it's a same-page link or external link
+                    if (this.hostname !== window.location.hostname) return;
+                    
+                    // Show mini loading state
+                    const loader = document.createElement('div');
+                    loader.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 4px;
+                        background: linear-gradient(90deg, #4F46E5, #0EA5E9);
+                        z-index: 9999;
+                        animation: slideIn 0.3s ease;
+                    `;
+                    loader.innerHTML = '<div style="height: 100%; background: rgba(255,255,255,0.3); animation: progress 1s ease-in-out infinite;"></div>';
+                    document.body.appendChild(loader);
+                    
+                    // Remove loader after page starts loading
+                    setTimeout(() => {
+                        if (loader.parentNode) {
+                            loader.remove();
+                        }
+                    }, 500);
+                });
+            });
+
+            // Page visibility change handler
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    // Page is visible again
+                    const loader = document.querySelector('.page-loader');
+                    if (loader && !loader.classList.contains('hidden')) {
+                        setTimeout(() => {
+                            loader.classList.add('hidden');
+                        }, 500);
+                    }
+                }
+            });
+        });
+
+        // Show loading for AJAX requests
+        if (window.axios) {
+            axios.interceptors.request.use(function (config) {
+                showMiniLoader();
+                return config;
+            });
+
+            axios.interceptors.response.use(function (response) {
+                hideMiniLoader();
+                return response;
+            }, function (error) {
+                hideMiniLoader();
+                return Promise.reject(error);
+            });
+        }
+
+        function showMiniLoader() {
+            let loader = document.getElementById('miniLoader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'miniLoader';
+                loader.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 3px;
+                    background: linear-gradient(90deg, #4F46E5, #0EA5E9);
+                    z-index: 9999;
+                    opacity: 0;
+                    transition: opacity 0.2s ease;
+                `;
+                document.body.appendChild(loader);
+            }
+            loader.style.opacity = '1';
+        }
+
+        function hideMiniLoader() {
+            const loader = document.getElementById('miniLoader');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    if (loader.parentNode) {
+                        loader.remove();
+                    }
+                }, 200);
+            }
+        }
+
+        // Show loading on page unload
+        window.addEventListener('beforeunload', function() {
+            showMiniLoader();
         });
     </script>
 </body>

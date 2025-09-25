@@ -26,7 +26,7 @@ class CourseController extends Controller
             $perPage = 12;
         }
         
-        $query = Course::where('instructor_id', $teacher->id)
+        $query = Course::where('teacher_id', $teacher->id)
             ->withCount(['enrollments', 'lessons']);
             
         // Search functionality
@@ -67,7 +67,7 @@ class CourseController extends Controller
                 ->latest()
                 ->get()
                 ->groupBy(function($course) {
-                    return $course->instructor_id == Auth::user()->teacher->id ? 'my_courses' : 'other_courses';
+                    return $course->teacher_id == Auth::user()->teacher->id ? 'my_courses' : 'other_courses';
                 });
         }
         
@@ -104,7 +104,7 @@ class CourseController extends Controller
                 'instructor_name' => $course->instructor->name,
                 'enrollments_count' => $course->enrollments_count,
                 'lessons_count' => $course->lessons_count,
-                'is_my_course' => $course->instructor_id == ($teacher ? $teacher->id : null),
+                'is_my_course' => $course->teacher_id == ($teacher ? $teacher->id : null),
                 'created_at' => $course->created_at->diffForHumans(),
                 'edit_url' => route('teacher.courses.edit', $course),
                 'view_url' => route('teacher.courses.show', $course)
@@ -149,7 +149,7 @@ class CourseController extends Controller
             'title' => $request->title,
             'slug' => Str::slug($request->title),
             'description' => $request->description,
-            'instructor_id' => $teacher->id,
+            'teacher_id' => $teacher->id,
             'category_id' => $request->category_id,
             'price' => $request->is_free ? 0 : ($request->price ?? 0),
             'level' => $request->level,

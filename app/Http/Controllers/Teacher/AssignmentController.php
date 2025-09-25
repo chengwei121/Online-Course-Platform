@@ -22,7 +22,7 @@ class AssignmentController extends Controller
     public function create(Course $course, Lesson $lesson)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -40,7 +40,7 @@ class AssignmentController extends Controller
     public function store(Request $request, Course $course, Lesson $lesson)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -83,7 +83,7 @@ class AssignmentController extends Controller
     public function show(Course $course, Lesson $lesson, Assignment $assignment)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -106,7 +106,7 @@ class AssignmentController extends Controller
     public function edit(Course $course, Lesson $lesson, Assignment $assignment)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -129,7 +129,7 @@ class AssignmentController extends Controller
     public function update(Request $request, Course $course, Lesson $lesson, Assignment $assignment)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 
@@ -176,7 +176,7 @@ class AssignmentController extends Controller
     public function destroy(Course $course, Lesson $lesson, Assignment $assignment)
     {
         // Ensure the course belongs to the authenticated teacher
-        if ($course->instructor_id !== Auth::user()->teacher->id) {
+        if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
         }
 

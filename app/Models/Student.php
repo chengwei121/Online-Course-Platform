@@ -4,36 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class Student extends Authenticatable
+class Student extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'name',
         'email',
-        'password',
         'avatar',
         'phone',
         'bio',
+        'date_of_birth',
+        'address',
         'status'
     ];
 
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'date_of_birth' => 'date',
     ];
 
-    public function enrollments()
+    /**
+     * Get the user that owns the student profile
+     */
+    public function user(): BelongsTo
     {
-        return $this->hasMany(Enrollment::class);
+        return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get enrollments for this student
+     * Note: Enrollments are linked through the user_id in users table
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class, 'user_id', 'user_id');
     }
 }

@@ -18,7 +18,7 @@ class Course extends Model
         'price',
         'thumbnail',
         'slug',
-        'instructor_id',
+        'teacher_id',
         'category_id',
         'status',
         'duration',
@@ -105,7 +105,12 @@ class Course extends Model
 
     public function instructor(): BelongsTo
     {
-        return $this->belongsTo(Teacher::class, 'instructor_id');
+        return $this->belongsTo(Teacher::class, 'teacher_id');
+    }
+
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
     public function category(): BelongsTo
