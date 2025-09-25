@@ -13,6 +13,7 @@ use App\Models\AssignmentSubmission;
 use App\Models\User;
 use App\Models\Enrollment;
 use App\Models\CourseReview;
+use App\Services\CourseOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -23,91 +24,66 @@ use Illuminate\Http\JsonResponse;
 
 class CourseController extends Controller
 {
+    protected $courseOptimizationService;
+
+    public function __construct(CourseOptimizationService $courseOptimizationService)
+    {
+        $this->courseOptimizationService = $courseOptimizationService;
+    }
+
     public function index(Request $request)
     {
-        $query = Course::query()
-            ->with(['category', 'instructor'])
-            ->withAvg('reviews', 'rating')
-            ->withCount('reviews');
+        try {
+            // Get filters from request
+            $filters = $request->only(['category', 'level', 'duration', 'rating', 'price_type', 'search']);
+            
+            // Get cached categories
+            $categories = $this->courseOptimizationService->getCachedCategories();
+            
+            // Get optimized courses
+            $courses = $this->courseOptimizationService->getOptimizedCourses($filters, 9);
+            
+            // Optimize thumbnails
+            $courses->setCollection($this->courseOptimizationService->optimizeThumbnails($courses->getCollection()));
 
-        // Apply filters with support for multiple values
-        if ($request->filled('category')) {
-            $categories = is_array($request->category) ? $request->category : [$request->category];
-            $query->whereIn('category_id', $categories);
-        }
-
-        if ($request->filled('level')) {
-            $levels = is_array($request->level) ? $request->level : [$request->level];
-            $query->whereIn('level', $levels);
-        }
-
-        if ($request->filled('duration')) {
-            $durations = is_array($request->duration) ? $request->duration : [$request->duration];
-            $query->where(function($q) use ($durations) {
-                foreach ($durations as $duration) {
-                    switch ($duration) {
-                        case 'short':
-                            $q->orWhere('duration', '<=', 3);
-                            break;
-                        case 'medium':
-                            $q->orWhereBetween('duration', [3, 6]);
-                            break;
-                        case 'long':
-                            $q->orWhere('duration', '>', 6);
-                            break;
-                    }
-                }
-            });
-        }
-
-        if ($request->filled('rating')) {
-            $ratings = is_array($request->rating) ? $request->rating : [$request->rating];
-            $minRating = min($ratings); // Use the lowest rating selected
-            $query->having('reviews_avg_rating', '>=', $minRating);
-        }
-
-        if ($request->filled('price_type')) {
-            $priceTypes = is_array($request->price_type) ? $request->price_type : [$request->price_type];
-            $query->where(function($q) use ($priceTypes) {
-                foreach ($priceTypes as $priceType) {
-                    if ($priceType === 'free') {
-                        $q->orWhere('is_free', true);
-                    } elseif ($priceType === 'premium') {
-                        $q->orWhere('is_free', false);
-                    }
-                }
-            });
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $courses = $query->latest()->paginate(12);
-        
-        // Add thumbnail URL accessor
-        $courses->each(function ($course) {
-            if ($course->thumbnail && Storage::disk('public')->exists($course->thumbnail)) {
-                $course->thumbnail_url = asset('storage/' . $course->thumbnail);
-            } else {
-                $course->thumbnail_url = asset('images/course-placeholder.jpg');
+            if ($request->ajax()) {
+                return response()->json([
+                    'html' => view('client.courses._grid_optimized', compact('courses'))->render(),
+                    'has_more' => $courses->hasMorePages(),
+                    'next_page' => $courses->nextPageUrl(),
+                    'current_page' => $courses->currentPage(),
+                    'total' => $courses->total()
+                ]);
             }
-        });
 
-        $categories = Category::withCount('courses')->get();
-
-        if ($request->ajax()) {
-            if ($request->filled('partial')) {
-                return view('client.courses._grid', compact('courses'))->render();
+            return view('client.courses.index', compact('courses', 'categories'));
+            
+        } catch (\Exception $e) {
+            Log::error('Error loading courses: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'error' => 'Failed to load courses. Please try again.',
+                    'html' => '<div class="col-span-full text-center p-8 text-red-500">Error loading courses. Please refresh the page.</div>'
+                ], 500);
             }
-            return view('client.courses._grid', compact('courses'));
+            
+            return back()->with('error', 'Failed to load courses. Please try again.');
         }
+    }
 
-        return view('client.courses.index', compact('courses', 'categories'));
+    /**
+     * Get optimized thumbnail URL with fallback
+     */
+    private function getOptimizedThumbnailUrl($thumbnail)
+    {
+        if ($thumbnail && Storage::disk('public')->exists($thumbnail)) {
+            return asset('storage/' . $thumbnail);
+        }
+        return asset('images/course-placeholder.jpg');
     }
 
     /**
