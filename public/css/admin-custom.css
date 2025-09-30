@@ -32,30 +32,80 @@ body {
 .sidebar {
     background-color: var(--sidebar-bg);
     color: var(--sidebar-text);
-    height: 100vh;
-    overflow-y: auto;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    height: 100vh !important;
+    width: 16.666667%; /* Matches col-md-3 col-lg-2 */
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
     z-index: 1000;
-    width: 25%; /* For col-md-3 */
+    padding: 0;
 }
 
 /* Adjust main content to account for fixed sidebar */
 .main-content {
-    margin-left: 25%; /* Match sidebar width */
-    width: 75%;
+    background: var(--content-bg);
+    min-height: 100vh;
+    margin-left: 16.666667% !important; /* Same width as sidebar */
+    width: calc(100% - 16.666667%) !important;
+    padding-top: 0 !important; /* Remove excessive top padding */
+}
+
+/* Prevent excessive spacing in admin pages */
+.main-content .navbar {
+    margin-bottom: 0.5rem !important;
+}
+
+.main-content .border-bottom {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-top: 0.5rem !important;
+}
+
+/* Ensure container-fluid doesn't add extra spacing */
+.main-content .container-fluid {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Fix flash message spacing */
+.main-content .alert:not(.position-fixed) {
+    margin-bottom: 0.75rem !important;
+    margin-top: 0 !important;
+}
+
+/* Page header optimization */
+.main-content .d-flex.justify-content-between.flex-wrap {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-top: 0.5rem !important;
+}
+
+/* Fix sidebar positioning and scrolling */
+.sidebar .position-sticky {
+    position: static !important;
+    height: 100% !important;
+    padding: 1rem 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* User actions at bottom */
+.sidebar .mt-auto {
+    margin-top: auto !important;
+    padding: 1rem;
 }
 
 /* Responsive adjustments */
 @media (max-width: 991.98px) {
     .sidebar {
-        width: 33.333333%; /* For col-md-3 on medium screens */
+        width: 25%; /* col-md-3 */
     }
     .main-content {
-        margin-left: 33.333333%;
-        width: 66.666667%;
+        margin-left: 25% !important;
+        width: calc(100% - 25%) !important;
     }
 }
 
@@ -65,13 +115,18 @@ body {
         transition: transform 0.3s ease;
         width: 80%;
         max-width: 300px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        height: 100vh;
     }
     .sidebar.show {
         transform: translateX(0);
     }
     .main-content {
-        margin-left: 0;
-        width: 100%;
+        margin-left: 0 !important;
+        width: 100% !important;
     }
     
     /* Mobile overlay */

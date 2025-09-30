@@ -483,25 +483,72 @@ class PaymentController extends Controller
                         ->orderBy('period')
                         ->get();
                 } elseif ($daysDiff <= 31) {
-                    // Less than 31 days - group by day
-                    return $query->selectRaw('DATE(enrolled_at) as date, SUM(amount_paid) as revenue, COUNT(*) as transactions')
+                    // Less than 31 days - group by day and fill missing days
+                    $results = $query->selectRaw('DATE(enrolled_at) as date, SUM(amount_paid) as revenue, COUNT(*) as transactions')
                         ->groupByRaw('DATE(enrolled_at)')
                         ->orderBy('date')
                         ->get()
-                        ->map(function($item) {
-                            $item->period = Carbon::parse($item->date)->format('M j'); // e.g., "Sep 18"
-                            return $item;
-                        });
+                        ->keyBy('date');
+                    
+                    // Fill missing days with zero values
+                    $filledData = collect();
+                    $currentDate = Carbon::parse($dateRange[0]);
+                    $endDate = Carbon::parse($dateRange[1]);
+                    
+                    while ($currentDate->lte($endDate)) {
+                        $dateKey = $currentDate->format('Y-m-d');
+                        $existing = $results->get($dateKey);
+                        
+                        if ($existing) {
+                            $existing->period = $currentDate->format('M j');
+                            $filledData->push($existing);
+                        } else {
+                            $filledData->push((object) [
+                                'date' => $dateKey,
+                                'revenue' => 0,
+                                'transactions' => 0,
+                                'period' => $currentDate->format('M j')
+                            ]);
+                        }
+                        $currentDate->addDay();
+                    }
+                    
+                    return $filledData;
                 } else {
-                    // More than 31 days - group by month
-                    return $query->selectRaw('YEAR(enrolled_at) as year, MONTH(enrolled_at) as month, SUM(amount_paid) as revenue, COUNT(*) as transactions')
+                    // More than 31 days - group by month and fill missing months
+                    $results = $query->selectRaw('YEAR(enrolled_at) as year, MONTH(enrolled_at) as month, SUM(amount_paid) as revenue, COUNT(*) as transactions')
                         ->groupByRaw('YEAR(enrolled_at), MONTH(enrolled_at)')
                         ->orderByRaw('YEAR(enrolled_at), MONTH(enrolled_at)')
                         ->get()
-                        ->map(function($item) {
-                            $item->period = Carbon::createFromDate($item->year, $item->month, 1)->format('M Y'); // e.g., "Sep 2025"
-                            return $item;
+                        ->keyBy(function($item) {
+                            return $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
                         });
+                    
+                    // Fill missing months with zero values
+                    $filledData = collect();
+                    $currentDate = Carbon::parse($dateRange[0])->startOfMonth();
+                    $endDate = Carbon::parse($dateRange[1])->endOfMonth();
+                    
+                    while ($currentDate->lte($endDate)) {
+                        $monthKey = $currentDate->format('Y-m');
+                        $existing = $results->get($monthKey);
+                        
+                        if ($existing) {
+                            $existing->period = $currentDate->format('M Y');
+                            $filledData->push($existing);
+                        } else {
+                            $filledData->push((object) [
+                                'year' => $currentDate->year,
+                                'month' => $currentDate->month,
+                                'revenue' => 0,
+                                'transactions' => 0,
+                                'period' => $currentDate->format('M Y')
+                            ]);
+                        }
+                        $currentDate->addMonth();
+                    }
+                    
+                    return $filledData;
                 }
                     
             case 'year':

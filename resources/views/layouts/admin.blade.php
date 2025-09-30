@@ -200,7 +200,7 @@
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 main-content">
                 <!-- Top Navigation -->
-                <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+                <nav class="navbar navbar-expand-lg navbar-light bg-light mb-2">
                     <div class="container-fluid">
                         <button class="btn btn-outline-secondary d-md-none" type="button" 
                                 onclick="toggleSidebar()">
@@ -254,7 +254,7 @@
 
                     <!-- Page Header -->
                     @hasSection('header')
-                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                        <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-2 pb-2 mb-2 border-bottom">
                             @yield('header')
                         </div>
                     @endif
@@ -686,6 +686,17 @@
                             to { transform: scaleX(0); }
                         }
                         .alert { position: relative; overflow: hidden; }
+                        .sidebar {
+                            position: sticky !important;
+                            top: 0 !important;
+                            height: 100vh !important;
+                            overflow: visible !important;
+                            overflow-y: visible !important;
+                        }
+                        .sidebar .position-sticky {
+                            height: auto !important;
+                            overflow: visible !important;
+                        }
                     `;
                     document.head.appendChild(style);
                 }

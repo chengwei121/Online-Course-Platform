@@ -3,7 +3,7 @@
 @section('title', 'Payment Statistics')
 
 @section('header')
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between">
         <h1 class="h2 mb-0 fw-bold">
             <i class="fas fa-chart-line me-2 text-primary"></i>
             Payment Statistics & Analytics
@@ -26,16 +26,16 @@
 @section('content')
 <div class="container-fluid" data-page-loaded="true">
     <!-- Custom Date Range Filter -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header bg-primary text-white py-2">
                     <h6 class="mb-0 fw-bold">
                         <i class="fas fa-calendar-alt me-2"></i>
                         Custom Date Range Filter
                     </h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body py-3">
                     <form id="dateRangeForm" method="GET" action="{{ route('admin.payments.statistics') }}">
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
@@ -95,10 +95,10 @@
     </div>
 
     <!-- Revenue Chart -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header modern-grey-header text-white">
+                <div class="card-header modern-grey-header text-white py-2">
                     <h6 class="m-0 font-weight-bold">
                         <i class="fas fa-chart-area me-2"></i>
                         Revenue Trend 
@@ -117,10 +117,10 @@
     </div>
 
     <!-- Top Performing Courses -->
-    <div class="row mb-4">
+    <div class="row mb-2">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header modern-grey-header text-white">
+                <div class="card-header modern-grey-header text-white py-2">
                     <h6 class="m-0 font-weight-bold">
                         <i class="fas fa-trophy me-2"></i>
                         Top Courses by Revenue 
@@ -206,7 +206,7 @@
     <div class="row">
         <div class="col-12">
             <div class="card shadow">
-                <div class="card-header modern-grey-header text-white">
+                <div class="card-header modern-grey-header text-white py-2">
                     <h6 class="m-0 font-weight-bold">
                         <i class="fas fa-users me-2"></i>
                         Top Customers by Spending 
@@ -296,35 +296,192 @@
 @push('styles')
 <style>
 /* Modern Grey Card Header */
-    .modern-grey-header {
-        background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
-        border-bottom: 3px solid #1e293b;
+.modern-grey-header {
+    background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
+    border-bottom: 3px solid #1e293b;
+}
+
+/* Optimize spacing and layout */
+.container-fluid {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Fix excessive spacing after filtering */
+.main-content {
+    padding-top: 0 !important;
+}
+
+.main-content .navbar {
+    margin-bottom: 0.5rem !important;
+}
+
+.main-content .border-bottom {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-top: 0.5rem !important;
+}
+
+/* Remove extra spacing from page sections */
+.main-content > .container-fluid {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Ensure no extra margins on flash messages */
+.alert:not(.position-fixed) {
+    margin-bottom: 0.75rem !important;
+    margin-top: 0 !important;
+}
+
+/* Fix potential spacing from header section */
+.d-flex.justify-content-between.flex-wrap {
+    margin-bottom: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-top: 0.5rem !important;
+}
+
+.card {
+    border: 1px solid #e3e6f0;
+    border-radius: 0.75rem;
+    margin-bottom: 0;
+}
+
+.card-header {
+    padding: 0.75rem 1rem;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+.form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+.btn-primary {
+    background-color: #4e73df;
+    border-color: #4e73df;
+}
+
+.btn-primary:hover {
+    background-color: #2e59d9;
+    border-color: #2653d4;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+    padding: 0.5rem 1rem;
+}
+
+/* Center table headers */
+th.text-center {
+    vertical-align: middle !important;
+    text-align: center !important;
+}
+
+/* Reduce excessive margins */
+.row {
+    margin-bottom: 0;
+}
+
+.mb-3 {
+    margin-bottom: 0.75rem !important;
+}
+
+.mb-2 {
+    margin-bottom: 0.5rem !important;
+}
+
+/* Prevent excessive spacing after page reload/filter */
+body {
+    padding-top: 0 !important;
+}
+
+.container-fluid .row:first-child {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* Ensure consistent spacing */
+@media (min-width: 768px) {
+    .main-content {
+        padding-top: 0 !important;
     }
-    .card {
-        border: 1px solid #e3e6f0;
-        border-radius: 0.75rem;
+}
+
+/* Optimize chart container */
+#revenueChart {
+    max-height: 400px;
+}
+
+/* Fix table spacing */
+.table-responsive {
+    margin-bottom: 0;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+/* Page header adjustments */
+.main-content .border-bottom {
+    margin-bottom: 1rem !important;
+    padding-bottom: 1rem !important;
+}
+
+/* Form control improvements */
+.form-label {
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+}
+
+/* Button spacing */
+.btn-toolbar .btn-group {
+    gap: 0.25rem;
+}
+
+/* Alert spacing optimization */
+.alert {
+    margin-bottom: 0.5rem;
+}
+
+/* Fix date range form spacing */
+#dateRangeForm .row {
+    margin: 0;
+}
+
+#dateRangeForm .col-md-3 {
+    padding: 0 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
-    .form-control:focus {
-        border-color: #4e73df;
+    
+    .card-body {
+        padding: 0.75rem;
     }
-    .btn-primary {
-        background-color: #4e73df;
-        border-color: #4e73df;
+    
+    .btn-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
     }
-    .btn-primary:hover {
-        background-color: #2e59d9;
-        border-color: #2653d4;
+    
+    .btn-group {
+        width: 100%;
     }
-    .alert-info {
-        background-color: #d1ecf1;
-        border-color: #bee5eb;
-        color: #0c5460;
+    
+    .btn-group .btn {
+        flex: 1;
     }
-    /* Center table headers */
-    th.text-center {
-        vertical-align: middle !important;
-        text-align: center !important;
-    }
+}
 </style>
 @endpush
 
@@ -370,103 +527,255 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Revenue Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    const revenueData = @json($revenueStats);
-    
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: revenueData.map(item => {
-                const period = "{{ $period }}";
-                if (period === 'day' || (period === 'custom' && item.period < 24)) {
-                    // For hourly data, show hour with AM/PM
-                    const hour = parseInt(item.period);
-                    return hour === 0 ? '12 AM' : 
-                           hour < 12 ? hour + ' AM' : 
-                           hour === 12 ? '12 PM' : 
-                           (hour - 12) + ' PM';
-                } else if (period === 'week') {
-                    // Use the formatted day name from backend
-                    return item.period;
-                } else if (period === 'month' || period === 'custom' || period === 'all') {
-                    // Use the formatted date from backend
-                    return item.period;
-                } else if (period === 'year') {
-                    // Convert month number to name
-                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    return months[item.period - 1];
-                } else {
-                    return item.period;
-                }
-            }),
-            datasets: [{
-                label: 'Revenue ($)',
-                data: revenueData.map(item => parseFloat(item.revenue) || 0),
-                borderColor: '#4e73df',
-                backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                fill: true
-            }, {
-                label: 'Transactions',
-                data: revenueData.map(item => parseInt(item.transactions) || 0),
-                borderColor: '#1cc88a',
-                backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                yAxisID: 'y1'
-            }]
-        },
-        options: {
-            responsive: true,
-            animation: false,
-            interaction: {
-                mode: 'index',
-                intersect: false,
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        const revenueData = @json($revenueStats);
+        const period = "{{ $period }}";
+        const hasCustomRange = {{ request('start_date') && request('end_date') ? 'true' : 'false' }};
+        
+        // Debug log to check data
+        console.log('Revenue Data:', revenueData);
+        console.log('Period:', period);
+        console.log('Has Custom Range:', hasCustomRange);
+        
+        // If no data, show message
+        if (!revenueData || revenueData.length === 0) {
+            revenueCtx.parentElement.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Revenue Data</h5>
+                    <p class="text-muted">No payment data found for the selected period.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Process chart labels based on period and data
+        const chartLabels = revenueData.map(item => {
+            if (hasCustomRange || period === 'custom') {
+                // For custom date ranges, use the period as provided by backend
+                return item.period;
+            } else if (period === 'day') {
+                // For hourly data, show hour with AM/PM
+                const hour = parseInt(item.period);
+                return hour === 0 ? '12 AM' : 
+                       hour < 12 ? hour + ' AM' : 
+                       hour === 12 ? '12 PM' : 
+                       (hour - 12) + ' PM';
+            } else if (period === 'week') {
+                // Use the formatted day name from backend
+                return item.period;
+            } else if (period === 'month' || period === 'all') {
+                // Use the formatted date from backend
+                return item.period;
+            } else if (period === 'year') {
+                // Convert month number to name
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return months[item.period - 1] || item.period;
+            } else {
+                return item.period;
+            }
+        });
+        
+        // Create the chart
+        const revenueChart = new Chart(revenueCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: revenueData.map(item => parseFloat(item.revenue) || 0),
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#4e73df',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 8
+                }, {
+                    label: 'Transactions',
+                    data: revenueData.map(item => parseInt(item.transactions) || 0),
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.1)',
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointBackgroundColor: '#1cc88a',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'y1'
+                }]
             },
-            scales: {
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    title: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
                         display: true,
-                        text: 'Revenue ($)'
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 20,
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#4e73df',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        callbacks: {
+                            title: function(context) {
+                                return 'Period: ' + context[0].label;
+                            },
+                            label: function(context) {
+                                if (context.datasetIndex === 0) {
+                                    return 'Revenue: $' + context.parsed.y.toLocaleString('en-US', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                } else {
+                                    return 'Transactions: ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
                     }
                 },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    title: {
+                scales: {
+                    x: {
                         display: true,
-                        text: 'Transactions'
+                        title: {
+                            display: true,
+                            text: hasCustomRange ? 'Custom Date Range' : 'Time Period',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
                     },
-                    grid: {
-                        drawOnChartArea: false,
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Revenue ($)',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
                     },
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            if (context.datasetIndex === 0) {
-                                return 'Revenue: $' + context.parsed.y.toLocaleString();
-                            } else {
-                                return 'Transactions: ' + context.parsed.y;
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: 'Transactions',
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            }
+                        },
+                        grid: {
+                            drawOnChartArea: false,
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString();
                             }
                         }
                     }
                 }
             }
-        }
-    });
+        });
+        
+        // Add data summary below chart
+        const totalRevenue = revenueData.reduce((sum, item) => sum + parseFloat(item.revenue || 0), 0);
+        const totalTransactions = revenueData.reduce((sum, item) => sum + parseInt(item.transactions || 0), 0);
+        const avgTransactionValue = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+        
+        const summaryHtml = `
+            <div class="row mt-3 pt-3 border-top">
+                <div class="col-md-4 text-center">
+                    <div class="metric-card">
+                        <h5 class="text-primary mb-1">$${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2})}</h5>
+                        <small class="text-muted">Total Revenue</small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="metric-card">
+                        <h5 class="text-success mb-1">${totalTransactions.toLocaleString()}</h5>
+                        <small class="text-muted">Total Transactions</small>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="metric-card">
+                        <h5 class="text-info mb-1">$${avgTransactionValue.toLocaleString('en-US', {minimumFractionDigits: 2})}</h5>
+                        <small class="text-muted">Avg. Transaction Value</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        revenueCtx.parentElement.insertAdjacentHTML('beforeend', summaryHtml);
+    }
 });
 
 function exportStatistics() {
-    // This would typically generate a comprehensive PDF or Excel report
-    showSuccessNotification('Statistics export feature will be implemented soon!');
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing...';
+    btn.disabled = true;
+    
+    // Simulate export process (replace with actual export logic)
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        
+        if (typeof showSuccessNotification === 'function') {
+            showSuccessNotification('Statistics export feature will be implemented soon!');
+        } else {
+            alert('Statistics export feature will be implemented soon!');
+        }
+    }, 2000);
 }
 </script>
 @endpush
