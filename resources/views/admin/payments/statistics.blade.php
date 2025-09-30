@@ -3,12 +3,12 @@
 @section('title', 'Payment Statistics')
 
 @section('header')
-    <div class="d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center justify-content-between mb-3">
         <h1 class="h2 mb-0 fw-bold">
             <i class="fas fa-chart-line me-2 text-primary"></i>
             Payment Statistics & Analytics
         </h1>
-        <div class="btn-toolbar">
+        <div class="btn-toolbar ms-4">
             <div class="btn-group">
                 <a href="{{ route('admin.payments.index') }}" class="btn btn-sm btn-outline-secondary">
                     <i class="fas fa-arrow-left me-1"></i>
