@@ -35,7 +35,7 @@
                         </div>
                     </div>
                     <div class="flex-grow-1">
-                        <div class="stats-value h3 mb-1 text-dark fw-bold">${{ number_format($stats['total_revenue'] ?? 0, 2) }}</div>
+                        <div class="stats-value h3 mb-1 text-dark fw-bold">RM{{ number_format($stats['total_revenue'] ?? 0, 2) }}</div>
                         <div class="stats-label text-muted small fw-semibold text-uppercase mb-1">Total Revenue</div>
                         <div class="stats-trend text-success small">
                             <i class="fas fa-arrow-up me-1"></i>+12.5% from last month

@@ -226,7 +226,7 @@
                             <small class="text-muted">Lessons</small>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-warning mb-1">${{ number_format($course->price, 2) }}</h4>
+                            <h4 class="text-warning mb-1">RM{{ number_format($course->price, 2) }}</h4>
                             <small class="text-muted">Course Price</small>
                         </div>
                         <div class="col-6">
@@ -250,11 +250,11 @@
                             <i class="fas fa-eye me-1"></i>View Course Details
                         </a>
                         @if($course->lessons_count > 0)
-                            <a href="{{ route('teacher.lessons.index', ['course' => $course->id]) }}" class="btn btn-outline-success btn-sm">
+                            <a href="{{ route('teacher.courses.lessons.index', ['course' => $course->id]) }}" class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-play me-1"></i>Manage Lessons
                             </a>
                         @else
-                            <a href="{{ route('teacher.lessons.create', ['course' => $course->id]) }}" class="btn btn-outline-success btn-sm">
+                            <a href="{{ route('teacher.courses.lessons.create', ['course' => $course->id]) }}" class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-plus me-1"></i>Add First Lesson
                             </a>
                         @endif

@@ -171,7 +171,7 @@
                             <span class="text-3xl font-bold text-green-600">Free</span>
                             <span class="text-gray-500 text-sm ml-2">No payment required</span>
                         @else
-                            <span class="text-3xl font-bold text-gray-900">${{ number_format($course->price, 2) }}</span>
+                            <span class="text-3xl font-bold text-gray-900">RM{{ number_format($course->price, 2) }}</span>
                             <span class="text-gray-500 text-sm ml-2">One-time payment</span>
                         @endif
                     </div>
@@ -212,7 +212,7 @@
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
                                         </svg>
-                                        Enroll Now - ${{ number_format($course->price, 2) }}
+                                        Enroll Now - RM{{ number_format($course->price, 2) }}
                                     </a>
                                     
                                     <!-- Alternative Direct Enrollment (for testing or other payment methods) -->

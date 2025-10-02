@@ -24,43 +24,69 @@ class DashboardController extends Controller
             return redirect()->route('login')->with('error', 'Teacher profile not found.');
         }
 
-        // Get teacher's courses
-        $courses = Course::where('teacher_id', $teacher->id)
-            ->withCount(['enrollments', 'lessons'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Get total stats
+        // Use a simpler, faster approach for initial dashboard load
+        return $this->getDashboardData($teacher);
+    }
+    
+    /**
+     * Get dashboard data efficiently
+     */
+    private function getDashboardData($teacher)
+    {
+        // Get basic stats first (fastest queries)
         $totalCourses = Course::where('teacher_id', $teacher->id)->count();
-        $totalStudents = Enrollment::whereIn('course_id', 
-            Course::where('teacher_id', $teacher->id)->pluck('id')
-        )->distinct('user_id')->count();
         
-        // Get total assignments (assignments are linked to lessons, not directly to courses)
-        $totalAssignments = Assignment::whereIn('lesson_id',
-            Lesson::whereIn('course_id', Course::where('teacher_id', $teacher->id)->pluck('id'))->pluck('id')
-        )->count();
-
-        // Get recent enrollments
-        $recentEnrollments = Enrollment::with(['user', 'course'])
-            ->whereIn('course_id', Course::where('teacher_id', $teacher->id)->pluck('id'))
+        if ($totalCourses === 0) {
+            // If no courses, return empty dashboard quickly
+            return view('teacher.dashboard', [
+                'teacher' => $teacher,
+                'courses' => collect(),
+                'totalCourses' => 0,
+                'totalStudents' => 0,
+                'totalAssignments' => 0,
+                'recentEnrollments' => collect(),
+                'pendingSubmissions' => collect()
+            ]);
+        }
+        
+        // Get course IDs once
+        $courseIds = Course::where('teacher_id', $teacher->id)->pluck('id');
+        
+        // Get courses with minimal data
+        $courses = Course::where('teacher_id', $teacher->id)
+            ->select('id', 'title', 'thumbnail', 'status', 'created_at')
+            ->withCount('enrollments')
             ->latest()
             ->take(5)
             ->get();
 
-        // Get pending assignment submissions (submissions that are submitted but not yet graded)
-        $pendingSubmissions = AssignmentSubmission::with(['assignment', 'user'])
-            ->whereIn('assignment_id', 
-                Assignment::whereIn('lesson_id', 
-                    Lesson::whereIn('course_id', 
-                        Course::where('teacher_id', $teacher->id)->pluck('id')
-                    )->pluck('id')
-                )->pluck('id')
-            )
-            ->whereNotNull('submitted_at')
-            ->whereNull('score') // Not yet graded
-            ->latest('submitted_at')
+        // Get student count efficiently
+        $totalStudents = Enrollment::whereIn('course_id', $courseIds)
+            ->distinct()
+            ->count('user_id');
+        
+        // Get assignment count using join for better performance
+        $totalAssignments = Assignment::join('lessons', 'assignments.lesson_id', '=', 'lessons.id')
+            ->whereIn('lessons.course_id', $courseIds)
+            ->count();
+
+        // Get recent enrollments with minimal data
+        $recentEnrollments = Enrollment::with(['user:id,name', 'course:id,title'])
+            ->whereIn('course_id', $courseIds)
+            ->select('id', 'user_id', 'course_id', 'created_at')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Get pending submissions efficiently
+        $pendingSubmissions = AssignmentSubmission::join('assignments', 'assignment_submissions.assignment_id', '=', 'assignments.id')
+            ->join('lessons', 'assignments.lesson_id', '=', 'lessons.id')
+            ->whereIn('lessons.course_id', $courseIds)
+            ->whereNotNull('assignment_submissions.submitted_at')
+            ->whereNull('assignment_submissions.score')
+            ->select('assignment_submissions.id', 'assignment_submissions.assignment_id', 'assignment_submissions.user_id', 'assignment_submissions.submitted_at')
+            ->with(['assignment:id,title', 'user:id,name'])
+            ->latest('assignment_submissions.submitted_at')
             ->take(5)
             ->get();
 

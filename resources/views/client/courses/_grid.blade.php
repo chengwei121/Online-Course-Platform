@@ -31,6 +31,14 @@
         opacity: 1;
     }
 
+    /* Fallback for placeholder SVG */
+    .course-image[src*="course-placeholder.svg"] {
+        opacity: 1;
+        object-fit: contain;
+        padding: 2rem;
+        background-color: #f8fafc;
+    }
+
     .course-image-placeholder {
         position: absolute;
         top: 0;
@@ -151,10 +159,9 @@
                 <span>Image unavailable</span>
             </div>
             <img class="course-image lazy"
-                 data-src="{{ $course->thumbnail_url }}"
-                 src="{{ asset('images/courses/placeholder.jpg') }}"
-                 alt="{{ $course->title }}"
-                 onerror="this.onerror=null; this.src='{{ asset('images/courses/default-course.jpg') }}'; this.classList.add('loaded');">
+                 data-src="{{ $course->thumbnail_url ?? asset('images/course-placeholder.svg') }}"
+                 src="{{ asset('images/course-placeholder.svg') }}"
+                 alt="{{ $course->title }}">
             <span class="category-badge">{{ $course->category->name }}</span>
             <span class="price-badge {{ $course->is_free ? 'free' : 'premium' }}">
                 {{ $course->is_free ? 'Free' : 'Premium' }}
@@ -179,7 +186,13 @@
 
             <!-- Duration -->
             <div class="text-sm text-gray-500 mb-6">
-                {{ $course->duration }} hrs
+                @if($course->learning_hours)
+                    {{ $course->learning_hours }} hrs
+                @elseif($course->duration)
+                    {{ $course->duration }}
+                @else
+                    Duration not specified
+                @endif
             </div>
 
             <!-- View Course Button -->
@@ -232,11 +245,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                     
                     tempImage.onerror = function() {
-                        // Show error state
-                        errorDisplay.classList.add('show');
+                        // Use placeholder instead of showing error state
+                        img.src = '{{ asset("images/course-placeholder.svg") }}';
+                        img.classList.add('loaded');
                         if (placeholder) {
                             placeholder.style.opacity = '0';
                         }
+                        console.warn('Failed to load course image:', img.dataset.src);
                     };
                     
                     tempImage.src = img.dataset.src;

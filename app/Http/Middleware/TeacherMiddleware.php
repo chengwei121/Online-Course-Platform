@@ -20,9 +20,16 @@ class TeacherMiddleware
             return redirect()->route('login');
         }
 
-        if (!Auth::user()->isTeacher()) {
+        $user = Auth::user();
+        
+        if (!$user->isTeacher()) {
             Auth::logout();
             return redirect()->route('login')->with('error', 'Access denied. Teachers only.');
+        }
+
+        // Preload teacher relationship to avoid N+1 queries
+        if (!$user->relationLoaded('teacher')) {
+            $user->load('teacher:id,user_id,name,email,status');
         }
 
         return $next($request);

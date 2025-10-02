@@ -34,6 +34,7 @@ class CourseFilterManager {
         this.bindEvents();
         this.initializeFilterState();
         this.initializeLazyLoading();
+        this.initializePaginationEvents();
     }
 
     bindEvents() {
@@ -138,9 +139,15 @@ class CourseFilterManager {
             if (data.html) {
                 this.updateCoursesGrid(data.html);
                 this.hasMore = data.has_more || false;
+                
+                // Update pagination if provided
+                if (data.pagination) {
+                    this.updatePagination(data.pagination);
+                }
             }
 
             this.initializeLazyLoading();
+            this.initializePaginationEvents();
 
         } catch (error) {
             console.error('Error applying filters:', error);
@@ -160,6 +167,104 @@ class CourseFilterManager {
                 AOS.refresh();
             }
         }
+    }
+
+    updatePagination(paginationHtml) {
+        const paginationContainer = document.querySelector('.pagination-container');
+        if (paginationContainer) {
+            paginationContainer.innerHTML = paginationHtml;
+        } else {
+            // If pagination container doesn't exist, find the existing pagination and replace it
+            const existingPagination = document.querySelector('nav[role="navigation"]');
+            if (existingPagination) {
+                existingPagination.outerHTML = paginationHtml;
+            }
+        }
+    }
+
+    initializePaginationEvents() {
+        // Remove existing event listeners to prevent duplication
+        document.querySelectorAll('nav[role="navigation"] a').forEach(link => {
+            // Clone node to remove all event listeners
+            const newLink = link.cloneNode(true);
+            link.parentNode.replaceChild(newLink, link);
+        });
+
+        // Handle pagination link clicks with AJAX
+        document.querySelectorAll('nav[role="navigation"] a').forEach(link => {
+            if (link.getAttribute('href') && !link.classList.contains('disabled') && !link.classList.contains('current')) {
+                link.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    
+                    const url = new URL(link.getAttribute('href'));
+                    
+                    // Preserve current filters
+                    const currentUrl = new URL(window.location.href);
+                    ['category', 'level', 'duration', 'rating', 'price_type', 'search'].forEach(param => {
+                        const values = currentUrl.searchParams.getAll(param);
+                        if (values.length > 0) {
+                            url.searchParams.delete(param);
+                            values.forEach(value => url.searchParams.append(param, value));
+                        }
+                    });
+                    
+                    this.showLoading();
+                    
+                    try {
+                        const response = await fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+
+                        const data = await response.json();
+
+                        console.log('Pagination AJAX response:', {
+                            current_page: data.current_page,
+                            total_pages: data.total_pages,
+                            total: data.total,
+                            has_more: data.has_more,
+                            url: url.toString()
+                        });
+
+                        if (data.html) {
+                            this.updateCoursesGrid(data.html);
+                            if (data.pagination) {
+                                this.updatePagination(data.pagination);
+                                console.log('Pagination updated successfully');
+                            } else {
+                                console.warn('No pagination data received');
+                            }
+                            
+                            // Update URL without page reload
+                            window.history.pushState({}, '', url);
+                            
+                            // Scroll to top of courses grid
+                            const coursesGrid = document.querySelector('.courses-grid');
+                            if (coursesGrid) {
+                                coursesGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        }
+
+                        this.initializeLazyLoading();
+                        // Reinitialize pagination events for new links
+                        setTimeout(() => this.initializePaginationEvents(), 100);
+
+                    } catch (error) {
+                        console.error('Error loading page:', error);
+                        // Fallback to regular navigation
+                        window.location.href = link.getAttribute('href');
+                    } finally {
+                        this.hideLoading();
+                    }
+                });
+            }
+        });
     }
 
     updateURL() {

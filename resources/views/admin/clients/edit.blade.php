@@ -174,7 +174,7 @@
                                     <div class="col-3">
                                         <div class="border-end">
                                             <h5 class="text-success mb-1">
-                                                ${{ number_format($client->enrollments->sum(function($e) { 
+                                                RM{{ number_format($client->enrollments->sum(function($e) { 
                                                     return $e->course->is_free ? 0 : $e->course->price; 
                                                 }), 2) }}
                                             </h5>

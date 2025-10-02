@@ -55,7 +55,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-success">${{ number_format($stats['total_spent'], 2) }}</h4>
+                            <h4 class="text-success">RM{{ number_format($stats['total_spent'], 2) }}</h4>
                             <small class="text-muted">Total Spent</small>
                         </div>
                     </div>
@@ -142,7 +142,7 @@
                                                     @if($enrollment->course->is_free)
                                                         <span class="badge bg-success">FREE</span>
                                                     @else
-                                                        <span class="badge bg-primary">${{ number_format($enrollment->course->price, 2) }}</span>
+                                                        <span class="badge bg-primary">RM{{ number_format($enrollment->course->price, 2) }}</span>
                                                     @endif
                                                 </div>
                                                 <small class="text-muted">{{ $enrollment->created_at->format('M d, Y') }}</small>

@@ -219,7 +219,7 @@
                                     <div>
                                         <strong>{{ $course->title }}</strong>
                                         @if($course->price > 0)
-                                        <br><small class="text-success">${{ number_format($course->price, 2) }}</small>
+                                        <br><small class="text-success">RM{{ number_format($course->price, 2) }}</small>
                                         @else
                                         <br><small class="text-info">Free</small>
                                         @endif

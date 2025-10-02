@@ -27,11 +27,20 @@ class PayPalService
     }
 
     /**
-     * Get PayPal access token
+     * Get PayPal access token with caching
      */
     private function getAccessToken()
     {
         if ($this->accessToken) {
+            return $this->accessToken;
+        }
+
+        // Check cache first
+        $cacheKey = 'paypal_access_token_' . md5($this->clientId);
+        $cachedToken = cache()->get($cacheKey);
+        
+        if ($cachedToken) {
+            $this->accessToken = $cachedToken;
             return $this->accessToken;
         }
 
@@ -44,11 +53,16 @@ class PayPalService
                 'auth' => [$this->clientId, $this->clientSecret],
                 'form_params' => [
                     'grant_type' => 'client_credentials'
-                ]
+                ],
+                'timeout' => 10, // Add timeout for faster failure
+                'connect_timeout' => 5
             ]);
 
             $data = json_decode($response->getBody(), true);
             $this->accessToken = $data['access_token'];
+            
+            // Cache token for 50 minutes (PayPal tokens expire in 9 hours)
+            cache()->put($cacheKey, $this->accessToken, 3000);
             
             return $this->accessToken;
         } catch (RequestException $e) {
@@ -91,7 +105,9 @@ class PayPalService
                     'Content-Type' => 'application/json',
                     'Authorization' => 'Bearer ' . $accessToken,
                 ],
-                'json' => $paymentData
+                'json' => $paymentData,
+                'timeout' => 15, // Add timeout for better UX
+                'connect_timeout' => 7
             ]);
 
             $payment = json_decode($response->getBody(), true);
@@ -134,7 +150,9 @@ class PayPalService
                 ],
                 'json' => [
                     'payer_id' => $payerId
-                ]
+                ],
+                'timeout' => 20, // Execution might take longer
+                'connect_timeout' => 10
             ]);
 
             return json_decode($response->getBody(), true);

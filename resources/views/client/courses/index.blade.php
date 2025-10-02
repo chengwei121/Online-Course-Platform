@@ -473,21 +473,21 @@
                                    {{ request('duration') == 'short' ? 'checked' : '' }}
                                    onchange="applyFilter('duration', this.value, this.checked)">
                             <span class="filter-label">0-3 hours</span>
-                            <span class="filter-count">({{ $courses->where('duration', '<=', 3)->count() }})</span>
+                            <span class="filter-count">({{ $courses->where('learning_hours', '<=', 3)->count() }})</span>
                         </label>
                         <label class="filter-item">
                             <input type="checkbox" class="filter-checkbox" value="medium"
                                    {{ request('duration') == 'medium' ? 'checked' : '' }}
                                    onchange="applyFilter('duration', this.value, this.checked)">
                             <span class="filter-label">3-6 hours</span>
-                            <span class="filter-count">({{ $courses->whereBetween('duration', [3, 6])->count() }})</span>
+                            <span class="filter-count">({{ $courses->whereBetween('learning_hours', [3, 6])->count() }})</span>
                         </label>
                         <label class="filter-item">
                             <input type="checkbox" class="filter-checkbox" value="long"
                                    {{ request('duration') == 'long' ? 'checked' : '' }}
                                    onchange="applyFilter('duration', this.value, this.checked)">
                             <span class="filter-label">6+ hours</span>
-                            <span class="filter-count">({{ $courses->where('duration', '>', 6)->count() }})</span>
+                            <span class="filter-count">({{ $courses->where('learning_hours', '>', 6)->count() }})</span>
                         </label>
                     </div>
                 </div>
@@ -605,12 +605,12 @@
 
             <!-- Courses Grid -->
             <div class="courses-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @include('client.courses._grid_optimized')
+                @include('client.courses._grid')
             </div>
 
             <!-- Pagination -->
-            <div class="mt-8">
-                {{ $courses->links() }}
+            <div class="pagination-container mt-8">
+                {{ $courses->appends(request()->all())->links() }}
             </div>
         </div>
     </div>

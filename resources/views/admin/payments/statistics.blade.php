@@ -176,7 +176,7 @@
                                         <span class="badge bg-primary">{{ $courseData->enrollments }}</span>
                                     </td>
                                     <td>
-                                        <strong class="text-success">${{ number_format($courseData->revenue, 2) }}</strong>
+                                        <strong class="text-success">RM{{ number_format($courseData->revenue, 2) }}</strong>
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.courses.show', $courseData->course) }}" 
@@ -265,7 +265,7 @@
                                         <span class="badge bg-info">{{ $userData->purchases }} courses</span>
                                     </td>
                                     <td>
-                                        <strong class="text-success">${{ number_format($userData->total_spent, 2) }}</strong>
+                                        <strong class="text-success">RM{{ number_format($userData->total_spent, 2) }}</strong>
                                     </td>
                                     <td>
                                         <a href="{{ route('admin.clients.show', $userData->user) }}" 

@@ -5,6 +5,8 @@ use App\Http\Controllers\Client\EnrollmentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Client\AssignmentController;
 use App\Models\Course;
 use App\Http\Controllers\Client\LessonController;
@@ -86,6 +88,12 @@ Route::middleware('guest')->group(function () {
     Route::post('register', [RegisteredUserController::class, 'store']);
     Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    
+    // Password Reset Routes
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
+    Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
 });
 
 Route::middleware('auth')->post('logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -164,6 +172,19 @@ Route::get('admin/dashboard/test-loading', [App\Http\Controllers\Admin\Dashboard
 Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middleware\TeacherMiddleware::class])->group(function () {
     Route::get('dashboard', [App\Http\Controllers\Teacher\DashboardController::class, 'index'])->name('dashboard');
     
+    // Fast dashboard route for quick initial load
+    Route::get('dashboard/quick', function() {
+        $teacher = Auth::user()->teacher;
+        if (!$teacher) {
+            return redirect()->route('login');
+        }
+        
+        return view('teacher.dashboard-quick', [
+            'teacher' => $teacher,
+            'totalCourses' => Course::where('teacher_id', $teacher->id)->count(),
+        ]);
+    })->name('dashboard.quick');
+    
     // Debug route to check authentication
     Route::get('debug-auth', function() {
         $user = \Illuminate\Support\Facades\Auth::user();
@@ -195,14 +216,10 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::post('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'store'])->name('courses.lessons.store')->middleware('upload.size');
     Route::post('courses/{course}/lessons/reorder', [App\Http\Controllers\Teacher\LessonController::class, 'reorder'])->name('courses.lessons.reorder');
     
-    // Assignment management
-    Route::resource('courses.lessons.assignments', App\Http\Controllers\Teacher\AssignmentController::class)->except(['index']);
-    Route::get('courses/{course}/lessons/{lesson}/assignments/create', [App\Http\Controllers\Teacher\AssignmentController::class, 'create'])->name('assignments.create');
-    Route::post('courses/{course}/lessons/{lesson}/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'store'])->name('assignments.store');
-    Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'show'])->name('assignments.show');
-    Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}/edit', [App\Http\Controllers\Teacher\AssignmentController::class, 'edit'])->name('assignments.edit');
-    Route::put('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'update'])->name('assignments.update');
-    Route::delete('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'destroy'])->name('assignments.destroy');
+    // Students management
+    Route::get('students', [App\Http\Controllers\Teacher\StudentsController::class, 'index'])->name('students.index');
+    Route::get('students/{student}', [App\Http\Controllers\Teacher\StudentsController::class, 'show'])->name('students.show');
+    Route::post('students/{student}/message', [App\Http\Controllers\Teacher\StudentsController::class, 'sendMessage'])->name('students.message');
     
     // Teacher logout
     Route::post('logout', [App\Http\Controllers\Teacher\AuthController::class, 'logout'])->name('logout');
@@ -264,6 +281,7 @@ Route::prefix('client')->name('client.')->group(function () {
             Route::get('success', [App\Http\Controllers\PayPalController::class, 'success'])->name('success');
             Route::get('cancel', [App\Http\Controllers\PayPalController::class, 'cancel'])->name('cancel');
             Route::get('status/{payment}', [App\Http\Controllers\PayPalController::class, 'status'])->name('status');
+            Route::post('prepare/{course}', [App\Http\Controllers\PayPalController::class, 'preparePayment'])->name('prepare');
         });
     });
 });

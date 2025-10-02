@@ -45,7 +45,7 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted">Amount Paid</label>
                                 <div class="h4 text-success">
-                                    ${{ number_format($enrollment->amount_paid, 2) }}
+                                    RM{{ number_format($enrollment->amount_paid, 2) }}
                                 </div>
                             </div>
                         </div>
@@ -174,7 +174,7 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label class="form-label text-muted">Total Spent</label>
-                                <div class="h6 text-success">${{ number_format($userStats['total_spent'], 2) }}</div>
+                                <div class="h6 text-success">RM{{ number_format($userStats['total_spent'], 2) }}</div>
                             </div>
                         </div>
                         <div class="col-md-4">

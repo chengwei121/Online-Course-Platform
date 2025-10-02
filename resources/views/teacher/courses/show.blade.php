@@ -48,33 +48,41 @@
                         </div>
                         
                         <!-- Course Actions -->
-                        <div class="btn-group" role="group">
+                        <div class="course-actions d-flex flex-wrap gap-2 align-items-center">
+                            <!-- Edit Button -->
                             <a href="{{ route('teacher.courses.edit', $course) }}" 
-                               class="btn btn-outline-primary btn-sm" 
-                               data-bs-toggle="tooltip" title="Edit Course">
-                                <i class="fas fa-edit me-1"></i>Edit
+                               class="btn btn-primary btn-action" 
+                               data-bs-toggle="tooltip" 
+                               data-bs-placement="top"
+                               title="Edit course details and content">
+                                <i class="fas fa-edit"></i>
+                                <span class="btn-text">Edit</span>
                             </a>
                             
                             <!-- Toggle Status Button -->
                             <form method="POST" action="{{ route('teacher.courses.toggle-status', $course) }}" class="d-inline">
                                 @csrf
                                 <button type="submit" 
-                                        class="btn btn-{{ $course->status === 'published' ? 'warning' : 'success' }} btn-sm"
+                                        class="btn btn-{{ $course->status === 'published' ? 'warning' : 'success' }} btn-action"
                                         data-bs-toggle="tooltip" 
-                                        title="{{ $course->status === 'published' ? 'Unpublish Course' : 'Publish Course' }}">
-                                    <i class="fas fa-{{ $course->status === 'published' ? 'pause' : 'play' }} me-1"></i>
-                                    {{ $course->status === 'published' ? 'Unpublish' : 'Publish' }}
+                                        data-bs-placement="top"
+                                        title="{{ $course->status === 'published' ? 'Hide course from students' : 'Make course available to students' }}"
+                                        onclick="return confirm(@json($course->status === 'published' ? 'Unpublish this course?' : 'Publish this course?'))">
+                                    <i class="fas fa-{{ $course->status === 'published' ? 'eye-slash' : 'eye' }}"></i>
+                                    <span class="btn-text">{{ $course->status === 'published' ? 'Unpublish' : 'Publish' }}</span>
                                 </button>
                             </form>
                             
                             <!-- Delete Button -->
                             <button type="button" 
-                                    class="btn btn-outline-danger btn-sm" 
+                                    class="btn btn-outline-danger btn-action" 
                                     data-bs-toggle="modal" 
                                     data-bs-target="#deleteModal"
+                                    data-bs-placement="top"
                                     data-bs-tooltip="tooltip" 
-                                    title="Delete Course">
-                                <i class="fas fa-trash me-1"></i>Delete
+                                    title="Permanently delete this course">
+                                <i class="fas fa-trash-alt"></i>
+                                <span class="btn-text">Delete</span>
                             </button>
                         </div>
                     </div>
@@ -115,7 +123,7 @@
                                     <div class="d-flex align-items-center justify-content-center">
                                         <i class="fas fa-dollar-sign fa-2x text-success me-2"></i>
                                         <div>
-                                            <h4 class="mb-0 text-success">${{ number_format($course->price, 0) }}</h4>
+                                            <h4 class="mb-0 text-success">RM{{ number_format($course->price, 0) }}</h4>
                                             <small class="text-muted">Price</small>
                                         </div>
                                     </div>
@@ -373,7 +381,7 @@
                                     <div class="d-flex align-items-center justify-content-center mb-2">
                                         <i class="fas fa-dollar-sign fa-2x text-success me-3"></i>
                                         <div>
-                                            <h3 class="mb-0 text-success">${{ number_format(($course->enrollments_count ?? 0) * $course->price, 2) }}</h3>
+                                            <h3 class="mb-0 text-success">RM{{ number_format(($course->enrollments_count ?? 0) * $course->price, 2) }}</h3>
                                             <p class="mb-0 text-muted">Total Revenue</p>
                                         </div>
                                     </div>
@@ -859,6 +867,154 @@
         </div>
     </div>
 @endsection
+
+@push('styles')
+<style>
+/* Course Action Buttons - Simplified Design */
+.course-actions {
+    min-width: fit-content;
+}
+
+.btn-action {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border-width: 1px;
+    text-decoration: none;
+    min-width: 100px;
+    justify-content: center;
+}
+
+.btn-action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.btn-action:active {
+    transform: translateY(0);
+    transition: transform 0.1s;
+}
+
+.btn-action i {
+    font-size: 14px;
+}
+
+.btn-text {
+    font-weight: 500;
+}
+
+/* Primary Button (Edit) - Subtle Blue */
+.btn-action.btn-primary {
+    background-color: #4f46e5;
+    border-color: #4f46e5;
+    color: white;
+}
+
+.btn-action.btn-primary:hover {
+    background-color: #4338ca;
+    border-color: #4338ca;
+    color: white;
+}
+
+/* Success Button (Publish) - Subtle Green */
+.btn-action.btn-success {
+    background-color: #10b981;
+    border-color: #10b981;
+    color: white;
+}
+
+.btn-action.btn-success:hover {
+    background-color: #059669;
+    border-color: #059669;
+    color: white;
+}
+
+/* Warning Button (Unpublish) - Subtle Orange */
+.btn-action.btn-warning {
+    background-color: #f59e0b;
+    border-color: #f59e0b;
+    color: white;
+}
+
+.btn-action.btn-warning:hover {
+    background-color: #d97706;
+    border-color: #d97706;
+    color: white;
+}
+
+/* Outline Danger Button (Delete) - Subtle Red */
+.btn-action.btn-outline-danger {
+    background-color: transparent;
+    border-color: #ef4444;
+    color: #ef4444;
+}
+
+.btn-action.btn-outline-danger:hover {
+    background-color: #ef4444;
+    border-color: #ef4444;
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .course-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .btn-action {
+        min-width: auto;
+        width: 100%;
+        margin-bottom: 8px;
+    }
+}
+
+@media (max-width: 576px) {
+    .btn-action {
+        padding: 8px 14px;
+        font-size: 13px;
+        min-width: auto;
+    }
+    
+    .btn-action i {
+        font-size: 13px;
+    }
+}
+
+/* Simple Tooltips */
+.tooltip-inner {
+    background-color: #374151;
+    color: #f9fafb;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    max-width: 200px;
+}
+
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: #374151;
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: #374151;
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+    border-left-color: #374151;
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: #374151;
+}
+</style>
+@endpush
 
 @push('scripts')
 <script>

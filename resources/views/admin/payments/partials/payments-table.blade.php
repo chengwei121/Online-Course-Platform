@@ -31,7 +31,7 @@
                     </div>
                 </td>
                 <td class="py-2 px-2">
-                    <div class="fw-bold text-success">${{ number_format($payment->amount_paid, 0) }}</div>
+                    <div class="fw-bold text-success">RM{{ number_format($payment->amount_paid, 0) }}</div>
                 </td>
                 <td class="py-2 px-2">
                     @if($payment->payment_status == 'completed')

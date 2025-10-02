@@ -3,10 +3,9 @@
 @section('title', 'Courses Management')
 
 @section('content')
-<div data-page-loaded="true">
-<div class="container-fluid">
+<div class="container-fluid py-3">
     <!-- Page Header -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card bg-primary text-white">
                 <div class="card-body">
@@ -28,7 +27,7 @@
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-md-3 mb-3">
             <div class="card bg-info text-white h-100">
                 <div class="card-body text-center">
@@ -68,7 +67,7 @@
     </div>
 
     <!-- Search and Filters -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
@@ -250,7 +249,7 @@
                                                 @if($course->is_free)
                                                     <span class="badge bg-success">FREE</span>
                                                 @else
-                                                    <span class="fw-bold text-success">${{ number_format($course->price, 2) }}</span>
+                                                    <span class="fw-bold text-success">RM{{ number_format($course->price, 2) }}</span>
                                                 @endif
                                             </td>
                                             <td>
@@ -454,6 +453,7 @@
         </div>
     </div>
 </div>
+@endsection
 
 <!-- Delete Confirmation Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
@@ -537,8 +537,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+@endpush
 
+@push('styles')
 <style>
+/* Remove excessive spacing */
+.container-fluid {
+    padding-top: 0 !important;
+}
+
+/* Compact layout */
+.row.mb-3 {
+    margin-bottom: 1rem !important;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+.card-header {
+    padding: 0.75rem 1rem;
+}
+
 /* Instructor Avatar Improvements */
 .instructor-avatar {
     position: relative;
@@ -575,11 +595,11 @@ document.addEventListener('DOMContentLoaded', function() {
     font-weight: 600;
     color: #5a5c69;
     border-bottom: 2px solid #e3e6f0;
-    padding: 1rem 0.75rem;
+    padding: 0.75rem;
 }
 
 .table td {
-    padding: 1rem 0.75rem;
+    padding: 0.75rem;
     vertical-align: middle;
 }
 
@@ -648,6 +668,7 @@ document.addEventListener('DOMContentLoaded', function() {
 /* Card improvements */
 .card {
     transition: box-shadow 0.2s ease;
+    margin-bottom: 1rem;
 }
 
 .card:hover {
@@ -716,8 +737,10 @@ document.addEventListener('DOMContentLoaded', function() {
     .instructor-info .small {
         font-size: 11px !important;
     }
+    
+    .container-fluid {
+        padding: 0.5rem !important;
+    }
 }
 </style>
 @endpush
-</div>
-@endsection

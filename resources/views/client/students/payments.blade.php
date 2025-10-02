@@ -36,7 +36,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600">Total Spent</p>
-                        <p class="text-2xl font-bold text-gray-900">${{ number_format($totalSpent, 2) }}</p>
+                        <p class="text-2xl font-bold text-gray-900">RM{{ number_format($totalSpent, 2) }}</p>
                     </div>
                     <div class="p-3 bg-green-100 rounded-lg">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -126,7 +126,7 @@
                                         @if($enrollment->course->is_free)
                                             <span class="text-green-600 font-semibold">Free</span>
                                         @else
-                                            ${{ number_format($enrollment->amount ?? $enrollment->course->price, 2) }}
+                                            RM{{ number_format($enrollment->amount ?? $enrollment->course->price, 2) }}
                                         @endif
                                     </td>
                                     <td class="px-6 py-4">

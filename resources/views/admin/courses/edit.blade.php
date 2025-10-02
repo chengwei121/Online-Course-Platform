@@ -324,7 +324,7 @@
                 </div>
                 <div class="col-md-3">
                     <div class="current-info">
-                        <h5 class="text-success">${{ number_format($course->enrollments->sum(function($enrollment) use ($course) { return $course->is_free ? 0 : $course->price; }), 2) }}</h5>
+                        <h5 class="text-success">RM{{ number_format($course->enrollments->sum(function($enrollment) use ($course) { return $course->is_free ? 0 : $course->price; }), 2) }}</h5>
                         <small class="text-muted">Total Revenue</small>
                     </div>
                 </div>

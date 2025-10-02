@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Services\PayPalService;
+use App\Services\PaymentOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,35 +14,43 @@ use Illuminate\Support\Facades\Log;
 class PayPalController extends Controller
 {
     private $paypalService;
+    private $paymentOptimizationService;
 
-    public function __construct(PayPalService $paypalService)
+    public function __construct(PayPalService $paypalService, PaymentOptimizationService $paymentOptimizationService)
     {
         $this->paypalService = $paypalService;
+        $this->paymentOptimizationService = $paymentOptimizationService;
         $this->middleware('auth');
     }
 
     /**
-     * Show payment confirmation page
+     * Show payment confirmation page with optimizations
      */
     public function confirm($courseId)
     {
         try {
-            $course = Course::findOrFail($courseId);
+            // Use optimization service for faster data loading
+            $course = $this->paymentOptimizationService->getOptimizedCourseData($courseId);
+            
+            if (!$course) {
+                return redirect()->back()->with('error', 'Course not found.');
+            }
+            
             $user = Auth::user();
 
-            // Check if user is already enrolled
-            $existingEnrollment = Enrollment::where('user_id', $user->id)
-                ->where('course_id', $course->id)
-                ->where('payment_status', 'completed')
-                ->first();
-
-            if ($existingEnrollment) {
-                return redirect()->route('client.courses.show', $course->slug)
-                    ->with('info', 'You are already enrolled in this course.');
+            // Fast enrollment check using optimization service
+            $validation = $this->paymentOptimizationService->preValidatePayment($courseId);
+            
+            if (!$validation['valid']) {
+                if ($validation['error'] === 'Already enrolled') {
+                    return redirect()->route('client.courses.show', $course->slug)
+                        ->with('info', 'You are already enrolled in this course.');
+                }
+                return redirect()->back()->with('error', $validation['error']);
             }
 
-            // Load course with instructor and category for display
-            $course->load(['instructor', 'category', 'lessons']);
+            // Pre-warm PayPal for faster connection
+            $this->paymentOptimizationService->preWarmPayPal();
 
             return view('client.courses.payment-confirm', compact('course'));
 
@@ -57,16 +66,17 @@ class PayPalController extends Controller
     public function createPayment(Request $request, $courseId)
     {
         try {
-            $course = Course::findOrFail($courseId);
+            // Get only required course data for payment
+            $course = Course::select('id', 'title', 'price', 'slug')->findOrFail($courseId);
             $user = Auth::user();
 
-            // Check if user is already enrolled
-            $existingEnrollment = Enrollment::where('user_id', $user->id)
+            // Fast enrollment check
+            $isEnrolled = Enrollment::where('user_id', $user->id)
                 ->where('course_id', $course->id)
                 ->where('payment_status', 'completed')
-                ->first();
+                ->exists();
 
-            if ($existingEnrollment) {
+            if ($isEnrolled) {
                 return redirect()->back()->with('error', 'You are already enrolled in this course.');
             }
 
@@ -77,7 +87,7 @@ class PayPalController extends Controller
             // Create PayPal payment
             $payment = $this->paypalService->createPayment(
                 $course->price,
-                'USD',
+                'MYR',
                 "Course: {$course->title}",
                 $successUrl,
                 $cancelUrl,
@@ -153,6 +163,12 @@ class PayPalController extends Controller
                     DB::commit();
 
                     $course = Course::find($courseId);
+                    
+                    if (!$course) {
+                        Log::error("Course not found after payment: $courseId");
+                        return redirect()->route('client.courses.index')->with('error', 'Course not found after payment.');
+                    }
+                    
                     return redirect()->route('client.paypal.confirm', $course->id)
                         ->with('payment_success', 'Successfully purchased the course! You can learn the course now.')
                         ->with('course_purchased', true);
@@ -204,6 +220,43 @@ class PayPalController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Unable to fetch payment status'], 400);
+        }
+    }
+
+    /**
+     * AJAX endpoint for payment preparation
+     */
+    public function preparePayment(Request $request, $courseId)
+    {
+        try {
+            $validation = $this->paymentOptimizationService->preValidatePayment($courseId);
+            
+            if (!$validation['valid']) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $validation['error']
+                ], 400);
+            }
+
+            // Pre-warm PayPal connection
+            $paypalReady = $this->paymentOptimizationService->preWarmPayPal();
+
+            return response()->json([
+                'success' => true,
+                'paypal_ready' => $paypalReady,
+                'course' => [
+                    'id' => $validation['course_id'],
+                    'title' => $validation['title'],
+                    'price' => $validation['price']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Payment Preparation Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to prepare payment'
+            ], 500);
         }
     }
 }

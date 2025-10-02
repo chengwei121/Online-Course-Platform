@@ -49,7 +49,7 @@
                         </div>
                         <div class="col-6">
                             <h5 class="text-success mb-1">
-                                ${{ number_format($client->enrollments->sum(function($e) { 
+                                RM{{ number_format($client->enrollments->sum(function($e) { 
                                     return $e->course->is_free ? 0 : $e->course->price; 
                                 }), 2) }}
                             </h5>
@@ -129,7 +129,7 @@
                                         @if($course->is_free)
                                             <span class="badge bg-success">FREE</span>
                                         @else
-                                            <span class="fw-bold text-primary">${{ number_format($course->price, 2) }}</span>
+                                            <span class="fw-bold text-primary">RM{{ number_format($course->price, 2) }}</span>
                                         @endif
                                     </td>
                                     <td>

@@ -25,6 +25,19 @@
             background: #3498db;
             color: #fff;
         }
+        .nav-section-header {
+            margin-top: 1rem;
+        }
+        .nav-section-header:first-child {
+            margin-top: 0;
+        }
+        .nav-section-header small {
+            color: #bdc3c7;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #34495e;
+            margin-bottom: 0.5rem;
+        }
         .main-content {
             background: #f8f9fa;
             min-height: 100vh;
@@ -36,48 +49,148 @@
             border: none;
             box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
+        
+        /* Additional styles for various components */
+        .table-responsive {
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        
+        .badge {
+            font-size: 0.75em;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.175);
+        }
     </style>
+    @stack('styles')
 </head>
 <body>
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 px-0 sidebar">
-                <div class="d-flex flex-column">
+                <div class="d-flex flex-column h-100">
                     <div class="p-3 text-center border-bottom border-secondary">
                         <h5 class="text-white mb-0">
                             <i class="fas fa-chalkboard-teacher me-2"></i>
                             Teacher Panel
                         </h5>
                     </div>
-                    <nav class="nav flex-column">
-                        <a class="nav-link {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" 
-                           href="{{ route('teacher.dashboard') }}">
-                            <i class="fas fa-tachometer-alt me-2"></i>
-                            Dashboard
-                        </a>
-                        <a class="nav-link {{ request()->routeIs('teacher.courses.*') ? 'active' : '' }}" 
-                           href="{{ route('teacher.courses.index') }}">
-                            <i class="fas fa-book me-2"></i>
-                            My Courses
-                        </a>
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-users me-2"></i>
-                            Students
-                        </a>
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-clipboard-list me-2"></i>
-                            Assignments
-                        </a>
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-chart-bar me-2"></i>
-                            Reports
-                        </a>
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-cog me-2"></i>
-                            Settings
-                        </a>
-                    </nav>
+                    <!-- Navigation -->
+                    <ul class="nav flex-column flex-grow-1">
+                        <!-- MAIN SECTION -->
+                        <li class="nav-section-header">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-home me-2"></i>Main
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('teacher.dashboard') ? 'active' : '' }}" 
+                               href="{{ route('teacher.dashboard') }}">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        
+                        <!-- CONTENT MANAGEMENT SECTION -->
+                        <li class="nav-section-header mt-3">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-layer-group me-2"></i>Content Management
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('teacher.courses.*') ? 'active' : '' }}" 
+                               href="{{ route('teacher.courses.index') }}">
+                                <i class="fas fa-book me-2"></i>
+                                My Courses
+                            </a>
+                        </li>
+                        
+                        <!-- STUDENT MANAGEMENT SECTION -->
+                        <li class="nav-section-header mt-3">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-users-cog me-2"></i>Student Management
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('teacher.students.*') ? 'active' : '' }}" 
+                               href="{{ route('teacher.students.index') }}">
+                                <i class="fas fa-users me-2"></i>
+                                Students
+                            </a>
+                        </li>
+                        
+                        <!-- ANALYTICS & REPORTS SECTION -->
+                        <li class="nav-section-header mt-3">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-chart-bar me-2"></i>Analytics & Reports
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-file-alt me-2"></i>
+                                Reports
+                            </a>
+                        </li>
+                        
+                        <!-- SETTINGS SECTION -->
+                        <li class="nav-section-header mt-3">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-cog me-2"></i>Settings
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="nav-link border-0 bg-transparent text-white w-100 text-start">
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                    
+                    <!-- User Actions -->
+                    <div class="mt-auto pt-4">
+                        <hr class="text-white-50">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" role="button" 
+                               data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-2"></i>
+                                {{ Auth::user()->name }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">
+                                    <i class="fas fa-user me-2"></i>Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="#">
+                                    <i class="fas fa-cog me-2"></i>Settings
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="POST" action="{{ route('teacher.logout') }}">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -89,26 +202,10 @@
                         <span class="navbar-brand mb-0 h1">@yield('page-title', 'Dashboard')</span>
                         
                         <div class="navbar-nav ms-auto">
-                            <div class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" 
-                                   data-bs-toggle="dropdown">
-                                    <i class="fas fa-user-circle me-2"></i>
-                                    {{ Auth::user()->name }}
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Profile</a></li>
-                                    <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form method="POST" action="{{ route('teacher.logout') }}">
-                                            @csrf
-                                            <button type="submit" class="dropdown-item">
-                                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                            </button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </div>
+                            <span class="nav-link text-muted">
+                                <i class="fas fa-calendar me-2"></i>
+                                {{ now()->format('M d, Y') }}
+                            </span>
                         </div>
                     </div>
                 </nav>
@@ -136,6 +233,33 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Teacher Sidebar Sticky Position -->
+    <script>
+        // Make sidebar sticky positioned following client pattern
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add CSS for sticky sidebar behavior
+            if (!document.getElementById('sidebarStickyCSS')) {
+                const style = document.createElement('style');
+                style.id = 'sidebarStickyCSS';
+                style.textContent = `
+                    .sidebar {
+                        position: sticky !important;
+                        top: 0 !important;
+                        height: 100vh !important;
+                        overflow: visible !important;
+                        overflow-y: visible !important;
+                    }
+                    .sidebar .position-sticky {
+                        height: auto !important;
+                        overflow: visible !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        });
+    </script>
+    
     @stack('scripts')
 </body>
 </html>

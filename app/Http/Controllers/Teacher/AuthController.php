@@ -79,13 +79,40 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials) && Auth::user()->isTeacher()) {
-            $request->session()->regenerate();
-            return redirect()->intended(route('teacher.dashboard'));
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user = Auth::user();
+            
+            if ($user->isTeacher()) {
+                $request->session()->regenerate();
+                
+                // Return JSON response for AJAX requests
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'redirect' => route('teacher.dashboard'),
+                        'message' => 'Login successful'
+                    ]);
+                }
+                
+                return redirect()->intended(route('teacher.dashboard'));
+            } else {
+                Auth::logout();
+                $error = 'Access denied. Teachers only.';
+            }
+        } else {
+            $error = 'The provided credentials do not match our records.';
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => $error,
+                'errors' => ['email' => [$error]]
+            ], 422);
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records or you are not a teacher.',
+            'email' => $error,
         ])->onlyInput('email');
     }
 

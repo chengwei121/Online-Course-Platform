@@ -100,7 +100,7 @@
                                     <td>
                                         <strong>{{ $course->title }}</strong>
                                         <br>
-                                        <small class="text-muted">${{ number_format($course->price, 2) }}</small>
+                                        <small class="text-muted">RM{{ number_format($course->price, 2) }}</small>
                                     </td>
                                     <td>
                                         <span class="badge bg-primary">{{ $course->enrollments_count }}</span>

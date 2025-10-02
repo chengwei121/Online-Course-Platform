@@ -188,7 +188,9 @@ class CourseController extends Controller
     {
         $this->authorize('update', $course);
         
-        $categories = Category::all();
+        $categories = Category::select('id', 'name')->get();
+        $course->loadCount(['enrollments', 'lessons']);
+        
         return view('teacher.courses.edit', compact('course', 'categories'));
     }
 
@@ -203,19 +205,29 @@ class CourseController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'difficulty_level' => 'required|in:beginner,intermediate,advanced',
-            'duration_hours' => 'required|integer|min:1',
+            'price' => 'nullable|numeric|min:0',
+            'level' => 'required|in:beginner,intermediate,advanced',
+            'learning_hours' => 'required|integer|min:1',
+            'skills_to_learn' => 'nullable|string',
+            'is_free' => 'nullable|boolean',
+            'status' => 'nullable|in:draft,published,archived',
             'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $thumbnailPath = $course->thumbnail;
         if ($request->hasFile('thumbnail')) {
             // Delete old thumbnail if exists
-            if ($course->thumbnail) {
+            if ($course->thumbnail && Storage::disk('public')->exists($course->thumbnail)) {
                 Storage::disk('public')->delete($course->thumbnail);
             }
-            $thumbnailPath = $request->file('thumbnail')->store('course-thumbnails', 'public');
+            $thumbnailPath = $request->file('thumbnail')->store('images/courses', 'public');
+        }
+
+        // Process skills to learn
+        $skillsArray = null;
+        if ($request->filled('skills_to_learn')) {
+            $skillsArray = array_map('trim', explode(',', $request->skills_to_learn));
+            $skillsArray = array_filter($skillsArray); // Remove empty values
         }
 
         $course->update([
@@ -223,9 +235,12 @@ class CourseController extends Controller
             'slug' => Str::slug($request->title),
             'description' => $request->description,
             'category_id' => $request->category_id,
-            'price' => $request->price,
-            'difficulty_level' => $request->difficulty_level,
-            'duration_hours' => $request->duration_hours,
+            'price' => $request->is_free ? 0 : ($request->price ?? 0),
+            'level' => $request->level,
+            'learning_hours' => $request->learning_hours,
+            'skills_to_learn' => $skillsArray,
+            'is_free' => (bool) $request->is_free,
+            'status' => $request->status ?? $course->status,
             'thumbnail' => $thumbnailPath,
         ]);
 

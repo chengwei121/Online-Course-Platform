@@ -104,7 +104,7 @@
                                     @if($course->is_free)
                                         <span class="badge bg-success fs-6">FREE</span>
                                     @else
-                                        <span class="h5 text-success">${{ number_format($course->price, 2) }}</span>
+                                        <span class="h5 text-success">RM{{ number_format($course->price, 2) }}</span>
                                     @endif
                                 </div>
                                 <div class="col-6">
@@ -266,7 +266,7 @@
                         <div class="col-6">
                             <div class="card bg-warning text-white h-100">
                                 <div class="card-body text-center">
-                                    <h3 class="card-title">${{ number_format($stats['revenue'], 0) }}</h3>
+                                    <h3 class="card-title">RM{{ number_format($stats['revenue'], 0) }}</h3>
                                     <p class="card-text small">Revenue</p>
                                 </div>
                             </div>

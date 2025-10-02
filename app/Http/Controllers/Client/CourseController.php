@@ -37,6 +37,13 @@ class CourseController extends Controller
             // Get filters from request
             $filters = $request->only(['category', 'level', 'duration', 'rating', 'price_type', 'search']);
             
+            // Log request for debugging
+            Log::info('Course index request', [
+                'filters' => $filters,
+                'page' => $request->get('page', 1),
+                'is_ajax' => $request->ajax()
+            ]);
+            
             // Get cached categories
             $categories = $this->courseOptimizationService->getCachedCategories();
             
@@ -47,13 +54,25 @@ class CourseController extends Controller
             $courses->setCollection($this->courseOptimizationService->optimizeThumbnails($courses->getCollection()));
 
             if ($request->ajax()) {
-                return response()->json([
-                    'html' => view('client.courses._grid_optimized', compact('courses'))->render(),
+                $response = [
+                    'html' => view('client.courses._grid', compact('courses'))->render(),
+                    'pagination' => $courses->appends($request->all())->links()->render(),
                     'has_more' => $courses->hasMorePages(),
                     'next_page' => $courses->nextPageUrl(),
                     'current_page' => $courses->currentPage(),
-                    'total' => $courses->total()
+                    'total' => $courses->total(),
+                    'total_pages' => $courses->lastPage(),
+                    'per_page' => $courses->perPage()
+                ];
+                
+                Log::info('AJAX response data', [
+                    'current_page' => $response['current_page'],
+                    'total_pages' => $response['total_pages'],
+                    'total' => $response['total'],
+                    'has_more' => $response['has_more']
                 ]);
+                
+                return response()->json($response);
             }
 
             return view('client.courses.index', compact('courses', 'categories'));
@@ -112,8 +131,7 @@ class CourseController extends Controller
         $reviews = $course->reviews()
             ->with('user:id,name')
             ->latest()
-            ->limit(10)
-            ->get(); // Load reviews separately for better performance
+            ->paginate(10); // Load reviews with pagination for better performance
 
         /** @var User|null $user */
         $user = Auth::user();
@@ -151,8 +169,8 @@ class CourseController extends Controller
             }
         }
 
-        // Use optimized view if available
-        $viewName = view()->exists('client.courses.show_optimized') ? 'client.courses.show_optimized' : 'client.courses.show';
+        // Use show.blade.php as main course show page
+        $viewName = view()->exists('client.courses.show') ? 'client.courses.show' : 'client.courses.show_optimized';
         
         return view($viewName, compact(
             'course', 

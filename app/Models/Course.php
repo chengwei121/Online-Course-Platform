@@ -71,12 +71,15 @@ class Course extends Model
 
         // If it's already a full URL, extract just the filename and rebuild the URL properly
         if (filter_var($thumbnail, FILTER_VALIDATE_URL)) {
-            // Extract the filename from the URL
-            $filename = basename(parse_url($thumbnail, PHP_URL_PATH));
+            // Parse the URL to get the path
+            $urlPath = parse_url($thumbnail, PHP_URL_PATH);
+            
+            // Extract the filename from the path
+            $filename = basename($urlPath);
             
             // Check if the file exists in the courses directory
             if (Storage::disk('public')->exists('images/courses/' . $filename)) {
-                return Storage::url('images/courses/' . $filename);
+                return asset('storage/images/courses/' . $filename);
             }
             
             // If not found, return the placeholder
@@ -96,7 +99,7 @@ class Course extends Model
 
         // Check if file exists before returning URL
         if (Storage::disk('public')->exists($thumbnailPath)) {
-            return Storage::url($thumbnailPath);
+            return asset('storage/' . $thumbnailPath);
         }
 
         // Return placeholder if file doesn't exist

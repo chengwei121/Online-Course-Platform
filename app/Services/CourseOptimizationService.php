@@ -14,29 +14,28 @@ class CourseOptimizationService
      */
     public function getOptimizedCourses($filters = [], $perPage = 9)
     {
-        $cacheKey = 'courses_' . md5(serialize($filters) . $perPage);
+        // Temporarily disable caching for pagination debugging
+        // TODO: Re-enable caching after pagination is fixed
         
-        return Cache::remember($cacheKey, config('performance.cache_duration.courses'), function() use ($filters, $perPage) {
-            $query = Course::query()
-                ->select([
-                    'id', 'title', 'slug', 'thumbnail', 'price', 'is_free',
-                    'duration', 'average_rating', 'total_ratings', 'category_id',
-                    'level', 'status', 'created_at', 'teacher_id'
-                ])
-                ->with([
-                    'category:id,name',
-                    'teacher:id,name'
-                ])
-                ->where('status', 'published');
+        $query = Course::query()
+            ->select([
+                'id', 'title', 'slug', 'thumbnail', 'price', 'is_free',
+                'duration', 'learning_hours', 'average_rating', 'total_ratings', 'category_id',
+                'level', 'status', 'created_at', 'teacher_id'
+            ])
+            ->with([
+                'category:id,name',
+                'teacher:id,name'
+            ])
+            ->where('status', 'published');
 
-            // Apply filters
-            $this->applyFilters($query, $filters);
+        // Apply filters
+        $this->applyFilters($query, $filters);
 
-            return $query->orderByDesc('average_rating')
-                        ->orderByDesc('total_ratings')
-                        ->latest()
-                        ->paginate($perPage);
-        });
+        return $query->orderByDesc('average_rating')
+                    ->orderByDesc('total_ratings')
+                    ->latest()
+                    ->paginate($perPage);
     }
 
     /**
@@ -159,13 +158,13 @@ class CourseOptimizationService
                 foreach ($durations as $duration) {
                     switch ($duration) {
                         case 'short':
-                            $q->orWhere('duration', '<=', 3);
+                            $q->orWhere('learning_hours', '<=', 3);
                             break;
                         case 'medium':
-                            $q->orWhereBetween('duration', [3, 6]);
+                            $q->orWhereBetween('learning_hours', [3, 6]);
                             break;
                         case 'long':
-                            $q->orWhere('duration', '>', 6);
+                            $q->orWhere('learning_hours', '>', 6);
                             break;
                     }
                 }

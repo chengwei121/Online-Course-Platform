@@ -84,7 +84,7 @@
                                         @endif
                                     </td>
                                     <td>
-                                        ${{ number_format($client->enrollments->sum(function($enrollment) {
+                                        RM{{ number_format($client->enrollments->sum(function($enrollment) {
                                             return $enrollment->course->is_free ? 0 : $enrollment->course->price;
                                         }), 2) }}
                                     </td>
