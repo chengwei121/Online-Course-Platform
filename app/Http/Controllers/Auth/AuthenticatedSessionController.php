@@ -66,6 +66,18 @@ class AuthenticatedSessionController extends Controller
             
             return $this->redirectBasedOnRole($user);
             
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return specific validation errors (like "credentials don't match")
+            if ($request->expectsJson()) {
+                return new JsonResponse([
+                    'success' => false,
+                    'errors' => $e->errors(),
+                    'message' => $e->getMessage()
+                ], 422);
+            }
+            
+            throw $e;
+            
         } catch (\Exception $e) {
             Log::error('Login error', [
                 'error' => $e->getMessage(),

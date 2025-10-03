@@ -169,6 +169,20 @@
                                 Administrators
                             </a>
                         </li>
+                        
+                        <!-- SYSTEM TOOLS SECTION -->
+                        <li class="nav-section-header mt-3">
+                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
+                                <i class="fas fa-tools me-2"></i>System Tools
+                            </small>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('admin.emails.*') ? 'active' : '' }}" 
+                               href="{{ route('admin.emails.test') }}">
+                                <i class="fas fa-envelope-open-text me-2"></i>
+                                Email Testing
+                            </a>
+                        </li>
                     </ul>
                     
                     <!-- User Actions -->

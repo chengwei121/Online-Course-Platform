@@ -23,302 +23,162 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <!-- Payment Information -->
+    <div class="row justify-content-center">
         <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header modern-grey-header text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-credit-card me-2"></i>
-                        Payment Information
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Payment ID</label>
-                                <div class="h5">#{{ $enrollment->id }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Amount Paid</label>
-                                <div class="h4 text-success">
-                                    RM{{ number_format($enrollment->amount_paid, 2) }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Payment Status</label>
-                                <div>
-                                    @if($enrollment->payment_status == 'completed')
-                                        <span class="badge bg-success fs-6">
-                                            <i class="fas fa-check me-1"></i>
-                                            Completed
-                                        </span>
-                                    @elseif($enrollment->payment_status == 'pending')
-                                        <span class="badge bg-warning fs-6">
-                                            <i class="fas fa-clock me-1"></i>
-                                            Pending
-                                        </span>
-                                    @else
-                                        <span class="badge bg-danger fs-6">
-                                            <i class="fas fa-times me-1"></i>
-                                            Failed
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Enrollment Date</label>
-                                <div class="h6">
-                                    {{ $enrollment->enrolled_at->format('M d, Y H:i') }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Course Completion</label>
-                                <div>
-                                    @if($enrollment->completed_at)
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-trophy me-1"></i>
-                                            Completed on {{ $enrollment->completed_at->format('M d, Y') }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-secondary">
-                                            <i class="fas fa-clock me-1"></i>
-                                            In Progress
-                                        </span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    @if($enrollment->payment_status !== 'completed')
-                    <hr>
-                    <div class="row">
-                        <div class="col-12">
-                            <h6 class="text-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                Update Payment Status
-                            </h6>
-                            <form action="{{ route('admin.payments.update-status', $enrollment) }}" method="POST" class="row g-3">
-                                @csrf
-                                @method('PATCH')
-                                <div class="col-md-4">
-                                    <select name="payment_status" class="form-select" required>
-                                        <option value="pending" {{ $enrollment->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="completed" {{ $enrollment->payment_status == 'completed' ? 'selected' : '' }}>Completed</option>
-                                        <option value="failed" {{ $enrollment->payment_status == 'failed' ? 'selected' : '' }}>Failed</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="text" name="notes" class="form-control" placeholder="Add notes (optional)">
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>
-                                        Update
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Student Information -->
-            <div class="card shadow mb-4">
-                <div class="card-header modern-grey-header text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-user me-2"></i>
-                        Student Information
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Student Name</label>
-                                <div class="h6">{{ $enrollment->user->name }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Email Address</label>
-                                <div class="h6">{{ $enrollment->user->email }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Total Purchases</label>
-                                <div class="h6 text-primary">{{ $userStats['total_purchases'] }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Total Spent</label>
-                                <div class="h6 text-success">RM{{ number_format($userStats['total_spent'], 2) }}</div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="mb-3">
-                                <label class="form-label text-muted">Completed Courses</label>
-                                <div class="h6 text-info">{{ $userStats['completed_courses'] }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <a href="{{ route('admin.clients.show', $enrollment->user) }}" class="btn btn-outline-primary">
-                                <i class="fas fa-user me-1"></i>
-                                View Student Profile
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Course Information -->
-            <div class="card shadow">
-                <div class="card-header modern-grey-header text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-book me-2"></i>
-                        Course Information
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            @if($enrollment->course->thumbnail)
-                                <img src="{{ $enrollment->course->thumbnail }}" 
-                                     alt="{{ $enrollment->course->title }}" 
-                                     class="img-fluid rounded">
+            <!-- Simple Receipt Card -->
+            <div class="receipt-card">
+                <!-- Header -->
+                <div class="receipt-header">
+                    <div class="text-center">
+                        <h2>E-learning Platform</h2>
+                        <p>Payment Receipt</p>
+                        <div class="receipt-status">
+                            @if($enrollment->payment_status == 'completed')
+                                <span class="status-badge paid">✓ PAID</span>
+                            @elseif($enrollment->payment_status == 'pending')
+                                <span class="status-badge pending">⏳ PENDING</span>
                             @else
-                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 120px;">
-                                    <i class="fas fa-book fa-3x text-muted"></i>
-                                </div>
+                                <span class="status-badge failed">✗ FAILED</span>
                             @endif
                         </div>
-                        <div class="col-md-9">
-                            <h5>{{ $enrollment->course->title }}</h5>
-                            <p class="text-muted">{{ Str::limit($enrollment->course->description, 200) }}</p>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <small class="text-muted">
-                                        <strong>Instructor:</strong> {{ $enrollment->course->instructor->name }}<br>
-                                        <strong>Category:</strong> {{ $enrollment->course->category->name }}<br>
-                                        <strong>Level:</strong> {{ ucfirst($enrollment->course->level) }}
-                                    </small>
-                                </div>
-                                <div class="col-md-6">
-                                    <small class="text-muted">
-                                        <strong>Duration:</strong> {{ $enrollment->course->duration }} hours<br>
-                                        <strong>Rating:</strong> 
-                                        @if($enrollment->course->average_rating)
-                                            {{ number_format($enrollment->course->average_rating, 1) }}/5
-                                            <span class="text-warning">
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    @if($i <= $enrollment->course->average_rating)
-                                                        <i class="fas fa-star"></i>
-                                                    @else
-                                                        <i class="far fa-star"></i>
-                                                    @endif
-                                                @endfor
-                                            </span>
-                                        @else
-                                            No ratings yet
-                                        @endif
-                                    </small>
-                                </div>
+                    </div>
+                </div>
+
+                <!-- Receipt Body -->
+                <div class="receipt-body">
+                    <!-- Basic Info -->
+                    <div class="info-row">
+                        <span>Receipt #:</span>
+                        <span><strong>#{{ str_pad($enrollment->id, 6, '0', STR_PAD_LEFT) }}</strong></span>
+                    </div>
+                    <div class="info-row">
+                        <span>Date:</span>
+                        <span>{{ $enrollment->enrolled_at->format('M d, Y') }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Student:</span>
+                        <span>{{ $enrollment->user->name }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Email:</span>
+                        <span>{{ $enrollment->user->email }}</span>
+                    </div>
+
+                    <!-- Course Info -->
+                    <div class="course-section">
+                        <h4>Course Purchased</h4>
+                        <div class="course-item">
+                            <div class="course-name">{{ $enrollment->course->title }}</div>
+                            <div class="course-details">
+                                {{ $enrollment->course->category->name }} • {{ ucfirst($enrollment->course->level) }} Level • {{ $enrollment->course->duration }} hours
                             </div>
+                            <div class="course-price">RM{{ number_format($enrollment->amount_paid, 2) }}</div>
                         </div>
                     </div>
+
+                    <!-- Total -->
+                    <div class="total-section">
+                        <div class="total-row">
+                            <span>Total Amount:</span>
+                            <span class="total-amount">RM{{ number_format($enrollment->amount_paid, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Status Info -->
+                    <div class="status-section">
+                        @if($enrollment->payment_status == 'completed')
+                            <div class="success-message">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Payment completed successfully. Course access is now active.</span>
+                            </div>
+                        @elseif($enrollment->payment_status == 'pending')
+                            <div class="warning-message">
+                                <i class="fas fa-clock"></i>
+                                <span>Payment is being processed. You'll get access once confirmed.</span>
+                            </div>
+                        @else
+                            <div class="error-message">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <span>Payment failed. Please contact support for assistance.</span>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="receipt-footer">
+                    <p>Thank you for your purchase!</p>
+                    <p>Questions? Contact us at {{ config('mail.from.address') }}</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="receipt-actions">
+                    <button onclick="window.print()" class="btn-primary">
+                        <i class="fas fa-print"></i> Print Receipt
+                    </button>
+                    <a href="{{ route('admin.emails.test') }}" class="btn-secondary">
+                        <i class="fas fa-envelope"></i> Test Email
+                    </a>
+                    <a href="{{ route('admin.payments.index') }}" class="btn-outline">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
+        <!-- Simple Admin Panel -->
         <div class="col-lg-4">
-            <!-- Quick Actions -->
-            <div class="card shadow mb-4">
-                <div class="card-header modern-grey-header text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-bolt me-2"></i>
-                        Quick Actions
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('admin.courses.show', $enrollment->course) }}" class="btn btn-outline-info">
-                            <i class="fas fa-book me-2"></i>
-                            View Course Details
-                        </a>
-                        <a href="{{ route('admin.clients.show', $enrollment->user) }}" class="btn btn-outline-primary">
-                            <i class="fas fa-user me-2"></i>
-                            View Student Profile
-                        </a>
-                        <a href="{{ route('admin.clients.enrollments', $enrollment->user) }}" class="btn btn-outline-success">
-                            <i class="fas fa-list me-2"></i>
-                            Student's All Enrollments
-                        </a>
+            @if($enrollment->payment_status !== 'completed')
+            <div class="admin-card">
+                <h5>Update Payment Status</h5>
+                <form action="{{ route('admin.payments.update-status', $enrollment) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <div class="form-group">
+                        <select name="payment_status" class="form-control">
+                            <option value="pending" {{ $enrollment->payment_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="completed" {{ $enrollment->payment_status == 'completed' ? 'selected' : '' }}>Completed</option>
+                            <option value="failed" {{ $enrollment->payment_status == 'failed' ? 'selected' : '' }}>Failed</option>
+                        </select>
                     </div>
+                    <div class="form-group">
+                        <input type="text" name="notes" class="form-control" placeholder="Notes (optional)">
+                    </div>
+                    <button type="submit" class="btn-primary">Update Status</button>
+                </form>
+            </div>
+            @endif
+
+            <div class="admin-card">
+                <h5>Quick Actions</h5>
+                <div class="quick-actions">
+                    <a href="{{ route('admin.courses.show', $enrollment->course) }}" class="action-link">
+                        <i class="fas fa-book"></i> View Course
+                    </a>
+                    <a href="{{ route('admin.clients.show', $enrollment->user) }}" class="action-link">
+                        <i class="fas fa-user"></i> View Student
+                    </a>
+                    <a href="{{ route('admin.emails.test') }}" class="action-link">
+                        <i class="fas fa-envelope"></i> Test Emails
+                    </a>
                 </div>
             </div>
 
-            <!-- Related Payments -->
-            @if($relatedPayments->count() > 0)
-            <div class="card shadow">
-                <div class="card-header modern-grey-header text-white">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-history me-2"></i>
-                        Student's Other Purchases
-                    </h6>
+            <div class="admin-card">
+                <h5>Student Summary</h5>
+                <div class="stat">
+                    <span class="stat-number">{{ $userStats['total_purchases'] }}</span>
+                    <span class="stat-label">Total Courses</span>
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @foreach($relatedPayments as $relatedPayment)
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="ms-2 me-auto">
-                                    <div class="fw-bold">{{ Str::limit($relatedPayment->course->title, 25) }}</div>
-                                    <small class="text-muted">{{ $relatedPayment->enrolled_at->format('M d, Y') }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <small class="text-success fw-bold">${{ number_format($relatedPayment->amount_paid, 2) }}</small><br>
-                                    @if($relatedPayment->payment_status == 'completed')
-                                        <span class="badge bg-success">Paid</span>
-                                    @elseif($relatedPayment->payment_status == 'pending')
-                                        <span class="badge bg-warning">Pending</span>
-                                    @else
-                                        <span class="badge bg-danger">Failed</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
+                <div class="stat">
+                    <span class="stat-number">RM{{ number_format($userStats['total_spent'], 2) }}</span>
+                    <span class="stat-label">Total Spent</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">{{ $userStats['completed_courses'] }}</span>
+                    <span class="stat-label">Completed</span>
                 </div>
             </div>
-            @endif
         </div>
     </div>
 </div>
@@ -326,24 +186,381 @@
 
 @push('styles')
 <style>
-/* Modern Grey Card Header */
-.modern-grey-header {
-    background: linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%);
-    border-bottom: 3px solid #1e293b;
+/* Simple Receipt Card */
+.receipt-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+    overflow: hidden;
 }
 
-.card {
-    border: 1px solid #e3e6f0;
-    border-radius: 0.35rem;
+/* Receipt Header */
+.receipt-header {
+    background: var(--sidebar-bg, linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%));
+    color: white;
+    padding: 30px;
+    text-align: center;
 }
 
-.badge.fs-6 {
-    font-size: 0.9rem !important;
-}
-
-.form-label {
+.receipt-header h2 {
+    margin: 0 0 5px 0;
+    font-size: 28px;
     font-weight: 600;
-    margin-bottom: 0.25rem;
+}
+
+.receipt-header p {
+    margin: 0 0 20px 0;
+    opacity: 0.9;
+    font-size: 16px;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.status-badge.paid {
+    background: #10b981;
+    color: white;
+}
+
+.status-badge.pending {
+    background: #f59e0b;
+    color: white;
+}
+
+.status-badge.failed {
+    background: #ef4444;
+    color: white;
+}
+
+/* Receipt Body */
+.receipt-body {
+    padding: 30px;
+}
+
+/* Info Rows */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 16px;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+/* Course Section */
+.course-section {
+    margin: 30px 0;
+    padding: 25px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border-left: 4px solid var(--sidebar-bg, #64748b);
+}
+
+.course-section h4 {
+    margin: 0 0 15px 0;
+    color: #374151;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.course-item {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.course-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 8px;
+}
+
+.course-details {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.course-price {
+    font-size: 20px;
+    font-weight: bold;
+    color: #059669;
+    text-align: right;
+}
+
+/* Total Section */
+.total-section {
+    margin: 30px 0;
+    padding: 25px;
+    background: #ecfdf5;
+    border-radius: 8px;
+    border: 1px solid #d1fae5;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 20px;
+}
+
+.total-amount {
+    font-weight: bold;
+    color: #059669;
+    font-size: 24px;
+}
+
+/* Status Messages */
+.status-section {
+    margin: 30px 0;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.success-message {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #d1fae5;
+}
+
+.warning-message {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fed7aa;
+}
+
+.error-message {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.status-section i {
+    font-size: 20px;
+}
+
+/* Receipt Footer */
+.receipt-footer {
+    padding: 20px 30px;
+    background: #f9fafb;
+    text-align: center;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+}
+
+.receipt-footer p {
+    margin: 5px 0;
+}
+
+/* Action Buttons */
+.receipt-actions {
+    padding: 25px 30px;
+    text-align: center;
+    gap: 10px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    background: var(--sidebar-bg, #64748b);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--sidebar-bg-hover, #475569);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #6b7280;
+    border: 2px solid #d1d5db;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-outline:hover {
+    background: #f3f4f6;
+    color: #374151;
+    text-decoration: none;
+}
+
+/* Admin Cards */
+.admin-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.admin-card h5 {
+    margin: 0 0 15px 0;
+    color: #374151;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Form Controls */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.action-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    color: #374151;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.action-link:hover {
+    background: #f3f4f6;
+    color: #111827;
+    text-decoration: none;
+}
+
+/* Stats */
+.stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.stat:last-child {
+    border-bottom: none;
+}
+
+.stat-number {
+    font-weight: bold;
+    font-size: 16px;
+    color: #111827;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .receipt-header,
+    .receipt-body,
+    .receipt-actions {
+        padding: 20px;
+    }
+    
+    .receipt-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+    
+    .course-section,
+    .total-section,
+    .status-section {
+        padding: 15px;
+        margin: 20px 0;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .receipt-actions,
+    .col-lg-4,
+    .admin-card {
+        display: none !important;
+    }
+    
+    .receipt-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .col-lg-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 }
 </style>
 @endpush

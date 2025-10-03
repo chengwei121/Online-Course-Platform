@@ -6,10 +6,12 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Services\PayPalService;
 use App\Services\PaymentOptimizationService;
+use App\Mail\PaymentReceiptMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class PayPalController extends Controller
 {
@@ -157,17 +159,27 @@ class PayPalController extends Controller
                         ]
                     );
 
-                    // Clear session data
-                    session()->forget(['paypal_payment_id', 'course_id', 'amount']);
-
-                    DB::commit();
-
+                    // Get course information for email
                     $course = Course::find($courseId);
                     
                     if (!$course) {
                         Log::error("Course not found after payment: $courseId");
-                        return redirect()->route('client.courses.index')->with('error', 'Course not found after payment.');
+                        throw new \Exception('Course not found after payment.');
                     }
+
+                    // Send email receipt to student
+                    try {
+                        Mail::to($user->email)->queue(new PaymentReceiptMail($enrollment, $course, $user, $payment));
+                        Log::info("Payment receipt email queued for user: {$user->email}, course: {$course->title}");
+                    } catch (\Exception $emailError) {
+                        // Log email error but don't fail the payment process
+                        Log::error("Failed to send payment receipt email: " . $emailError->getMessage());
+                    }
+
+                    // Clear session data
+                    session()->forget(['paypal_payment_id', 'course_id', 'amount']);
+
+                    DB::commit();
                     
                     return redirect()->route('client.paypal.confirm', $course->id)
                         ->with('payment_success', 'Successfully purchased the course! You can learn the course now.')

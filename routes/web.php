@@ -146,6 +146,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('/', [App\Http\Controllers\Admin\NotificationController::class, 'store'])->name('store');
         Route::post('test', [App\Http\Controllers\Admin\NotificationController::class, 'sendTestNotification'])->name('test');
     });
+    
+    // Email Testing
+    Route::prefix('emails')->name('emails.')->group(function () {
+        Route::get('test', [App\Http\Controllers\Admin\EmailTestController::class, 'index'])->name('test');
+        Route::post('test/send', [App\Http\Controllers\Admin\EmailTestController::class, 'sendTest'])->name('test.send');
+        Route::get('test/preview', [App\Http\Controllers\Admin\EmailTestController::class, 'preview'])->name('test.preview');
+    });
 });
 
 // Temporary chart data route outside middleware for debugging

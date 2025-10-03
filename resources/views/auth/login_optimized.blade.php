@@ -777,7 +777,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Prepare form data
                 const formData = new FormData(form);
                 
-                    // Submit via fetch
+                // Debug: Log what we're sending
+                console.log('Login attempt with:', {
+                    email: formData.get('email'),
+                    password: formData.get('password') ? '[HIDDEN]' : 'MISSING',
+                    csrf: formData.get('_token') ? 'Present' : 'MISSING'
+                });
+                
                 const response = await fetch(form.action, {
                     method: 'POST',
                     body: formData,
@@ -788,13 +794,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     signal: AbortSignal.timeout(10000) // 10 second timeout
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
+                // Handle all responses, including 422 validation errors
                 const data = await response.json();
                 
-                if (data.success || response.redirected) {
+                // Debug: Log the response
+                console.log('Server response:', {
+                    status: response.status,
+                    ok: response.ok,
+                    data: data
+                });
+                
+                // Enhanced debugging for 422 errors
+                if (response.status === 422) {
+                    console.log('422 Validation Error Details:', {
+                        hasErrors: !!data.errors,
+                        errors: data.errors,
+                        hasMessage: !!data.message,
+                        message: data.message,
+                        fullData: data
+                    });
+                }
+                
+                if (response.ok && (data.success || response.redirected)) {
                     // Show success state
                     loginBtnText.textContent = 'Success!';
                     loginBtn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
@@ -802,7 +823,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Redirect immediately for better UX
                     window.location.href = data.redirect || '/teacher/dashboard';
                 } else {
-                    // Handle validation errors
+                    // Handle validation errors or other errors
                     if (data.errors) {
                         Object.keys(data.errors).forEach(field => {
                             const input = form.querySelector(`[name="${field}"]`);
@@ -812,6 +833,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     } else if (data.message) {
                         showFieldError(emailInput, data.message);
+                    } else {
+                        // Generic error message
+                        showFieldError(emailInput, 'Login failed. Please check your credentials and try again.');
                     }
                     
                     setLoadingState(false);
@@ -819,7 +843,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showFieldError(emailInput, 'Connection error. Please try again.');
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
+                
+                // Show user-friendly error message
+                showFieldError(emailInput, 'Connection error. Please check your internet connection and try again.');
                 setLoadingState(false);
                 isSubmitting = false;
             }
