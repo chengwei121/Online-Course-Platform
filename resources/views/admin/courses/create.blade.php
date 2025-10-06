@@ -146,7 +146,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-4 mb-3">
-                                <label for="price" class="form-label">Price (USD) <span class="text-danger">*</span></label>
+                                <label for="price" class="form-label">Price (MYR) <span class="text-danger">*</span></label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
                                     <input type="number" 

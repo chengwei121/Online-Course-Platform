@@ -189,39 +189,40 @@
 /* Simple Receipt Card */
 .receipt-card {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
     overflow: hidden;
+    max-width: 100%;
 }
 
 /* Receipt Header */
 .receipt-header {
     background: var(--sidebar-bg, linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%));
     color: white;
-    padding: 30px;
+    padding: 20px;
     text-align: center;
 }
 
 .receipt-header h2 {
-    margin: 0 0 5px 0;
-    font-size: 28px;
+    margin: 0 0 3px 0;
+    font-size: 22px;
     font-weight: 600;
 }
 
 .receipt-header p {
-    margin: 0 0 20px 0;
+    margin: 0 0 12px 0;
     opacity: 0.9;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 /* Status Badge */
 .status-badge {
     display: inline-block;
-    padding: 8px 20px;
-    border-radius: 25px;
+    padding: 6px 16px;
+    border-radius: 20px;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .status-badge.paid {
@@ -241,7 +242,7 @@
 
 /* Receipt Body */
 .receipt-body {
-    padding: 30px;
+    padding: 20px;
 }
 
 /* Info Rows */
@@ -249,9 +250,9 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 0;
+    padding: 8px 0;
     border-bottom: 1px solid #f3f4f6;
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .info-row:last-child {
@@ -260,42 +261,42 @@
 
 /* Course Section */
 .course-section {
-    margin: 30px 0;
-    padding: 25px;
+    margin: 20px 0;
+    padding: 15px;
     background: #f8fafc;
-    border-radius: 8px;
-    border-left: 4px solid var(--sidebar-bg, #64748b);
+    border-radius: 6px;
+    border-left: 3px solid var(--sidebar-bg, #64748b);
 }
 
 .course-section h4 {
-    margin: 0 0 15px 0;
+    margin: 0 0 10px 0;
     color: #374151;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
 }
 
 .course-item {
     background: white;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 15px;
+    border-radius: 6px;
     border: 1px solid #e5e7eb;
 }
 
 .course-name {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: #111827;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .course-details {
     color: #6b7280;
-    font-size: 14px;
-    margin-bottom: 10px;
+    font-size: 13px;
+    margin-bottom: 8px;
 }
 
 .course-price {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     color: #059669;
     text-align: right;
@@ -303,10 +304,10 @@
 
 /* Total Section */
 .total-section {
-    margin: 30px 0;
-    padding: 25px;
+    margin: 20px 0;
+    padding: 15px;
     background: #ecfdf5;
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid #d1fae5;
 }
 
@@ -314,23 +315,23 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 20px;
+    font-size: 16px;
 }
 
 .total-amount {
     font-weight: bold;
     color: #059669;
-    font-size: 24px;
+    font-size: 20px;
 }
 
 /* Status Messages */
 .status-section {
-    margin: 30px 0;
-    padding: 20px;
-    border-radius: 8px;
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .success-message {
@@ -352,27 +353,28 @@
 }
 
 .status-section i {
-    font-size: 20px;
+    font-size: 16px;
 }
 
 /* Receipt Footer */
 .receipt-footer {
-    padding: 20px 30px;
+    padding: 15px 20px;
     background: #f9fafb;
     text-align: center;
     color: #6b7280;
     border-top: 1px solid #e5e7eb;
+    font-size: 13px;
 }
 
 .receipt-footer p {
-    margin: 5px 0;
+    margin: 3px 0;
 }
 
 /* Action Buttons */
 .receipt-actions {
-    padding: 25px 30px;
+    padding: 15px 20px;
     text-align: center;
-    gap: 10px;
+    gap: 8px;
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
@@ -382,15 +384,16 @@
     background: var(--sidebar-bg, #64748b);
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-weight: 500;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
     transition: all 0.2s;
+    font-size: 14px;
 }
 
 .btn-primary:hover {
@@ -402,14 +405,15 @@
     background: #6b7280;
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-weight: 500;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.2s;
+    font-size: 14px;
 }
 
 .btn-secondary:hover {
@@ -421,15 +425,16 @@
 .btn-outline {
     background: transparent;
     color: #6b7280;
-    border: 2px solid #d1d5db;
-    padding: 12px 24px;
-    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-weight: 500;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     transition: all 0.2s;
+    font-size: 14px;
 }
 
 .btn-outline:hover {
@@ -520,7 +525,7 @@
     .receipt-header,
     .receipt-body,
     .receipt-actions {
-        padding: 20px;
+        padding: 15px;
     }
     
     .receipt-actions {
@@ -533,14 +538,14 @@
     .btn-outline {
         width: 100%;
         justify-content: center;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
     
     .course-section,
     .total-section,
     .status-section {
-        padding: 15px;
-        margin: 20px 0;
+        padding: 12px;
+        margin: 15px 0;
     }
 }
 

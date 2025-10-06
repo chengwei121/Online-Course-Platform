@@ -283,8 +283,8 @@
                                                 {{ $enrollment->created_at ? $enrollment->created_at->diffForHumans() : 'Recently' }}
                                             </span>
                                             <span class="text-muted ms-3">
-                                                <i class="fas fa-dollar-sign me-1"></i>
-                                                ${{ $enrollment->course->price ?? '0' }}
+                                                <i class="fas fa-coins me-1"></i>
+                                                RM{{ number_format($enrollment->course->price ?? 0, 2) }}
                                             </span>
                                         </div>
                                     </div>
@@ -2738,8 +2738,8 @@ function createEnrollmentSection(enrollments) {
                             ${formatTimeAgo(enrollment.created_at)}
                         </span>
                         <span class="text-muted ms-3">
-                            <i class="fas fa-dollar-sign me-1"></i>
-                            $${enrollment.course?.price || '0'}
+                            <i class="fas fa-coins me-1"></i>
+                            RM${enrollment.course?.price ? parseFloat(enrollment.course.price).toFixed(2) : '0.00'}
                         </span>
                     </div>
                 </div>

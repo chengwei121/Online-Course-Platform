@@ -78,7 +78,7 @@
                         <!-- Price and Level Row -->
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="price" class="form-label">Price ($) *</label>
+                                <label for="price" class="form-label">Price (RM) *</label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
                                     <input type="number" class="form-control @error('price') is-invalid @enderror" 

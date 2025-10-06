@@ -72,8 +72,8 @@
                                     <td>{{ $teacher->department }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold"><i class="fas fa-dollar-sign me-2 text-primary"></i>Hourly Rate:</td>
-                                    <td>${{ number_format($teacher->hourly_rate ?? 0, 2) }}</td>
+                                    <td class="fw-bold"><i class="fas fa-coins me-2 text-primary"></i>Hourly Rate:</td>
+                                    <td>RM{{ number_format($teacher->hourly_rate ?? 0, 2) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="fw-bold"><i class="fas fa-calendar me-2 text-primary"></i>Joined:</td>

@@ -82,7 +82,7 @@
                             <!-- Price and Level Row -->
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label for="price" class="form-label">Price ($) *</label>
+                                    <label for="price" class="form-label">Price (RM) *</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
                                         <input type="number" class="form-control @error('price') is-invalid @enderror" 
@@ -341,7 +341,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="row text-center mb-2">
                             <div class="col-4">
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">Price</small>
-                                <span class="fw-bold small text-success">$${course.price}</span>
+                                <span class="fw-bold small text-success">RM${course.price}</span>
                             </div>
                             <div class="col-4">
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">Students</small>

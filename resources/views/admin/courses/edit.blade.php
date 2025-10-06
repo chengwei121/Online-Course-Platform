@@ -212,7 +212,7 @@
                 <div class="col-md-4">
                     <div class="mb-3">
                         <label for="price" class="form-label">
-                            Price (USD) <span class="required-asterisk">*</span>
+                            Price (MYR) <span class="required-asterisk">*</span>
                         </label>
                         <div class="input-group">
                             <span class="input-group-text">$</span>

@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Add enhanced headers with descriptions
         const enhancedHeaders = [
-            'Payment ID', 'Customer Name', 'Course Title', 'Amount (USD)', 
+            'Payment ID', 'Customer Name', 'Course Title', 'Amount (MYR)', 
             'Payment Method', 'Status', 'Transaction ID', 'Payment Date', 'Processing Fee', 'Net Amount'
         ];
         headerData.push(enhancedHeaders);

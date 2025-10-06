@@ -449,7 +449,7 @@
                             
                             @if($enrollment->amount_paid)
                             <div class="meta-item">
-                                <i class="fas fa-dollar-sign"></i>
+                                <i class="fas fa-coins"></i>
                                 <span>Amount: RM{{ number_format($enrollment->amount_paid, 2) }}</span>
                             </div>
                             @endif

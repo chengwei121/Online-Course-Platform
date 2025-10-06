@@ -121,7 +121,7 @@
                             <div class="card border-0 bg-success bg-opacity-10 text-center">
                                 <div class="card-body py-3">
                                     <div class="d-flex align-items-center justify-content-center">
-                                        <i class="fas fa-dollar-sign fa-2x text-success me-2"></i>
+                                        <i class="fas fa-coins fa-2x text-success me-2"></i>
                                         <div>
                                             <h4 class="mb-0 text-success">RM{{ number_format($course->price, 0) }}</h4>
                                             <small class="text-muted">Price</small>
@@ -379,7 +379,7 @@
                             <div class="card border-0 bg-success bg-opacity-10">
                                 <div class="card-body text-center">
                                     <div class="d-flex align-items-center justify-content-center mb-2">
-                                        <i class="fas fa-dollar-sign fa-2x text-success me-3"></i>
+                                        <i class="fas fa-coins fa-2x text-success me-3"></i>
                                         <div>
                                             <h3 class="mb-0 text-success">RM{{ number_format(($course->enrollments_count ?? 0) * $course->price, 2) }}</h3>
                                             <p class="mb-0 text-muted">Total Revenue</p>

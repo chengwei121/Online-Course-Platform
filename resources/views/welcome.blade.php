@@ -808,7 +808,7 @@
                             <div class="text-center">
                                 <p class="text-sm font-medium text-indigo-600">Monthly Subscription</p>
                                 <div class="mt-3 flex items-center justify-center">
-                                    <span class="text-4xl font-bold text-gray-900">$29.99</span>
+                                    <span class="text-4xl font-bold text-gray-900">RM99.99</span>
                                     <span class="ml-2 text-gray-500">/month</span>
                                 </div>
                                 <p class="mt-2 text-sm text-gray-500">Cancel anytime</p>

@@ -124,7 +124,7 @@
                         <!-- FINANCIAL MANAGEMENT SECTION -->
                         <li class="nav-section-header mt-3">
                             <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
-                                <i class="fas fa-dollar-sign me-2"></i>Financial Management
+                                <i class="fas fa-coins me-2"></i>Financial Management
                             </small>
                         </li>
                         <li class="nav-item">

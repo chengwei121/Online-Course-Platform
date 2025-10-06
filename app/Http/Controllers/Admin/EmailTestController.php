@@ -26,7 +26,7 @@ class EmailTestController extends Controller
     }
 
     /**
-     * Preview the email template
+     * Preview the email template without touching the database
      */
     public function preview(Request $request)
     {
@@ -36,30 +36,23 @@ class EmailTestController extends Controller
         $user = User::findOrFail($userId);
         $course = Course::findOrFail($courseId);
         
-        // Check for existing enrollment to avoid duplicates during testing
-        $existingEnrollment = Enrollment::where('user_id', $user->id)
-                                      ->where('course_id', $course->id)
-                                      ->first();
+        // Create a MOCK enrollment object without saving to database
+        $enrollment = new Enrollment([
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'payment_status' => 'completed',
+            'amount_paid' => $course->price,
+            'enrolled_at' => now(),
+            'status' => 'in_progress'
+        ]);
         
-        if ($existingEnrollment) {
-            $enrollment = $existingEnrollment;
-            $deleteAfter = false;
-        } else {
-            // Create a temporary enrollment for preview
-            $enrollment = Enrollment::create([
-                'user_id' => $user->id,
-                'course_id' => $course->id,
-                'payment_status' => 'completed',
-                'amount_paid' => $course->price,
-                'enrolled_at' => now(),
-                'status' => 'in_progress'
-            ]);
-            $deleteAfter = true;
-        }
+        // Set a fake ID for testing display
+        $enrollment->id = 999999;
+        $enrollment->exists = true; // Trick Laravel into thinking this is a saved model
         
         // Create mock payment data
         $payment = (object) [
-            'id' => 'PAY-TEST-' . time(),
+            'id' => 'TEST-PREVIEW-' . time(),
             'transactions' => [
                 (object) [
                     'amount' => (object) [
@@ -73,16 +66,11 @@ class EmailTestController extends Controller
         $mailable = new PaymentReceiptMail($enrollment, $course, $user, $payment, true);
         $rendered = $mailable->render();
         
-        // Clean up - delete only if we created it for testing
-        if ($deleteAfter) {
-            $enrollment->delete();
-        }
-        
         return $rendered;
     }
 
     /**
-     * Send a test email
+     * Send a test email without affecting real database data
      */
     public function sendTest(Request $request)
     {
@@ -96,30 +84,23 @@ class EmailTestController extends Controller
             $user = User::findOrFail($request->user_id);
             $course = Course::findOrFail($request->course_id);
             
-            // Check for existing enrollment to avoid duplicates during testing
-            $existingEnrollment = Enrollment::where('user_id', $user->id)
-                                          ->where('course_id', $course->id)
-                                          ->first();
+            // Create a MOCK enrollment object without saving to database
+            $enrollment = new Enrollment([
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'payment_status' => 'completed',
+                'amount_paid' => $course->price,
+                'enrolled_at' => now(),
+                'status' => 'in_progress'
+            ]);
             
-            if ($existingEnrollment) {
-                $enrollment = $existingEnrollment;
-                $deleteAfter = false;
-            } else {
-                // Create a temporary enrollment for testing
-                $enrollment = Enrollment::create([
-                    'user_id' => $user->id,
-                    'course_id' => $course->id,
-                    'payment_status' => 'completed',
-                    'amount_paid' => $course->price,
-                    'enrolled_at' => now(),
-                    'status' => 'in_progress'
-                ]);
-                $deleteAfter = true;
-            }
+            // Set a fake ID for testing display
+            $enrollment->id = 888888;
+            $enrollment->exists = true; // Trick Laravel into thinking this is a saved model
             
             // Create mock payment data
             $payment = (object) [
-                'id' => 'TEST-PAYMENT-' . time(),
+                'id' => 'TEST-EMAIL-' . time(),
                 'transactions' => [
                     (object) [
                         'amount' => (object) [
@@ -132,11 +113,6 @@ class EmailTestController extends Controller
             
             // Send test email without queue to avoid serialization issues
             Mail::to($request->test_email)->sendNow(new PaymentReceiptMail($enrollment, $course, $user, $payment, true));
-            
-            // Clean up - delete only if we created it for testing
-            if ($deleteAfter) {
-                $enrollment->delete();
-            }
             
             Log::info('Test email sent', [
                 'test_email' => $request->test_email,
