@@ -423,12 +423,15 @@
                     </div>
                     <div id="skillLevel" class="filter-content show">
                         @foreach(['beginner', 'intermediate', 'advanced'] as $level)
+                        @php
+                            $levelCount = \App\Models\Course::where('status', 'published')->where('level', $level)->count();
+                        @endphp
                         <label class="filter-item">
                             <input type="checkbox" class="filter-checkbox" value="{{ $level }}" 
                                    {{ request('level') == $level ? 'checked' : '' }}
                                    onchange="applyFilter('level', this.value, this.checked)">
                             <span class="filter-label capitalize">{{ $level }}</span>
-                            <span class="filter-count">({{ $courses->where('level', $level)->count() }})</span>
+                            <span class="filter-count">({{ $levelCount }})</span>
                         </label>
                         @endforeach
                     </div>
@@ -473,21 +476,21 @@
                                    {{ request('duration') == 'short' ? 'checked' : '' }}
                                    onchange="applyFilter('duration', this.value, this.checked)">
                             <span class="filter-label">0-3 hours</span>
-                            <span class="filter-count">({{ $courses->where('learning_hours', '<=', 3)->count() }})</span>
+                            <span class="filter-count">({{ \App\Models\Course::where('status', 'published')->where('learning_hours', '<=', 3)->count() }})</span>
                         </label>
                         <label class="filter-item">
                             <input type="checkbox" class="filter-checkbox" value="medium"
                                    {{ request('duration') == 'medium' ? 'checked' : '' }}
                                    onchange="applyFilter('duration', this.value, this.checked)">
                             <span class="filter-label">3-6 hours</span>
-                            <span class="filter-count">({{ $courses->whereBetween('learning_hours', [3, 6])->count() }})</span>
+                            <span class="filter-count">({{ \App\Models\Course::where('status', 'published')->whereBetween('learning_hours', [3, 6])->count() }})</span>
                         </label>
                         <label class="filter-item">
                             <input type="checkbox" class="filter-checkbox" value="long"
                                    {{ request('duration') == 'long' ? 'checked' : '' }}
                                    onchange="applyFilter('duration', this.value, this.checked)">
                             <span class="filter-label">6+ hours</span>
-                            <span class="filter-count">({{ $courses->where('learning_hours', '>', 6)->count() }})</span>
+                            <span class="filter-count">({{ \App\Models\Course::where('status', 'published')->where('learning_hours', '>', 6)->count() }})</span>
                         </label>
                     </div>
                 </div>
@@ -530,14 +533,14 @@
                                    {{ request('price_type') == 'free' ? 'checked' : '' }}
                                    onchange="applyFilter('price_type', this.value, this.checked)">
                             <span class="filter-label">Free Courses</span>
-                            <span class="filter-count">({{ $courses->where('is_free', true)->count() }})</span>
+                            <span class="filter-count">({{ \App\Models\Course::where('status', 'published')->where('is_free', true)->count() }})</span>
                         </label>
                         <label class="filter-item">
                             <input type="checkbox" class="filter-checkbox" value="premium"
                                    {{ request('price_type') == 'premium' ? 'checked' : '' }}
                                    onchange="applyFilter('price_type', this.value, this.checked)">
                             <span class="filter-label">Premium Courses</span>
-                            <span class="filter-count">({{ $courses->where('is_free', false)->count() }})</span>
+                            <span class="filter-count">({{ \App\Models\Course::where('status', 'published')->where('is_free', false)->count() }})</span>
                         </label>
                     </div>
                 </div>

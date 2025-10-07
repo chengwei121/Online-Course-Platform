@@ -151,7 +151,7 @@
             </div>
 
             <!-- Course Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8" id="courseGrid">
                 @foreach($enrollments as $enrollment)
                     @php
                         $totalLessons = $enrollment->course->lessons->count();
@@ -303,6 +303,33 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+
+            <!-- No Courses Found Message (for filters) -->
+            <div id="noCourseMessage" class="bg-white rounded-xl shadow-sm p-12 text-center" style="display: none;">
+                <div class="max-w-md mx-auto">
+                    <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                        <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.466-.943-6.009-2.47M15 21v-9a6 6 0 00-12 0v9a1 1 0 001 1h10a1 1 0 001-1z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">No Courses Found</h3>
+                    <p class="text-gray-600 mb-6">No courses match the selected filter. Try selecting a different filter or explore new courses.</p>
+                    <button onclick="filterCourses('all')" 
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-200 shadow-sm mr-3">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                        </svg>
+                        Show All Courses
+                    </button>
+                    <a href="{{ route('client.courses.index') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 border border-gray-300 transition duration-200 shadow-sm">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Browse New Courses
+                    </a>
+                </div>
             </div>
 
             <!-- Pagination -->
@@ -460,6 +487,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Filter courses with animation
+        let visibleCourses = 0;
         document.querySelectorAll('.course-card').forEach(card => {
             const courseType = card.dataset.courseType;
             const courseStatus = card.dataset.courseStatus;
@@ -474,6 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             if (shouldShow) {
+                visibleCourses++;
                 card.style.display = 'block';
                 card.style.opacity = '0';
                 card.style.transform = 'translateY(20px)';
@@ -490,6 +519,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 300);
             }
         });
+
+        // Show/hide "no courses found" message
+        const noCoursesMessage = document.getElementById('noCourseMessage');
+        const courseGrid = document.getElementById('courseGrid');
+        
+        if (visibleCourses === 0) {
+            courseGrid.style.display = 'none';
+            noCoursesMessage.style.display = 'block';
+            noCoursesMessage.style.opacity = '0';
+            setTimeout(() => {
+                noCoursesMessage.style.opacity = '1';
+                noCoursesMessage.style.transition = 'opacity 0.3s ease';
+            }, 100);
+        } else {
+            noCoursesMessage.style.display = 'none';
+            courseGrid.style.display = 'grid';
+        }
     }
 });
 </script>

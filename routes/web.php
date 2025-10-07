@@ -223,6 +223,14 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::post('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'store'])->name('courses.lessons.store')->middleware('upload.size');
     Route::post('courses/{course}/lessons/reorder', [App\Http\Controllers\Teacher\LessonController::class, 'reorder'])->name('courses.lessons.reorder');
     
+    // Assignment management
+    Route::get('courses/{course}/lessons/{lesson}/assignments/create', [App\Http\Controllers\Teacher\AssignmentController::class, 'create'])->name('assignments.create');
+    Route::post('courses/{course}/lessons/{lesson}/assignments', [App\Http\Controllers\Teacher\AssignmentController::class, 'store'])->name('assignments.store');
+    Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'show'])->name('assignments.show');
+    Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}/edit', [App\Http\Controllers\Teacher\AssignmentController::class, 'edit'])->name('assignments.edit');
+    Route::put('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'update'])->name('assignments.update');
+    Route::delete('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'destroy'])->name('assignments.destroy');
+    
     // Students management
     Route::get('students', [App\Http\Controllers\Teacher\StudentsController::class, 'index'])->name('students.index');
     Route::get('students/{student}', [App\Http\Controllers\Teacher\StudentsController::class, 'show'])->name('students.show');

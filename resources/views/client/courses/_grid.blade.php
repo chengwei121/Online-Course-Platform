@@ -215,7 +215,6 @@
 
 @if($courses->hasMorePages())
 <div id="loadMoreTrigger" class="col-span-full text-center p-4">
-    <div class="spinner hidden"></div>
 </div>
 @endif
 

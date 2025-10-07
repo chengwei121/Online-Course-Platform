@@ -763,68 +763,6 @@
         </div>
     </section>
 
-    <!-- Premium Plan Section -->
-    <section class="py-8 sm:py-12 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-8 fade-in-up">
-                <h2 class="text-sm font-semibold tracking-wide text-indigo-600 uppercase">PREMIUM ACCESS</h2>
-                <p class="mt-2 text-2xl sm:text-3xl font-bold text-gray-900">Unlock All Features</p>
-                <p class="mt-3 text-base text-gray-500">Get unlimited access to all premium courses and exclusive features</p>
-            </div>
-
-            <div class="max-w-lg mx-auto bg-white rounded-2xl shadow-sm fade-in-up fade-in-delay-100">
-                <div class="p-6 sm:p-8">
-                    <div class="flex flex-col">
-                        <h3 class="text-xl font-semibold text-gray-900">Premium Membership</h3>
-                        
-                        <ul class="mt-6 space-y-4">
-                            <li class="flex items-center text-gray-700">
-                                <svg class="h-5 w-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Access to all premium courses
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <svg class="h-5 w-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Exclusive course materials
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <svg class="h-5 w-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Priority support
-                            </li>
-                            <li class="flex items-center text-gray-700">
-                                <svg class="h-5 w-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                </svg>
-                                Certificate of completion
-                            </li>
-                        </ul>
-
-                        <div class="mt-8 bg-gray-50 rounded-xl p-6">
-                            <div class="text-center">
-                                <p class="text-sm font-medium text-indigo-600">Monthly Subscription</p>
-                                <div class="mt-3 flex items-center justify-center">
-                                    <span class="text-4xl font-bold text-gray-900">RM99.99</span>
-                                    <span class="ml-2 text-gray-500">/month</span>
-                                </div>
-                                <p class="mt-2 text-sm text-gray-500">Cancel anytime</p>
-                            </div>
-                        </div>
-
-                        <a href="{{ route('register') }}" 
-                           class="mt-6 block w-full text-center px-6 py-3 text-base font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
-                            Get Started
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- CTA Section -->
     <section class="relative overflow-hidden py-20 bg-gradient-to-br from-indigo-700 via-indigo-600 to-purple-700">
         <!-- Enhanced background patterns -->

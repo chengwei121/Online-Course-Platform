@@ -117,12 +117,14 @@ class CourseFilterManager {
 
     async applyFilters() {
         if (this.isLoading) return;
-
+        
         this.showLoading();
         this.updateURL();
 
         try {
             const url = new URL(window.location.href);
+            console.log('Request URL:', url.toString());
+            
             const response = await fetch(url, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
@@ -135,6 +137,7 @@ class CourseFilterManager {
             }
 
             const data = await response.json();
+            console.log('Server response:', data);
 
             if (data.html) {
                 this.updateCoursesGrid(data.html);
@@ -198,13 +201,21 @@ class CourseFilterManager {
                     
                     const url = new URL(link.getAttribute('href'));
                     
-                    // Preserve current filters
-                    const currentUrl = new URL(window.location.href);
+                    // Preserve current filters from filter state (not URL)
                     ['category', 'level', 'duration', 'rating', 'price_type', 'search'].forEach(param => {
-                        const values = currentUrl.searchParams.getAll(param);
-                        if (values.length > 0) {
-                            url.searchParams.delete(param);
-                            values.forEach(value => url.searchParams.append(param, value));
+                        url.searchParams.delete(param);
+                    });
+                    
+                    // Add current filter state
+                    Object.keys(this.filterState).forEach(filterType => {
+                        if (filterType === 'search') {
+                            if (this.filterState[filterType]) {
+                                url.searchParams.set(filterType, this.filterState[filterType]);
+                            }
+                        } else if (this.filterState[filterType].length > 0) {
+                            this.filterState[filterType].forEach(value => {
+                                url.searchParams.append(filterType, value);
+                            });
                         }
                     });
                     
@@ -224,21 +235,10 @@ class CourseFilterManager {
 
                         const data = await response.json();
 
-                        console.log('Pagination AJAX response:', {
-                            current_page: data.current_page,
-                            total_pages: data.total_pages,
-                            total: data.total,
-                            has_more: data.has_more,
-                            url: url.toString()
-                        });
-
                         if (data.html) {
                             this.updateCoursesGrid(data.html);
                             if (data.pagination) {
                                 this.updatePagination(data.pagination);
-                                console.log('Pagination updated successfully');
-                            } else {
-                                console.warn('No pagination data received');
                             }
                             
                             // Update URL without page reload
@@ -270,8 +270,8 @@ class CourseFilterManager {
     updateURL() {
         const url = new URL(window.location.href);
         
-        // Clear existing parameters
-        ['category', 'level', 'duration', 'rating', 'price_type', 'search'].forEach(param => {
+        // Clear existing parameters (including page)
+        ['category', 'level', 'duration', 'rating', 'price_type', 'search', 'page'].forEach(param => {
             url.searchParams.delete(param);
         });
 
@@ -287,6 +287,9 @@ class CourseFilterManager {
                 });
             }
         });
+
+        // Reset to page 1 when filters are applied
+        this.currentPage = 1;
 
         window.history.pushState({}, '', url);
     }
@@ -473,3 +476,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Global functions for backward compatibility with inline onchange handlers
+window.applyFilter = function(type, value, isChecked) {
+    console.log('applyFilter called:', { type, value, isChecked });
+    
+    if (window.courseFilterManager) {
+        if (isChecked) {
+            if (!window.courseFilterManager.filterState[type].includes(value)) {
+                window.courseFilterManager.filterState[type].push(value);
+            }
+        } else {
+            window.courseFilterManager.filterState[type] = window.courseFilterManager.filterState[type].filter(item => item !== value);
+        }
+        
+        console.log('Updated filter state:', window.courseFilterManager.filterState);
+        
+        clearTimeout(window.courseFilterManager.filterTimeout);
+        window.courseFilterManager.filterTimeout = setTimeout(() => {
+            window.courseFilterManager.applyFilters();
+        }, window.courseFilterManager.options.filterDelay);
+    } else {
+        console.error('courseFilterManager not found');
+    }
+};
+
+window.removeFilter = function(type, value) {
+    if (window.courseFilterManager) {
+        window.courseFilterManager.removeFilter(type, value);
+    }
+};
+
+window.clearAllFilters = function() {
+    if (window.courseFilterManager) {
+        window.courseFilterManager.clearAllFilters();
+    }
+};
+
+window.toggleFilterDrawer = function() {
+    if (window.courseFilterManager) {
+        window.courseFilterManager.toggleFilterDrawer();
+    }
+};

@@ -5,17 +5,6 @@
 @push('styles')
 <style>
     /* Optimized learning page styles */
-    .loading-skeleton {
-        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-        background-size: 200% 100%;
-        animation: loading 1.5s infinite;
-    }
-    
-    @keyframes loading {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
-    }
-    
     .lesson-item { transition: all 0.2s ease; }
     .lesson-item:hover { transform: translateX(2px); }
     
@@ -36,10 +25,6 @@
     
     /* Optimize font loading */
     .lesson-title { font-display: swap; }
-    
-    /* Lazy loading improvements */
-    img[data-src] { opacity: 0; transition: opacity 0.3s; }
-    img[data-loaded] { opacity: 1; }
     
     /* Performance optimizations */
     .gpu-accelerated { transform: translateZ(0); }
@@ -121,8 +106,6 @@
                         @if($lesson->video_url)
                             <div class="video-container relative w-full max-w-4xl mx-auto bg-black">
                                 <div class="relative w-full aspect-[16/9]">
-                                    <!-- Loading Skeleton -->
-                                    <div id="videoSkeleton" class="absolute inset-0 loading-skeleton"></div>
                                     
                                     @if(Str::startsWith($lesson->video_url, ['http://', 'https://']))
                                         {{-- External URL (YouTube, Vimeo, etc.) --}}
@@ -140,9 +123,7 @@
                                                 class="absolute top-0 left-0 w-full h-full"
                                                 frameborder="0" 
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowfullscreen
-                                                loading="lazy"
-                                                onload="document.getElementById('videoSkeleton').style.display='none'">
+                                                allowfullscreen>
                                             </iframe>
                                         @elseif(Str::contains($lesson->video_url, 'youtu.be'))
                                             @php
@@ -154,9 +135,7 @@
                                                 class="absolute top-0 left-0 w-full h-full"
                                                 frameborder="0" 
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowfullscreen
-                                                loading="lazy"
-                                                onload="document.getElementById('videoSkeleton').style.display='none'">
+                                                allowfullscreen>
                                             </iframe>
                                         @else
                                             <iframe 
@@ -164,9 +143,7 @@
                                                 class="absolute top-0 left-0 w-full h-full"
                                                 frameborder="0" 
                                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                                allowfullscreen
-                                                loading="lazy"
-                                                onload="document.getElementById('videoSkeleton').style.display='none'">
+                                                allowfullscreen>
                                             </iframe>
                                         @endif
                                     @else
@@ -177,8 +154,7 @@
                                             controls 
                                             playsinline
                                             preload="metadata"
-                                            crossorigin="anonymous"
-                                            onloadeddata="document.getElementById('videoSkeleton').style.display='none'">
+                                            crossorigin="anonymous">
                                             <source src="{{ $lesson->getDisplayVideoUrl() }}" type="video/mp4">
                                             <p class="text-white text-center p-4">
                                                 Your browser does not support the video tag. 
@@ -450,9 +426,6 @@ document.addEventListener('DOMContentLoaded', function() {
     video = document.getElementById('lessonVideo');
     initializeVideoPlayer();
     
-    // Lazy load lessons beyond first 5
-    initializeLazyLoading();
-    
     // Optimized progress update - throttled to every 2 seconds
     const throttledProgressUpdate = throttle(function() {
         if (video && video.currentTime > 0) {
@@ -499,22 +472,6 @@ function setInitialProgress(videoProgress, lessonDuration) {
     if (isCompleted || videoProgress >= lessonDuration) {
         hasWatchedEntireVideo = true;
         showAssignments();
-    }
-}
-
-function initializeLazyLoading() {
-    const lazyElements = document.querySelectorAll('[data-lazy-load]');
-    if ('IntersectionObserver' in window) {
-        const lazyObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.removeAttribute('data-lazy-load');
-                    lazyObserver.unobserve(entry.target);
-                }
-            });
-        }, { rootMargin: '50px' });
-        
-        lazyElements.forEach(el => lazyObserver.observe(el));
     }
 }
 
