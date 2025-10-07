@@ -25,92 +25,93 @@
 
 @section('content')
 <div class="container-fluid" data-page-loaded="true">
-    <!-- Custom Date Range Filter -->
-    <div class="row mb-2">
-        <div class="col-12">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-2">
-                    <h6 class="mb-0 fw-bold">
-                        <i class="fas fa-calendar-alt me-2"></i>
-                        Custom Date Range Filter
-                    </h6>
-                </div>
-                <div class="card-body py-3">
-                    <form id="dateRangeForm" method="GET" action="{{ route('admin.payments.statistics') }}">
-                        <div class="row g-3 align-items-end">
-                            <div class="col-md-3">
-                                <label for="start_date" class="form-label fw-semibold">
-                                    <i class="fas fa-calendar-day me-1 text-primary"></i>
-                                    Start Date
-                                </label>
-                                <input type="date" 
-                                       class="form-control" 
-                                       id="start_date" 
-                                       name="start_date" 
-                                       value="{{ request('start_date') }}"
-                                       max="{{ date('Y-m-d') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <label for="end_date" class="form-label fw-semibold">
-                                    <i class="fas fa-calendar-check me-1 text-success"></i>
-                                    End Date
-                                </label>
-                                <input type="date" 
-                                       class="form-control" 
-                                       id="end_date" 
-                                       name="end_date" 
-                                       value="{{ request('end_date') }}"
-                                       max="{{ date('Y-m-d') }}">
-                            </div>
-                            <div class="col-md-3">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-search me-1"></i>
-                                    Apply Filter
-                                </button>
-                                @if(request('start_date') || request('end_date'))
-                                <a href="{{ route('admin.payments.statistics') }}" 
-                                   class="btn btn-outline-secondary ms-2">
-                                    <i class="fas fa-times me-1"></i>
-                                    Clear
-                                </a>
-                                @endif
-                            </div>
-                            <div class="col-md-3">
-                                @if(request('start_date') && request('end_date'))
-                                <div class="alert alert-info mb-0 py-2">
-                                    <small class="mb-0">
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        Filtering: {{ \Carbon\Carbon::parse(request('start_date'))->format('M j') }} - 
-                                        {{ \Carbon\Carbon::parse(request('end_date'))->format('M j, Y') }}
-                                    </small>
-                                </div>
-                                @endif
-                            </div>
-                        </div>
-                        <input type="hidden" name="period" value="custom">
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Revenue Chart -->
+    <!-- Combined: Date Range Filter & Revenue Chart -->
     <div class="row mb-2">
         <div class="col-12">
             <div class="card shadow">
                 <div class="card-header modern-grey-header text-white py-2">
-                    <h6 class="m-0 font-weight-bold">
-                        <i class="fas fa-chart-area me-2"></i>
-                        Revenue Trend 
-                        @if(request('start_date') && request('end_date'))
-                            (Custom Range)
-                        @else
-                            ({{ ucfirst($period) }}ly)
-                        @endif
-                    </h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">
+                            <i class="fas fa-chart-area me-2"></i>
+                            Revenue Trend 
+                            @if(request('start_date') && request('end_date'))
+                                (Custom Range)
+                            @else
+                                ({{ ucfirst($period) }}ly)
+                            @endif
+                        </h6>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Filter Available
+                        </span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="revenueChart" width="400" height="100"></canvas>
+                    <!-- Date Range Filter Form -->
+                    <div class="filter-section mb-4 p-3 bg-light rounded">
+                        <form id="dateRangeForm" method="GET" action="{{ route('admin.payments.statistics') }}">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label for="start_date" class="form-label fw-semibold small">
+                                        <i class="fas fa-calendar-day me-1 text-primary"></i>
+                                        Start Date
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="start_date" 
+                                           name="start_date" 
+                                           value="{{ request('start_date') }}"
+                                           max="{{ date('Y-m-d') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="end_date" class="form-label fw-semibold small">
+                                        <i class="fas fa-calendar-check me-1 text-success"></i>
+                                        End Date
+                                    </label>
+                                    <input type="date" 
+                                           class="form-control" 
+                                           id="end_date" 
+                                           name="end_date" 
+                                           value="{{ request('end_date') }}"
+                                           max="{{ date('Y-m-d') }}">
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-search me-1"></i>
+                                        Apply Filter
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    @if(request('start_date') || request('end_date'))
+                                    <a href="{{ route('admin.payments.statistics') }}" 
+                                       class="btn btn-outline-secondary w-100">
+                                        <i class="fas fa-times me-1"></i>
+                                        Clear Filter
+                                    </a>
+                                    @endif
+                                </div>
+                            </div>
+                            @if(request('start_date') && request('end_date'))
+                            <div class="row mt-2">
+                                <div class="col-12">
+                                    <div class="alert alert-info mb-0 py-2">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Active Filter:</strong> 
+                                        {{ \Carbon\Carbon::parse(request('start_date'))->format('M d, Y') }} 
+                                        to 
+                                        {{ \Carbon\Carbon::parse(request('end_date'))->format('M d, Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                            <input type="hidden" name="period" value="custom">
+                        </form>
+                    </div>
+
+                    <!-- Revenue Chart -->
+                    <div class="chart-section">
+                        <canvas id="revenueChart" width="400" height="100"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -416,6 +417,34 @@ body {
 /* Optimize chart container */
 #revenueChart {
     max-height: 400px;
+}
+
+/* Filter Section Styling */
+.filter-section {
+    border: 1px dashed #dee2e6;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+.filter-section .form-label {
+    color: #495057;
+    font-weight: 600;
+}
+
+.filter-section .form-control {
+    border: 2px solid #dee2e6;
+    transition: all 0.3s;
+}
+
+.filter-section .form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    background-color: #fff;
+}
+
+.chart-section {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 0.5rem;
 }
 
 /* Fix table spacing */

@@ -11,6 +11,7 @@ use App\Http\Controllers\Client\AssignmentController;
 use App\Models\Course;
 use App\Http\Controllers\Client\LessonController;
 use App\Models\Teacher;
+use App\Models\Student;
 use Illuminate\Support\Facades\Artisan;
 
 /*
@@ -23,34 +24,11 @@ use Illuminate\Support\Facades\Artisan;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-// Test Route
-Route::get('/test-nav', function () {
-    return view('test-nav');
-})->name('test-nav');
-
-Route::get('/test-layout', function () {
-    return view('test-layout');
-})->name('test-layout');
-
 // Cache clearing route
 Route::get('/clear-cache', function() {
     Artisan::call('optimize:clear');
     return "All caches cleared successfully! <br><a href='/client/courses'>Go to courses</a>";
 })->name('clear-cache');
-
-// Debug routes
-Route::get('/test-admin-chart', function () {
-    return response()->json([
-        'test' => 'Admin chart endpoint working',
-        'user' => auth()->check() ? auth()->user()->name : 'Not authenticated',
-        'period' => request('period', 'month'),
-        'labels' => ['Jan', 'Feb', 'Mar'],
-        'enrollments' => [1, 2, 3],
-        'courses' => [0, 1, 1],
-        'teachers' => [0, 0, 1]
-    ]);
-})->middleware(['auth', 'admin'])->name('test-admin-chart');
 
 // Home Route (Welcome Page)
 Route::get('/', function () {
@@ -75,10 +53,19 @@ Route::get('/', function () {
         ->take(8)
         ->get();
     
+    // Statistics
+    $stats = [
+        'total_courses' => Course::where('status', 'published')->count(),
+        'total_students' => Student::count(),
+        'total_instructors' => Teacher::where('status', 'active')->count(),
+        'success_rate' => 95, // Can be calculated based on course completions if you have that data
+    ];
+    
     return view('welcome', [
         'featuredCourses' => $featuredCourses,
         'instructors' => $instructors,
-        'trendingCourses' => $trendingCourses
+        'trendingCourses' => $trendingCourses,
+        'stats' => $stats,
     ]);
 })->name('welcome');
 
@@ -131,13 +118,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('clients', [App\Http\Controllers\Admin\ClientController::class, 'index'])->name('clients.index');
     Route::get('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'show'])->name('clients.show');
     Route::get('clients/{client}/edit', [App\Http\Controllers\Admin\ClientController::class, 'edit'])->name('clients.edit');
-    Route::put('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
+    Route::put('clients/{cli                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ent}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
     Route::patch('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.patch');
     Route::get('clients/{client}/enrollments', [App\Http\Controllers\Admin\ClientController::class, 'enrollments'])->name('clients.enrollments');
     Route::get('clients/{client}/activities', [App\Http\Controllers\Admin\ClientController::class, 'activities'])->name('clients.activities');
     
+    // User Management (Legacy compatibility route)
+    Route::get('users', [App\Http\Controllers\Admin\ClientController::class, 'index'])->name('users.index');
+    
     // Administrator Management
-    Route::resource('admins', App\Http\Controllers\Admin\AdminController::class)->except(['create', 'store']);
+    Route::resource('admins', App\Http\Controllers\Admin\AdminController::class);
     Route::patch('admins/{admin}/toggle-verification', [App\Http\Controllers\Admin\AdminController::class, 'toggleVerification'])->name('admins.toggle-verification');
     
     // Notification Management
@@ -218,7 +208,7 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::post('courses/{course}/toggle-status', [App\Http\Controllers\Teacher\CourseController::class, 'toggleStatus'])->name('courses.toggle-status');
     
     // Lesson management
-    Route::resource('courses.lessons', App\Http\Controllers\Teacher\LessonController::class)->except(['index', 'store']);
+    Route::resource('courses.lessons', App\Http\Controllers\Teacher\LessonController::class)->except(['index', 'store', 'create']);
     Route::get('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'index'])->name('courses.lessons.index');
     Route::post('courses/{course}/lessons', [App\Http\Controllers\Teacher\LessonController::class, 'store'])->name('courses.lessons.store')->middleware('upload.size');
     Route::post('courses/{course}/lessons/reorder', [App\Http\Controllers\Teacher\LessonController::class, 'reorder'])->name('courses.lessons.reorder');

@@ -39,13 +39,14 @@
                                            id="name" 
                                            name="name" 
                                            value="{{ old('name') }}" 
-                                           placeholder="Enter category name"
+                                           placeholder="e.g., Web Development, Data Science, Business"
                                            required>
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     <div class="form-text">
-                                        This will be the display name for your category
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        The URL will be automatically generated from this name (e.g., "Web Development" → "web-development")
                                     </div>
                                 </div>
                             </div>
@@ -54,25 +55,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="mb-3">
-                                    <label for="slug" class="form-label">URL Slug</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="slug" 
-                                           name="slug" 
-                                           value="{{ old('slug') }}" 
-                                           placeholder="auto-generated"
-                                           readonly>
-                                    <div class="form-text">
-                                        This will be automatically generated from the category name
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div class="mb-3">
-                                    <label for="description" class="form-label">Description</label>
+                                    <label for="description" class="form-label">Description (Optional)</label>
                                     <textarea class="form-control @error('description') is-invalid @enderror" 
                                               id="description" 
                                               name="description" 
@@ -82,6 +65,7 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                     <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
                                         Provide a brief description of what courses belong to this category
                                     </div>
                                 </div>
@@ -93,13 +77,13 @@
                                 <div class="card border-left-info">
                                     <div class="card-body">
                                         <h6 class="card-title text-info">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            Category Guidelines
+                                            <i class="fas fa-lightbulb me-2"></i>
+                                            Quick Tips
                                         </h6>
                                         <ul class="mb-0 text-muted">
-                                            <li>Choose a clear and descriptive name for your category</li>
-                                            <li>Category names should be unique across the platform</li>
-                                            <li>The URL slug will be automatically generated from the name</li>
+                                            <li>Choose a clear and descriptive name (e.g., "Web Development", "Data Science")</li>
+                                            <li>Category names must be unique across the platform</li>
+                                            <li>The description helps students understand what courses fit in this category</li>
                                             <li>You can edit categories later, but it may affect existing courses</li>
                                         </ul>
                                     </div>
@@ -179,22 +163,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const nameInput = document.getElementById('name');
-    const slugInput = document.getElementById('slug');
     const form = document.getElementById('categoryForm');
     const submitBtn = document.getElementById('submitBtn');
-
-    // Auto-generate slug from name
-    nameInput.addEventListener('input', function() {
-        const name = this.value;
-        const slug = name.toLowerCase()
-            .replace(/[^a-z0-9 -]/g, '') // Remove invalid chars
-            .replace(/\s+/g, '-')        // Replace spaces with -
-            .replace(/-+/g, '-')         // Replace multiple - with single -
-            .replace(/^-+/, '')          // Trim - from start of text
-            .replace(/-+$/, '');         // Trim - from end of text
-        
-        slugInput.value = slug;
-    });
 
     // Form submission with loading state
     form.addEventListener('submit', function(e) {

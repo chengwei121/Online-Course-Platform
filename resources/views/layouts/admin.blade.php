@@ -234,37 +234,40 @@
                     </div>
                 </nav>
 
-                <!-- Page Content -->
-                <div class="container-fluid">
-                    <!-- Flash Messages -->
+                <!-- Toast Notifications Container (Top Right) -->
+                <div class="toast-container">
                     @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            <i class="fas fa-check-circle me-2"></i>
+                        <div class="alert alert-success alert-dismissible fade show toast-alert" role="alert">
+                            <i class="fas fa-check-circle"></i>
                             {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
 
                     @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-2"></i>
+                        <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
+                            <i class="fas fa-exclamation-circle"></i>
                             {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
 
                     @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Please fix the following errors:</strong>
-                            <ul class="mb-0 mt-2">
+                        <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Validation Errors:</strong>
+                            <ul class="mb-0 mt-2 ps-3">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
                             </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
+                </div>
+
+                <!-- Page Content -->
+                <div class="container-fluid">
 
                     <!-- Page Header -->
                     @hasSection('header')
@@ -421,9 +424,10 @@
             const checkPageLoad = setInterval(() => {
                 // Check if main content elements are present
                 const mainContent = document.querySelector('.main-content');
-                const pageContent = document.querySelector('[data-page-loaded]');
+                const containerFluid = document.querySelector('.container-fluid');
                 
-                if (mainContent && (pageContent || document.readyState === 'complete')) {
+                // Page is ready when container-fluid has content or document is complete
+                if (mainContent && containerFluid && (containerFluid.children.length > 0 || document.readyState === 'complete')) {
                     clearInterval(checkPageLoad);
                     pageLoadComplete();
                 }
@@ -432,10 +436,11 @@
             // Fallback: hide loading after page is fully loaded
             window.addEventListener('load', () => {
                 setTimeout(() => {
-                    if (document.getElementById('globalLoadingScreen').style.display !== 'none') {
+                    const loadingScreen = document.getElementById('globalLoadingScreen');
+                    if (loadingScreen && loadingScreen.style.display !== 'none') {
                         pageLoadComplete();
                     }
-                }, 1000);
+                }, 500);
             });
         });
         
@@ -673,9 +678,22 @@
         window.showErrorNotification = showErrorNotification;
         window.showSuccessNotification = showSuccessNotification;
         
-        // Auto-close flash messages after 5 seconds
+        // Auto-close toast alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
-            const flashMessages = document.querySelectorAll('.alert:not(.position-fixed)');
+            const toastAlerts = document.querySelectorAll('.toast-alert');
+            toastAlerts.forEach(function(alert) {
+                // Auto-close after 5 seconds
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        // Use Bootstrap's dismiss method
+                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            });
+            
+            // Keep legacy alerts (non-toast) for backward compatibility
+            const flashMessages = document.querySelectorAll('.alert:not(.position-fixed):not(.toast-alert)');
             flashMessages.forEach(function(alert) {
                 // Add a progress bar to show remaining time
                 const progressBar = document.createElement('div');

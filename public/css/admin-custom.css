@@ -50,24 +50,33 @@ body {
     min-height: 100vh;
     margin-left: 16.666667% !important; /* Same width as sidebar */
     width: calc(100% - 16.666667%) !important;
-    padding-top: 0 !important; /* Remove excessive top padding */
+    padding: 0 !important; /* Remove ALL padding */
+    margin-top: 0 !important;
+    
 }
 
 /* Prevent excessive spacing in admin pages */
 .main-content .navbar {
-    margin-bottom: 0.5rem !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
 }
 
 .main-content .border-bottom {
     margin-bottom: 0.5rem !important;
     padding-bottom: 0.5rem !important;
-    padding-top: 0.5rem !important;
-}
-
-/* Ensure container-fluid doesn't add extra spacing */
-.main-content .container-fluid {
     padding-top: 0 !important;
     margin-top: 0 !important;
+}
+
+/* Ensure container-fluid has appropriate spacing */
+.main-content .container-fluid {
+    padding-top: 1.5rem !important; /* Proper top padding for content */
+    margin-top: 0 !important;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    padding-bottom: 1.5rem;
 }
 
 /* Fix flash message spacing */
@@ -76,11 +85,15 @@ body {
     margin-top: 0 !important;
 }
 
-/* Page header optimization */
-.main-content .d-flex.justify-content-between.flex-wrap {
-    margin-bottom: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    padding-top: 0.5rem !important;
+/* Only remove margin from alert if it's the first child */
+.main-content .container-fluid > .alert:first-child {
+    margin-top: 0 !important;
+}
+
+/* Keep spacing for content headers */
+.main-content .container-fluid > .d-flex:first-child {
+    margin-top: 0 !important;
+    margin-bottom: 1.5rem !important;
 }
 
 /* Fix sidebar positioning and scrolling */
@@ -296,7 +309,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #a7a7a7 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -590,4 +603,140 @@ body {
 .ajax-loading-overlay .spinner-border {
     width: 2rem;
     height: 2rem;
+}
+
+/* ==========================================
+   TOAST NOTIFICATIONS - Top Right Alerts
+   ========================================== */
+
+/* Toast Container */
+.toast-container {
+    position: fixed;
+    top: 80px; /* Below navbar */
+    right: 20px;
+    z-index: 9999;
+    max-width: 400px;
+}
+
+/* Toast Alert Styling */
+.main-content .alert.toast-alert {
+    position: relative !important;
+    margin-bottom: 1rem !important;
+    margin-top: 0 !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: 0.5rem !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    border: none !important;
+    animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in 4.7s;
+    animation-fill-mode: forwards;
+}
+
+/* Success Toast */
+.alert.toast-alert.alert-success {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+}
+
+.alert.toast-alert.alert-success .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Error/Danger Toast */
+.alert.toast-alert.alert-danger {
+    background: linear-gradient(135deg, #dc3545 0%, #f85149 100%) !important;
+    color: white !important;
+}
+
+.alert.toast-alert.alert-danger .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Warning Toast */
+.alert.toast-alert.alert-warning {
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%) !important;
+    color: #212529 !important;
+}
+
+/* Info Toast */
+.alert.toast-alert.alert-info {
+    background: linear-gradient(135deg, #17a2b8 0%, #0dcaf0 100%) !important;
+    color: white !important;
+}
+
+.alert.toast-alert.alert-info .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+/* Toast Icon */
+.toast-alert i.fas {
+    font-size: 1.2rem;
+    margin-right: 0.75rem !important;
+    vertical-align: middle;
+}
+
+/* Toast Close Button */
+.toast-alert .btn-close {
+    padding: 0.5rem;
+    opacity: 0.8;
+}
+
+.toast-alert .btn-close:hover {
+    opacity: 1;
+}
+
+/* Toast Animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+}
+
+/* Toast Progress Bar */
+.toast-alert::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.3);
+    animation: progress 5s linear;
+    width: 0;
+}
+
+@keyframes progress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0;
+    }
+}
+
+/* Responsive Toast */
+@media (max-width: 768px) {
+    .toast-container {
+        top: 70px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+    
+    .alert.toast-alert {
+        font-size: 0.9rem;
+    }
 }

@@ -254,7 +254,7 @@
                                 <i class="fas fa-play me-1"></i>Manage Lessons
                             </a>
                         @else
-                            <a href="{{ route('teacher.courses.lessons.create', ['course' => $course->id]) }}" class="btn btn-outline-success btn-sm">
+                            <a href="{{ route('teacher.courses.lessons.index', ['course' => $course->id]) }}" class="btn btn-outline-success btn-sm">
                                 <i class="fas fa-plus me-1"></i>Add First Lesson
                             </a>
                         @endif

@@ -1,38 +1,20 @@
-@extends('layouts.@section('content')
-<div data-page-loaded="true">
-@php
-    use Illuminate\Support\Facades\Storage;
-@endphp
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow border-0">
-            <div class="card-header py-3 bg-secondary text-white border-bottom">
-                <h6 class="m-0 font-weight-bold">
-                    <i class="fas fa-user-circle me-2"></i>
-                    Edit Teacher Information
-                </h6>
-            </div>
-            <div class="card-body p-4">`tion('title', 'Edit Teacher')
+@extends('layouts.admin')
 
-@section('header')
-    <h1 class="h2">
-        <i class="fas fa-user-edit me-2"></i>
-        Edit Teacher
-    </h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{{ route('admin.teachers.show', $teacher) }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to Details
-            </a>
-        </div>
-    </div>
-@endsection
+@section('title', 'Edit Teacher')
 
 @section('content')
-<div data-page-loaded="true">
 @php
     use Illuminate\Support\Facades\Storage;
 @endphp
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+        <i class="fas fa-user-edit me-2"></i>Edit Teacher
+    </h1>
+    <a href="{{ route('admin.teachers.show', $teacher) }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Details
+    </a>
+</div>
 <div class="row justify-content-center">
     <div class="col-lg-10">
         <div class="card shadow-lg border-0">
@@ -133,18 +115,14 @@
                                 <select class="form-select @error('department') is-invalid @enderror" 
                                         id="department" name="department" required>
                                     <option value="">Select Department</option>
-                                    <option value="Computer Science & IT" {{ old('department', $teacher->department) === 'Computer Science & IT' ? 'selected' : '' }}>Computer Science & IT</option>
-                                    <option value="Engineering" {{ old('department', $teacher->department) === 'Engineering' ? 'selected' : '' }}>Engineering</option>
-                                    <option value="Business & Management" {{ old('department', $teacher->department) === 'Business & Management' ? 'selected' : '' }}>Business & Management</option>
-                                    <option value="Mathematics & Statistics" {{ old('department', $teacher->department) === 'Mathematics & Statistics' ? 'selected' : '' }}>Mathematics & Statistics</option>
-                                    <option value="Science & Technology" {{ old('department', $teacher->department) === 'Science & Technology' ? 'selected' : '' }}>Science & Technology</option>
-                                    <option value="Arts & Design" {{ old('department', $teacher->department) === 'Arts & Design' ? 'selected' : '' }}>Arts & Design</option>
-                                    <option value="Languages & Literature" {{ old('department', $teacher->department) === 'Languages & Literature' ? 'selected' : '' }}>Languages & Literature</option>
-                                    <option value="Health & Medicine" {{ old('department', $teacher->department) === 'Health & Medicine' ? 'selected' : '' }}>Health & Medicine</option>
-                                    <option value="Education & Training" {{ old('department', $teacher->department) === 'Education & Training' ? 'selected' : '' }}>Education & Training</option>
-                                    <option value="Finance & Accounting" {{ old('department', $teacher->department) === 'Finance & Accounting' ? 'selected' : '' }}>Finance & Accounting</option>
-                                    <option value="Marketing & Sales" {{ old('department', $teacher->department) === 'Marketing & Sales' ? 'selected' : '' }}>Marketing & Sales</option>
-                                    <option value="Other" {{ old('department', $teacher->department) === 'Other' ? 'selected' : '' }}>Other</option>
+                                    <option value="Information Technology" {{ old('department', $teacher->department) === 'Information Technology' ? 'selected' : '' }}>Information Technology</option>
+                                    <option value="Computer Science" {{ old('department', $teacher->department) === 'Computer Science' ? 'selected' : '' }}>Computer Science</option>
+                                    <option value="Software Engineering" {{ old('department', $teacher->department) === 'Software Engineering' ? 'selected' : '' }}>Software Engineering</option>
+                                    <option value="Information Systems" {{ old('department', $teacher->department) === 'Information Systems' ? 'selected' : '' }}>Information Systems</option>
+                                    <option value="Computer Engineering" {{ old('department', $teacher->department) === 'Computer Engineering' ? 'selected' : '' }}>Computer Engineering</option>
+                                    <option value="Cybersecurity" {{ old('department', $teacher->department) === 'Cybersecurity' ? 'selected' : '' }}>Cybersecurity</option>
+                                    <option value="Data Science" {{ old('department', $teacher->department) === 'Data Science' ? 'selected' : '' }}>Data Science</option>
+                                    <option value="Artificial Intelligence" {{ old('department', $teacher->department) === 'Artificial Intelligence' ? 'selected' : '' }}>Artificial Intelligence</option>
                                 </select>
                                 @error('department')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -230,7 +208,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 @endsection
 

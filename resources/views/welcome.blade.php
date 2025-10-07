@@ -233,22 +233,28 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 <!-- Stats Cards -->
                 <div class="stats-card p-4 rounded-lg bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 fade-in-up">
-                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">1000+</div>
+                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">{{ $stats['total_courses'] }}{{ $stats['total_courses'] >= 100 ? '+' : '' }}</div>
                     <div class="text-sm text-gray-600">Active Courses</div>
                 </div>
                 
                 <div class="stats-card p-4 rounded-lg bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 fade-in-up fade-in-delay-100">
-                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">50K+</div>
+                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">
+                        @if($stats['total_students'] >= 1000)
+                            {{ number_format($stats['total_students'] / 1000, 1) }}K+
+                        @else
+                            {{ $stats['total_students'] }}{{ $stats['total_students'] >= 100 ? '+' : '' }}
+                        @endif
+                    </div>
                     <div class="text-sm text-gray-600">Happy Students</div>
                 </div>
                 
                 <div class="stats-card p-4 rounded-lg bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 fade-in-up fade-in-delay-200">
-                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">200+</div>
+                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">{{ $stats['total_instructors'] }}{{ $stats['total_instructors'] >= 10 ? '+' : '' }}</div>
                     <div class="text-sm text-gray-600">Expert Instructors</div>
                 </div>
                 
                 <div class="stats-card p-4 rounded-lg bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 fade-in-up fade-in-delay-300">
-                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">95%</div>
+                    <div class="text-2xl md:text-3xl font-bold text-indigo-600 mb-1">{{ $stats['success_rate'] }}%</div>
                     <div class="text-sm text-gray-600">Success Rate</div>
                 </div>
             </div>
@@ -565,45 +571,34 @@
                 </p>
             </div>
 
-            @php
-                $displayed = $instructors->take(3);
-                $count = $displayed->count();
-                $grid = $count === 1 ? 'flex justify-center' : ($count === 2 ? 'flex justify-center space-x-6' : 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3');
-            @endphp
-            <div class="{{ $grid }}">
-                @foreach($displayed as $i => $instructor)
-                    <div class="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 fade-in-up"
-                        @if($count === 2)
-                            style="width: 280px;"
-                        @elseif($count === 1)
-                            style="width: 320px;"
-                        @endif
-                    >
-                        <div class="relative h-[200px] sm:h-[220px] overflow-hidden flex items-center justify-center">
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+                @foreach($instructors->take(3) as $i => $instructor)
+                    <div class="group bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 fade-in-up w-full">
+                        <div class="relative h-[380px] overflow-hidden flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
                             @php
                                 $imgSrc = $instructor->profile_picture ? asset('storage/' . $instructor->profile_picture) : null;
                             @endphp
-                            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                 src="{{ $imgSrc ?? 'https://ui-avatars.com/api/?name=' . urlencode($instructor->name) . '&size=200&background=random' }}"
+                            <img class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+                                 src="{{ $imgSrc ?? 'https://ui-avatars.com/api/?name=' . urlencode($instructor->name) . '&size=400&background=random' }}"
                                  alt="{{ $instructor->name }}"
                                  loading="lazy"
-                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($instructor->name) }}&size=200&background=random';">
+                                 onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($instructor->name) }}&size=400&background=random';">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         </div>
-                        <div class="p-4">
-                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">{{ $instructor->name }}</h3>
-                            <p class="text-indigo-600 text-sm font-medium mb-2">{{ $instructor->qualification ?? 'Instructor' }}</p>
-                            <p class="text-gray-600 text-xs mb-3 line-clamp-2">
+                        <div class="p-5">
+                            <h3 class="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200 mb-1">{{ $instructor->name }}</h3>
+                            <p class="text-indigo-600 text-sm font-medium mb-3">{{ $instructor->qualification ?? 'Instructor' }}</p>
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[40px]">
                                 {{ $instructor->bio }}
                             </p>
-                            <div class="flex items-center justify-between">
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                                 <div class="flex items-center">
-                                    <span class="text-xs text-gray-500">{{ $instructor->courses_count }} Courses</span>
+                                    <span class="text-sm text-gray-500">{{ $instructor->courses_count }} Courses</span>
                                 </div>
                                 <a href="{{ route('client.courses.index', ['instructor' => $instructor->id]) }}"
-                                   class="inline-flex items-center text-indigo-600 hover:text-indigo-700 text-xs font-medium group">
+                                   class="inline-flex items-center text-indigo-600 hover:text-indigo-700 text-sm font-medium group">
                                     View Courses
-                                    <svg class="ml-1 h-3 w-3 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="ml-1 h-4 w-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                     </svg>
                                 </a>

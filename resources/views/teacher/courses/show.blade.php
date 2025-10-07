@@ -166,7 +166,7 @@
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-clock text-warning me-2"></i>
                                 <span class="text-muted me-2">Duration:</span>
-                                <span class="fw-semibold">{{ $course->duration ?? 'Not specified' }}</span>
+                                <span class="fw-semibold">{{ $course->learning_hours ? $course->learning_hours . ' hours' : 'Not specified' }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -306,9 +306,9 @@
                             <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
                             <h5>No lessons yet</h5>
                             <p class="text-muted mb-4">Start building your course by adding lessons.</p>
-                            <a href="{{ route('teacher.courses.lessons.create', $course) }}" class="btn btn-primary">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLessonModal">
                                 <i class="fas fa-plus me-1"></i>Add Your First Lesson
-                            </a>
+                            </button>
                         </div>
                     @endif
                 </div>

@@ -29,9 +29,9 @@
                     <p class="text-muted mb-0">Manage lessons and content for your course</p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <a href="{{ route('teacher.courses.lessons.create', $course) }}" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLessonModal">
                         <i class="fas fa-plus me-2"></i>Add New Lesson
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -123,9 +123,9 @@
                             <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
                             <h5 class="text-muted">No lessons created yet</h5>
                             <p class="text-muted mb-4">Start building your course by creating your first lesson with video content and assignments.</p>
-                            <a href="{{ route('teacher.courses.lessons.create', $course) }}" class="btn btn-primary">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLessonModal">
                                 <i class="fas fa-plus me-2"></i>Create First Lesson
-                            </a>
+                            </button>
                         </div>
                     @endif
                 </div>
@@ -196,9 +196,9 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ route('teacher.courses.lessons.create', $course) }}" class="btn btn-primary">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLessonModal">
                             <i class="fas fa-plus me-2"></i>Add New Lesson
-                        </a>
+                        </button>
                         <a href="{{ route('teacher.courses.show', $course) }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Back to Course
                         </a>

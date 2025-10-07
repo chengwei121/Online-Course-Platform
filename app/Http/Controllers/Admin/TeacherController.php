@@ -77,10 +77,10 @@ class TeacherController extends Controller
                 'regex:/^(0[1-9][0-9]?|1[0-9])-[0-9]{3,4}-[0-9]{4}$/'
             ],
             'qualification' => 'required|in:Certificate,Diploma,Bachelor\'s Degree,Master\'s Degree,PhD/Doctorate,Professional Certification',
-            'department' => 'required|in:Computer Science & IT,Engineering,Business & Management,Mathematics & Statistics,Science & Technology,Arts & Design,Languages & Literature,Health & Medicine,Education & Training,Finance & Accounting,Marketing & Sales,Other',
+            'department' => 'required|in:Information Technology,Computer Science,Software Engineering,Information Systems,Computer Engineering,Cybersecurity,Data Science,Artificial Intelligence',
             'bio' => 'nullable|string|max:1000',
             'hourly_rate' => 'nullable|numeric|min:0|max:1000',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'status' => 'required|in:active,inactive'
         ], [
             'name.regex' => 'Name may only contain letters and spaces.',
@@ -89,7 +89,8 @@ class TeacherController extends Controller
             'qualification.in' => 'Please select a valid qualification.',
             'department.in' => 'Please select a valid department.',
             'hourly_rate.max' => 'Hourly rate cannot exceed RM 1000.',
-            'bio.max' => 'Biography cannot exceed 1000 characters.'
+            'bio.max' => 'Biography cannot exceed 1000 characters.',
+            'profile_picture.max' => 'Profile picture must not exceed 10MB.'
         ]);
 
         // Create user account
@@ -151,19 +152,24 @@ class TeacherController extends Controller
     public function update(Request $request, Teacher $teacher)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|min:2|regex:/^[a-zA-Z\s]+$/',
             'email' => 'required|string|email|max:255|unique:users,email,' . $teacher->user_id,
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[\pL\s]+$/u'
+            ],
             'phone' => [
                 'required',
                 'string',
                 'regex:/^(0[1-9][0-9]?|1[0-9])-[0-9]{3,4}-[0-9]{4}$/'
             ],
             'qualification' => 'required|in:Certificate,Diploma,Bachelor\'s Degree,Master\'s Degree,PhD/Doctorate,Professional Certification',
-            'department' => 'required|in:Computer Science & IT,Engineering,Business & Management,Mathematics & Statistics,Science & Technology,Arts & Design,Languages & Literature,Health & Medicine,Education & Training,Finance & Accounting,Marketing & Sales,Other',
+            'department' => 'required|in:Information Technology,Computer Science,Software Engineering,Information Systems,Computer Engineering,Cybersecurity,Data Science,Artificial Intelligence',
             'bio' => 'nullable|string|max:1000',
             'hourly_rate' => 'nullable|numeric|min:0|max:1000',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
             'status' => 'required|in:active,inactive'
         ], [
             'name.regex' => 'Name may only contain letters and spaces.',
@@ -172,7 +178,8 @@ class TeacherController extends Controller
             'qualification.in' => 'Please select a valid qualification.',
             'department.in' => 'Please select a valid department.',
             'hourly_rate.max' => 'Hourly rate cannot exceed RM 1000.',
-            'bio.max' => 'Biography cannot exceed 1000 characters.'
+            'bio.max' => 'Biography cannot exceed 1000 characters.',
+            'profile_picture.max' => 'Profile picture must not exceed 10MB.'
         ]);
 
         // Update user account

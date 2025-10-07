@@ -135,7 +135,7 @@
             <i class="fas fa-graduation-cap me-2"></i>
             Manage Courses
         </a>
-        <a href="{{ route('admin.users.index') }}" class="btn btn-outline-info">
+        <a href="{{ route('admin.clients.index') }}" class="btn btn-outline-info">
             <i class="fas fa-users me-2"></i>
             View Students
         </a>
