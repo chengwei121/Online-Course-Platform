@@ -46,7 +46,18 @@
                         </span>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body position-relative">
+                    <!-- Active Filter Badge (Top Right) -->
+                    @if(request('start_date') && request('end_date'))
+                    <div class="active-filter-badge">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Active Filter:</strong> 
+                        {{ \Carbon\Carbon::parse(request('start_date'))->format('M d, Y') }} 
+                        to 
+                        {{ \Carbon\Carbon::parse(request('end_date'))->format('M d, Y') }}
+                    </div>
+                    @endif
+
                     <!-- Date Range Filter Form -->
                     <div class="filter-section mb-4 p-3 bg-light rounded">
                         <form id="dateRangeForm" method="GET" action="{{ route('admin.payments.statistics') }}">
@@ -91,19 +102,6 @@
                                     @endif
                                 </div>
                             </div>
-                            @if(request('start_date') && request('end_date'))
-                            <div class="row mt-2">
-                                <div class="col-12">
-                                    <div class="alert alert-info mb-0 py-2">
-                                        <i class="fas fa-info-circle me-2"></i>
-                                        <strong>Active Filter:</strong> 
-                                        {{ \Carbon\Carbon::parse(request('start_date'))->format('M d, Y') }} 
-                                        to 
-                                        {{ \Carbon\Carbon::parse(request('end_date'))->format('M d, Y') }}
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
                             <input type="hidden" name="period" value="custom">
                         </form>
                     </div>
@@ -148,7 +146,7 @@
                             <tbody>
                                 @foreach($topCourses as $index => $courseData)
                                 <tr>
-                                    <td>
+                                    <td class="text-center">
                                         @if($index == 0)
                                             <span class="badge bg-warning">
                                                 <i class="fas fa-crown me-1"></i>
@@ -170,16 +168,16 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <strong>{{ Str::limit($courseData->course->title, 50) }}</strong>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <span class="badge bg-primary">{{ $courseData->enrollments }}</span>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <strong class="text-success">RM{{ number_format($courseData->revenue, 2) }}</strong>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <a href="{{ route('admin.courses.show', $courseData->course) }}" 
                                            class="btn btn-sm btn-outline-info">
                                             <i class="fas fa-eye me-1"></i>
@@ -234,7 +232,7 @@
                             <tbody>
                                 @foreach($topUsers as $index => $userData)
                                 <tr>
-                                    <td>
+                                    <td class="text-center">
                                         @if($index == 0)
                                             <span class="badge bg-warning">
                                                 <i class="fas fa-crown me-1"></i>
@@ -256,19 +254,19 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td>
-                                        <div class="d-flex flex-column">
+                                    <td class="text-center">
+                                        <div class="d-flex flex-column align-items-center">
                                             <strong>{{ $userData->user->name }}</strong>
                                             <small class="text-muted">{{ $userData->user->email }}</small>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <span class="badge bg-info">{{ $userData->purchases }} courses</span>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <strong class="text-success">RM{{ number_format($userData->total_spent, 2) }}</strong>
                                     </td>
-                                    <td>
+                                    <td class="text-center">
                                         <a href="{{ route('admin.clients.show', $userData->user) }}" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-user me-1"></i>

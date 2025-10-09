@@ -237,7 +237,8 @@
                                         <p class="mb-1 text-muted">{{ Str::limit($lesson->description, 100) }}</p>
                                         <small class="text-muted">
                                             @if($lesson->duration)
-                                                <i class="fas fa-clock me-1"></i>{{ $lesson->duration }}
+                                                <i class="fas fa-clock me-1"></i>{{ $lesson->duration }} 
+                                                {{ $lesson->duration == 1 ? 'minute' : 'minutes' }}
                                             @endif
                                             @if($lesson->video_url)
                                                 <i class="fas fa-video ms-3 me-1"></i>Video Available
@@ -519,10 +520,11 @@
                                                 <div class="col-md-4">
                                                     <div class="form-group mb-2">
                                                         <label for="lesson_duration" class="form-label fw-bold small">
-                                                            <i class="fas fa-clock me-1 text-primary"></i>Duration
+                                                            <i class="fas fa-clock me-1 text-primary"></i>Duration (minutes)
                                                         </label>
-                                                        <input type="text" class="form-control form-control-sm" id="lesson_duration" name="duration" 
-                                                               placeholder="15 minutes">
+                                                        <input type="number" class="form-control form-control-sm" id="lesson_duration" name="duration" 
+                                                               placeholder="60" min="1" step="1">
+                                                        <small class="text-muted">Enter duration in minutes</small>
                                                     </div>
 
                                                     <div class="form-group mb-2">

@@ -118,7 +118,8 @@ class CourseFilterManager {
     async applyFilters() {
         if (this.isLoading) return;
         
-        this.showLoading();
+        // Show subtle loading indicator (not full screen)
+        this.showSubtleLoading();
         this.updateURL();
 
         try {
@@ -156,7 +157,7 @@ class CourseFilterManager {
             console.error('Error applying filters:', error);
             this.showError('Failed to load courses. Please try again.');
         } finally {
-            this.hideLoading();
+            this.hideSubtleLoading();
         }
     }
 
@@ -417,30 +418,74 @@ class CourseFilterManager {
         });
     }
 
-    showLoading() {
+    // Subtle loading - just top progress bar, no full screen overlay
+    showSubtleLoading() {
         this.isLoading = true;
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) {
-            loadingScreen.classList.remove('hidden');
+        
+        // Show minimal top progress bar
+        let loader = document.getElementById('topProgressBar');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'topProgressBar';
+            loader.style.cssText = `
+                position: fixed;
+                top: 4rem;
+                left: 0;
+                width: 0%;
+                height: 3px;
+                background: linear-gradient(90deg, #4F46E5, #0EA5E9);
+                z-index: 9998;
+                transition: width 0.3s ease;
+                box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
+            `;
+            document.body.appendChild(loader);
         }
+        
+        // Animate to 70%
+        setTimeout(() => {
+            loader.style.width = '70%';
+        }, 10);
 
+        // Add subtle opacity to courses grid
         const coursesGrid = document.querySelector('.courses-grid');
         if (coursesGrid) {
-            coursesGrid.classList.add('courses-loading');
+            coursesGrid.style.transition = 'opacity 0.2s ease';
+            coursesGrid.style.opacity = '0.6';
         }
     }
 
-    hideLoading() {
+    hideSubtleLoading() {
         this.isLoading = false;
-        const loadingScreen = document.getElementById('loadingScreen');
-        if (loadingScreen) {
-            loadingScreen.classList.add('hidden');
+        
+        const loader = document.getElementById('topProgressBar');
+        if (loader) {
+            // Complete to 100%
+            loader.style.width = '100%';
+            // Fade out
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    if (loader.parentNode) {
+                        loader.remove();
+                    }
+                }, 300);
+            }, 100);
         }
 
+        // Restore courses grid opacity
         const coursesGrid = document.querySelector('.courses-grid');
         if (coursesGrid) {
-            coursesGrid.classList.remove('courses-loading');
+            coursesGrid.style.opacity = '1';
         }
+    }
+
+    // Keep old methods for backward compatibility (pagination)
+    showLoading() {
+        this.showSubtleLoading();
+    }
+
+    hideLoading() {
+        this.hideSubtleLoading();
     }
 
     showError(message) {

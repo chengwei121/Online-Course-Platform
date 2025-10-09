@@ -116,7 +116,7 @@ class LessonController extends Controller
             'description' => 'required|string',
             'video' => 'nullable|file|mimes:mp4,avi,mov,wmv,flv|max:500000', // 500MB max
             'video_url' => 'nullable|url',
-            'duration' => 'nullable|string|max:50', // Changed to string to accept formats like "15 minutes"
+            'duration' => 'nullable|integer|min:1', // Duration in minutes
             'order' => 'required|integer|min:1',
             'content' => 'nullable|string',
             'learning_objectives' => 'nullable|string',
@@ -219,7 +219,7 @@ class LessonController extends Controller
             'description' => 'required|string',
             'video' => 'nullable|file|mimes:mp4,avi,mov,wmv,flv|max:500000',
             'video_url' => 'nullable|url',
-            'duration' => 'nullable|string|max:50', // Changed to string to accept formats like "15 minutes"
+            'duration' => 'nullable|integer|min:1', // Duration in minutes
             'order' => 'required|integer|min:1',
             'content' => 'nullable|string',
             'learning_objectives' => 'nullable|string',

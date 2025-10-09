@@ -12,7 +12,10 @@ use App\Models\Course;
 use App\Http\Controllers\Client\LessonController;
 use App\Models\Teacher;
 use App\Models\Student;
+use App\Models\CourseReview;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,42 +33,58 @@ Route::get('/clear-cache', function() {
     return "All caches cleared successfully! <br><a href='/client/courses'>Go to courses</a>";
 })->name('clear-cache');
 
-// Home Route (Welcome Page)
+// Home Route (Welcome Page) - Optimized with caching
 Route::get('/', function () {
-    $featuredCourses = Course::with(['teacher', 'category'])
-        ->where('status', 'published')
-        ->latest()
-        ->take(6)
-        ->get();
-    
-    $instructors = Teacher::select('id', 'name', 'qualification', 'bio', 'profile_picture')
-        ->withCount('courses')
-        ->orderByDesc('courses_count')
-        ->take(3)
-        ->get();
+    // Cache all welcome page data for 15 minutes (900 seconds)
+    $welcomeData = Cache::remember('welcome_page_data', 900, function () {
+        return [
+            'featuredCourses' => Course::with(['teacher:id,name,profile_picture', 'category:id,name'])
+                ->select('id', 'title', 'slug', 'description', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at')
+                ->where('status', 'published')
+                ->latest()
+                ->take(6)
+                ->get(),
+            
+            'instructors' => Teacher::select('id', 'name', 'qualification', 'bio', 'profile_picture')
+                ->withCount('courses')
+                ->orderByDesc('courses_count')
+                ->take(3)
+                ->get(),
 
-    $trendingCourses = Course::with(['category', 'teacher'])
-        ->where('status', 'published')
-        ->withCount('enrollments')
-        ->orderByDesc('enrollments_count')
-        ->orderByDesc('average_rating')
-        ->orderByDesc('created_at')
-        ->take(8)
-        ->get();
-    
-    // Statistics
-    $stats = [
-        'total_courses' => Course::where('status', 'published')->count(),
-        'total_students' => Student::count(),
-        'total_instructors' => Teacher::where('status', 'active')->count(),
-        'success_rate' => 95, // Can be calculated based on course completions if you have that data
-    ];
+            'trendingCourses' => Course::with(['category:id,name', 'teacher:id,name,profile_picture'])
+                ->select('id', 'title', 'slug', 'description', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at')
+                ->where('status', 'published')
+                ->withCount('enrollments')
+                ->orderByDesc('enrollments_count')
+                ->orderByDesc('average_rating')
+                ->orderByDesc('created_at')
+                ->take(8)
+                ->get(),
+            
+            'stats' => [
+                'total_courses' => Course::where('status', 'published')->count(),
+                'total_students' => Student::count(),
+                'total_instructors' => Teacher::where('status', 'active')->count(),
+                'success_rate' => 95,
+            ],
+            
+            'testimonials' => CourseReview::with(['user:id,name', 'course:id,title'])
+                ->select('id', 'user_id', 'course_id', 'rating', 'comment', 'created_at')
+                ->whereIn('rating', [4, 5])
+                ->whereNotNull('comment')
+                ->where('comment', '!=', '')
+                ->latest()
+                ->take(3)
+                ->get(),
+        ];
+    });
     
     return view('welcome', [
-        'featuredCourses' => $featuredCourses,
-        'instructors' => $instructors,
-        'trendingCourses' => $trendingCourses,
-        'stats' => $stats,
+        'featuredCourses' => $welcomeData['featuredCourses'],
+        'instructors' => $welcomeData['instructors'],
+        'trendingCourses' => $welcomeData['trendingCourses'],
+        'stats' => $welcomeData['stats'],
+        'testimonials' => $welcomeData['testimonials'],
     ]);
 })->name('welcome');
 
@@ -118,7 +137,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('clients', [App\Http\Controllers\Admin\ClientController::class, 'index'])->name('clients.index');
     Route::get('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'show'])->name('clients.show');
     Route::get('clients/{client}/edit', [App\Http\Controllers\Admin\ClientController::class, 'edit'])->name('clients.edit');
-    Route::put('clients/{cli                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ent}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
+    Route::put('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.update');
     Route::patch('clients/{client}', [App\Http\Controllers\Admin\ClientController::class, 'update'])->name('clients.patch');
     Route::get('clients/{client}/enrollments', [App\Http\Controllers\Admin\ClientController::class, 'enrollments'])->name('clients.enrollments');
     Route::get('clients/{client}/activities', [App\Http\Controllers\Admin\ClientController::class, 'activities'])->name('clients.activities');
@@ -164,6 +183,24 @@ Route::get('admin/dashboard/performance-metrics', [App\Http\Controllers\Admin\Da
 Route::get('admin/dashboard/test-loading', [App\Http\Controllers\Admin\DashboardController::class, 'testLoading'])
     ->middleware(['auth', 'admin'])
     ->name('admin.dashboard.test-loading');
+
+// Test chart data route
+Route::get('admin/dashboard/test-chart', function() {
+    $controller = new App\Http\Controllers\Admin\DashboardController();
+    $reflection = new ReflectionClass($controller);
+    $method = $reflection->getMethod('getOptimizedChartData');
+    $method->setAccessible(true);
+    
+    $monthData = $method->invoke($controller, 'month');
+    $yearData = $method->invoke($controller, 'year');
+    $weekData = $method->invoke($controller, 'week');
+    
+    return response()->json([
+        'month' => $monthData,
+        'year' => $yearData,
+        'week' => $weekData
+    ]);
+})->middleware(['auth', 'admin']);
 
 // Teacher Routes (Authentication handled by admin)
 Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middleware\TeacherMiddleware::class])->group(function () {

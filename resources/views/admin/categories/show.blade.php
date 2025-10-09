@@ -267,10 +267,10 @@
             <div class="text-center py-5">
                 <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">No Courses in this Category</h5>
-                <p class="text-muted mb-3">This category doesn't have any courses yet.</p>
-                <a href="{{ route('admin.courses.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus me-1"></i>
-                    Create First Course
+                <p class="text-muted mb-3">This category doesn't have any courses yet. Teachers can create courses in this category.</p>
+                <a href="{{ route('admin.courses.index') }}" class="btn btn-primary">
+                    <i class="fas fa-eye me-1"></i>
+                    View All Courses
                 </a>
             </div>
             @endif

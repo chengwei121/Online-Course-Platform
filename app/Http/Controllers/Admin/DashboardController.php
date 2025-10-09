@@ -60,8 +60,10 @@ class DashboardController extends Controller
         // Get fresh recent data (no cache for real-time accuracy)
         $recentEnrollments = $this->getOptimizedRecentEnrollments();
         
-        // Get real-time chart data for the last 6 months (default)
-        $chartData = $this->getOptimizedChartData('month');
+        // Get cached chart data for the last 6 months (default)
+        $chartData = Cache::remember(self::CACHE_CHART_DATA . 'month', self::CACHE_DURATION_CHART, function () {
+            return $this->getOptimizedChartData('month');
+        });
 
         return view('admin.dashboard', compact('stats', 'recentTeachers', 'recentCourses', 'recentEnrollments', 'recentReviews', 'chartData', 'performanceMetrics', 'growthTrends'));
     }
@@ -176,12 +178,24 @@ class DashboardController extends Controller
         try {
             $period = $request->get('period', 'month');
             
-            // Always get fresh real-time data instead of cached data
-            $chartData = $this->getOptimizedChartData($period);
+            // Use cached data for better performance (15 minute cache)
+            $chartData = Cache::remember(self::CACHE_CHART_DATA . $period, self::CACHE_DURATION_CHART, function () use ($period) {
+                return $this->getOptimizedChartData($period);
+            });
+            
+            // Add debug info
+            Log::info('Chart Data Response', [
+                'period' => $period,
+                'labels' => $chartData['labels'],
+                'enrollments' => $chartData['enrollments'],
+                'courses' => $chartData['courses'],
+                'teachers' => $chartData['teachers']
+            ]);
             
             return response()->json($chartData);
         } catch (\Exception $e) {
             Log::error('Chart data error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             // Return cached fallback data
             return response()->json([
@@ -289,7 +303,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Optimized chart data using single query per period
+     * Optimized chart data using single query per period (3 queries total instead of 18-36)
      */
     private function getOptimizedChartData($period = 'month')
     {
@@ -300,55 +314,168 @@ class DashboardController extends Controller
 
         switch ($period) {
             case 'week':
-                // Real-time data for the last 7 days
+                // Get data for the last 7 days using single query
+                $startDate = Carbon::now()->subDays(6)->startOfDay();
+                $endDate = Carbon::now()->endOfDay();
+                
+                // Single query to get all enrollment counts grouped by date
+                $enrollmentsRaw = DB::table('enrollments')
+                    ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('date')
+                    ->get();
+                
+                $enrollments = [];
+                foreach ($enrollmentsRaw as $item) {
+                    $enrollments[$item->date] = $item->count;
+                }
+                
+                // Single query for courses
+                $coursesRaw = DB::table('courses')
+                    ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('date')
+                    ->get();
+                
+                $courses = [];
+                foreach ($coursesRaw as $item) {
+                    $courses[$item->date] = $item->count;
+                }
+                
+                // Single query for teachers
+                $teachersRaw = DB::table('teachers')
+                    ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('date')
+                    ->get();
+                
+                $teachers = [];
+                foreach ($teachersRaw as $item) {
+                    $teachers[$item->date] = $item->count;
+                }
+                
+                // Build labels and data arrays
                 for ($i = 6; $i >= 0; $i--) {
                     $date = Carbon::now()->subDays($i);
                     $labels[] = $date->format('M d');
                     $dateStr = $date->format('Y-m-d');
                     
-                    // Get actual counts for each day
-                    $enrollmentData[] = Enrollment::whereDate('created_at', $dateStr)->count();
-                    $courseData[] = Course::whereDate('created_at', $dateStr)->count();
-                    $teacherData[] = Teacher::whereDate('created_at', $dateStr)->count();
+                    $enrollmentData[] = isset($enrollments[$dateStr]) ? (int)$enrollments[$dateStr] : 0;
+                    $courseData[] = isset($courses[$dateStr]) ? (int)$courses[$dateStr] : 0;
+                    $teacherData[] = isset($teachers[$dateStr]) ? (int)$teachers[$dateStr] : 0;
                 }
                 break;
 
             case 'year':
-                // Real-time data for 12 months
+                // Get data for 12 months using single query
+                $startDate = Carbon::now()->subMonths(11)->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                
+                // Single query for enrollments grouped by year-month
+                $enrollmentsRaw = DB::table('enrollments')
+                    ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('year', 'month')
+                    ->get();
+                
+                $enrollments = [];
+                foreach ($enrollmentsRaw as $item) {
+                    $key = $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                    $enrollments[$key] = $item->count;
+                }
+                
+                // Single query for courses
+                $coursesRaw = DB::table('courses')
+                    ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('year', 'month')
+                    ->get();
+                
+                $courses = [];
+                foreach ($coursesRaw as $item) {
+                    $key = $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                    $courses[$key] = $item->count;
+                }
+                
+                // Single query for teachers
+                $teachersRaw = DB::table('teachers')
+                    ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('year', 'month')
+                    ->get();
+                
+                $teachers = [];
+                foreach ($teachersRaw as $item) {
+                    $key = $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                    $teachers[$key] = $item->count;
+                }
+                
+                // Build labels and data arrays
                 for ($i = 11; $i >= 0; $i--) {
                     $date = Carbon::now()->subMonths($i);
                     $labels[] = $date->format('M Y');
+                    $key = $date->format('Y-m');
                     
-                    // Get actual counts for each month
-                    $enrollmentData[] = Enrollment::whereYear('created_at', $date->year)
-                        ->whereMonth('created_at', $date->month)
-                        ->count();
-                    $courseData[] = Course::whereYear('created_at', $date->year)
-                        ->whereMonth('created_at', $date->month)
-                        ->count();
-                    $teacherData[] = Teacher::whereYear('created_at', $date->year)
-                        ->whereMonth('created_at', $date->month)
-                        ->count();
+                    $enrollmentData[] = isset($enrollments[$key]) ? (int)$enrollments[$key] : 0;
+                    $courseData[] = isset($courses[$key]) ? (int)$courses[$key] : 0;
+                    $teacherData[] = isset($teachers[$key]) ? (int)$teachers[$key] : 0;
                 }
                 break;
 
             case 'month':
             default:
-                // Real-time data for 6 months
+                // Get data for 6 months using single query
+                $startDate = Carbon::now()->subMonths(5)->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                
+                // Single query for enrollments grouped by year-month
+                $enrollmentsRaw = DB::table('enrollments')
+                    ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('year', 'month')
+                    ->get();
+                
+                $enrollments = [];
+                foreach ($enrollmentsRaw as $item) {
+                    $key = $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                    $enrollments[$key] = $item->count;
+                }
+                
+                // Single query for courses
+                $coursesRaw = DB::table('courses')
+                    ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('year', 'month')
+                    ->get();
+                
+                $courses = [];
+                foreach ($coursesRaw as $item) {
+                    $key = $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                    $courses[$key] = $item->count;
+                }
+                
+                // Single query for teachers
+                $teachersRaw = DB::table('teachers')
+                    ->select(DB::raw('YEAR(created_at) as year'), DB::raw('MONTH(created_at) as month'), DB::raw('COUNT(*) as count'))
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->groupBy('year', 'month')
+                    ->get();
+                
+                $teachers = [];
+                foreach ($teachersRaw as $item) {
+                    $key = $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT);
+                    $teachers[$key] = $item->count;
+                }
+                
+                // Build labels and data arrays
                 for ($i = 5; $i >= 0; $i--) {
                     $date = Carbon::now()->subMonths($i);
                     $labels[] = $date->format('M Y');
+                    $key = $date->format('Y-m');
                     
-                    // Get actual counts for each month
-                    $enrollmentData[] = Enrollment::whereYear('created_at', $date->year)
-                        ->whereMonth('created_at', $date->month)
-                        ->count();
-                    $courseData[] = Course::whereYear('created_at', $date->year)
-                        ->whereMonth('created_at', $date->month)
-                        ->count();
-                    $teacherData[] = Teacher::whereYear('created_at', $date->year)
-                        ->whereMonth('created_at', $date->month)
-                        ->count();
+                    $enrollmentData[] = isset($enrollments[$key]) ? (int)$enrollments[$key] : 0;
+                    $courseData[] = isset($courses[$key]) ? (int)$courses[$key] : 0;
+                    $teacherData[] = isset($teachers[$key]) ? (int)$teachers[$key] : 0;
                 }
                 break;
         }

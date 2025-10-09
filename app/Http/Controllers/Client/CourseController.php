@@ -128,10 +128,12 @@ class CourseController extends Controller
             abort(404);
         }
 
+        // Optimize reviews query with pagination
         $reviews = $course->reviews()
             ->with('user:id,name')
+            ->select('id', 'course_id', 'user_id', 'rating', 'comment', 'created_at')
             ->latest()
-            ->paginate(10); // Load reviews with pagination for better performance
+            ->paginate(10);
 
         /** @var User|null $user */
         $user = Auth::user();
@@ -141,7 +143,7 @@ class CourseController extends Controller
         $canReview = false;
         
         if ($user) {
-            // Check if user is enrolled
+            // Optimized enrollment check with single query
             $enrollment = $user->enrollments()
                 ->where('course_id', $course->id)
                 ->where('payment_status', 'completed')
@@ -150,22 +152,28 @@ class CourseController extends Controller
             $isEnrolled = $enrollment !== null;
             
             if ($isEnrolled) {
-                // Check if user has completed the course
-                $totalLessons = $course->lessons()->count();
-                $completedLessons = LessonProgress::where('user_id', $user->id)
-                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('completed', true)
-                    ->count();
+                // Optimized: Get counts in single query instead of two separate queries
+                $lessonIds = $course->lessons->pluck('id')->toArray();
+                $totalLessons = count($lessonIds);
                 
-                $hasCompletedCourse = $totalLessons > 0 && $completedLessons >= $totalLessons;
-                
-                // Check if user has already reviewed this course
-                $existingReview = CourseReview::where('course_id', $course->id)
-                    ->where('user_id', $user->id)
-                    ->first();
-                
-                // User can review if they completed the course and haven't reviewed yet
-                $canReview = $hasCompletedCourse && !$existingReview;
+                if ($totalLessons > 0) {
+                    // Single query for completed lessons count
+                    $completedLessons = LessonProgress::where('user_id', $user->id)
+                        ->whereIn('lesson_id', $lessonIds)
+                        ->where('completed', true)
+                        ->count();
+                    
+                    $hasCompletedCourse = $completedLessons >= $totalLessons;
+                    
+                    // Single query for existing review
+                    $existingReview = CourseReview::select('id', 'rating', 'comment', 'created_at')
+                        ->where('course_id', $course->id)
+                        ->where('user_id', $user->id)
+                        ->first();
+                    
+                    // User can review if they completed the course and haven't reviewed yet
+                    $canReview = $hasCompletedCourse && !$existingReview;
+                }
             }
         }
 

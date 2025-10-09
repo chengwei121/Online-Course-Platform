@@ -871,29 +871,7 @@
 <body class="bg-gray-50 min-h-screen flex flex-col" 
       x-data="{ 
           mobileMenuOpen: false, 
-          userMenuOpen: false,
-          pageLoaded: false,
-          init() {
-              AOS.init({
-                  duration: 800,
-                  easing: 'ease-in-out',
-                  once: true
-              });
-              
-              // Show page loader
-              this.showLoader();
-          },
-          showLoader() {
-              // Simulate loading time
-              setTimeout(() => {
-                  this.hideLoader();
-              }, 1500);
-          },
-          hideLoader() {
-              document.querySelector('.page-loader').classList.add('hidden');
-              document.querySelector('main').classList.add('loaded');
-              this.pageLoaded = true;
-          }
+          userMenuOpen: false
       }">
 
     <!-- Page Loader -->
@@ -1358,7 +1336,7 @@
     
     @stack('scripts')
     
-    <!-- Loading Scripts -->
+    <!-- Smart Loading Scripts -->
     <script>
         // Initialize AOS
         AOS.init({
@@ -1367,20 +1345,49 @@
             once: true
         });
 
-        // Loading functionality
+        // Smart loading functionality - only show if loading takes > 300ms
+        let loaderTimeout = null;
+        let loadStartTime = Date.now();
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Show mini loader for form submissions
+            const pageLoader = document.getElementById('pageLoader');
+            const mainContent = document.querySelector('main');
+            
+            // Check if page loaded quickly
+            const loadTime = Date.now() - loadStartTime;
+            
+            if (loadTime < 300) {
+                // Fast load - hide loader immediately
+                pageLoader.classList.add('hidden');
+                mainContent.classList.add('loaded');
+            } else {
+                // Slow load - show loader briefly then hide
+                setTimeout(() => {
+                    pageLoader.classList.add('hidden');
+                    mainContent.classList.add('loaded');
+                }, 200);
+            }
+
+            // Smart form submission loader
             const forms = document.querySelectorAll('form');
             forms.forEach(form => {
                 form.addEventListener('submit', function(e) {
                     const submitBtn = form.querySelector('button[type="submit"]');
                     if (submitBtn && !submitBtn.disabled) {
                         const originalText = submitBtn.innerHTML;
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        
+                        // Only show loading after 200ms (avoid flash for fast submissions)
+                        const btnTimeout = setTimeout(() => {
+                            submitBtn.disabled = true;
+                            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+                        }, 200);
+                        
+                        // Store timeout ID to clear if fast
+                        submitBtn.dataset.timeoutId = btnTimeout;
                         
                         // Re-enable after 5 seconds as fallback
                         setTimeout(() => {
+                            clearTimeout(btnTimeout);
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalText;
                         }, 5000);
@@ -1388,103 +1395,128 @@
                 });
             });
 
-            // Show mini loader for navigation links
+            // Smart navigation loader - minimal and only for slower navigations
             const navLinks = document.querySelectorAll('a[href]:not([href^="#"]):not([target="_blank"]):not([href^="mailto:"]):not([href^="tel:"])');
             navLinks.forEach(link => {
                 link.addEventListener('click', function(e) {
                     // Skip if it's a same-page link or external link
                     if (this.hostname !== window.location.hostname) return;
                     
-                    // Show mini loading state
-                    const loader = document.createElement('div');
-                    loader.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        width: 100%;
-                        height: 4px;
-                        background: linear-gradient(90deg, #4F46E5, #0EA5E9);
-                        z-index: 9999;
-                        animation: slideIn 0.3s ease;
-                    `;
-                    loader.innerHTML = '<div style="height: 100%; background: rgba(255,255,255,0.3); animation: progress 1s ease-in-out infinite;"></div>';
-                    document.body.appendChild(loader);
-                    
-                    // Remove loader after page starts loading
-                    setTimeout(() => {
-                        if (loader.parentNode) {
-                            loader.remove();
-                        }
-                    }, 500);
+                    // Only show loader after 250ms delay (avoid flash for fast navigations)
+                    loaderTimeout = setTimeout(() => {
+                        showTopLoader();
+                    }, 250);
                 });
             });
 
             // Page visibility change handler
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') {
-                    // Page is visible again
-                    const loader = document.querySelector('.page-loader');
-                    if (loader && !loader.classList.contains('hidden')) {
-                        setTimeout(() => {
-                            loader.classList.add('hidden');
-                        }, 500);
+                    clearTimeout(loaderTimeout);
+                    hideTopLoader();
+                    const pageLoader = document.querySelector('.page-loader');
+                    if (pageLoader && !pageLoader.classList.contains('hidden')) {
+                        pageLoader.classList.add('hidden');
                     }
                 }
             });
+
+            // Performance observer to detect slow pages
+            if ('PerformanceObserver' in window) {
+                const observer = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        // If navigation takes > 500ms, consider it slow
+                        if (entry.duration > 500) {
+                            console.log('Slow page detected:', entry.duration + 'ms');
+                        }
+                    }
+                });
+                observer.observe({ entryTypes: ['navigation'] });
+            }
         });
 
-        // Show loading for AJAX requests
+        // Smart AJAX loader - only show for slow requests (> 300ms)
+        let ajaxLoaderTimeout = null;
+        
         if (window.axios) {
             axios.interceptors.request.use(function (config) {
-                showMiniLoader();
+                // Only show loader after 300ms delay
+                ajaxLoaderTimeout = setTimeout(() => {
+                    showTopLoader();
+                }, 300);
                 return config;
             });
 
             axios.interceptors.response.use(function (response) {
-                hideMiniLoader();
+                clearTimeout(ajaxLoaderTimeout);
+                hideTopLoader();
                 return response;
             }, function (error) {
-                hideMiniLoader();
+                clearTimeout(ajaxLoaderTimeout);
+                hideTopLoader();
                 return Promise.reject(error);
             });
         }
 
-        function showMiniLoader() {
-            let loader = document.getElementById('miniLoader');
+        // Minimal top progress bar loader
+        function showTopLoader() {
+            let loader = document.getElementById('topLoader');
             if (!loader) {
                 loader = document.createElement('div');
-                loader.id = 'miniLoader';
+                loader.id = 'topLoader';
                 loader.style.cssText = `
                     position: fixed;
                     top: 0;
                     left: 0;
-                    width: 100%;
+                    width: 0%;
                     height: 3px;
                     background: linear-gradient(90deg, #4F46E5, #0EA5E9);
                     z-index: 9999;
-                    opacity: 0;
-                    transition: opacity 0.2s ease;
+                    transition: width 0.5s ease;
+                    box-shadow: 0 0 10px rgba(79, 70, 229, 0.5);
                 `;
                 document.body.appendChild(loader);
+                
+                // Animate to 70% over 1 second
+                setTimeout(() => {
+                    loader.style.width = '70%';
+                }, 10);
             }
-            loader.style.opacity = '1';
         }
 
-        function hideMiniLoader() {
-            const loader = document.getElementById('miniLoader');
+        function hideTopLoader() {
+            const loader = document.getElementById('topLoader');
             if (loader) {
-                loader.style.opacity = '0';
+                // Complete to 100%
+                loader.style.width = '100%';
+                // Fade out
                 setTimeout(() => {
-                    if (loader.parentNode) {
-                        loader.remove();
-                    }
+                    loader.style.opacity = '0';
+                    setTimeout(() => {
+                        if (loader.parentNode) {
+                            loader.remove();
+                        }
+                    }, 300);
+                }, 100);
+            }
+        }
+
+        // Smart page unload loader - only for actual navigations
+        let isNavigating = false;
+        window.addEventListener('beforeunload', function(e) {
+            if (isNavigating) {
+                loaderTimeout = setTimeout(() => {
+                    showTopLoader();
                 }, 200);
             }
-        }
+        });
 
-        // Show loading on page unload
-        window.addEventListener('beforeunload', function() {
-            showMiniLoader();
+        // Track if user is actually navigating
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a[href]');
+            if (link && !link.href.startsWith('#') && !link.target === '_blank') {
+                isNavigating = true;
+            }
         });
     </script>
 </body>

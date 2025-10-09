@@ -56,6 +56,21 @@ class Teacher extends Model
     }
 
     /**
+     * Get the students enrolled in teacher's courses
+     */
+    public function students()
+    {
+        return $this->hasManyThrough(
+            Enrollment::class,
+            Course::class,
+            'teacher_id', // Foreign key on courses table
+            'course_id',  // Foreign key on enrollments table
+            'id',         // Local key on teachers table
+            'id'          // Local key on courses table
+        )->where('payment_status', 'completed')->distinct('user_id');
+    }
+
+    /**
      * Get full name attribute
      */
     public function getFullNameAttribute(): string

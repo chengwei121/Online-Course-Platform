@@ -697,64 +697,44 @@
                 </p>
             </div>
 
-            <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                <!-- Testimonial 1 -->
-                <div class="group bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 fade-in-up">
-                    <div class="flex items-center mb-6">
-                        <img class="h-12 w-12 rounded-full ring-2 ring-white shadow-sm" src="https://ui-avatars.com/api/?name=Michael+Zhang&background=random" alt="Michael Zhang">
-                        <div class="ml-4">
-                            <h4 class="text-lg font-semibold text-gray-900">Michael Zhang</h4>
-                            <p class="text-sm text-gray-500">Web Development Student</p>
+            @if($testimonials && $testimonials->count() > 0)
+                <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                    @foreach($testimonials as $index => $testimonial)
+                    <div class="group bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 fade-in-up {{ $index > 0 ? 'fade-in-delay-' . ($index * 100) : '' }}">
+                        <div class="flex items-center mb-6">
+                            @php
+                                $avatar = $testimonial->user->avatar ?? null;
+                                $avatarSrc = $avatar ? asset('storage/' . $avatar) : 'https://ui-avatars.com/api/?name=' . urlencode($testimonial->user->name) . '&background=random';
+                            @endphp
+                            <img class="h-12 w-12 rounded-full ring-2 ring-white shadow-sm object-cover" 
+                                 src="{{ $avatarSrc }}" 
+                                 alt="{{ $testimonial->user->name }}"
+                                 onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($testimonial->user->name) }}&background=random'">
+                            <div class="ml-4">
+                                <h4 class="text-lg font-semibold text-gray-900">{{ $testimonial->user->name }}</h4>
+                                <p class="text-sm text-gray-500">{{ $testimonial->course->title }}</p>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 leading-relaxed">"{{ Str::limit($testimonial->comment, 150) }}"</p>
+                        <div class="mt-6 flex text-yellow-400">
+                            @for($i = 0; $i < 5; $i++)
+                                <svg class="h-5 w-5 {{ $i < $testimonial->rating ? 'text-yellow-400' : 'text-gray-300' }}" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                            @endfor
                         </div>
                     </div>
-                    <p class="text-gray-600 leading-relaxed">"The courses are well-structured and the instructors are very knowledgeable. I've learned so much in such a short time!"</p>
-                    <div class="mt-6 flex text-yellow-400">
-                        @for($i = 0; $i < 5; $i++)
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                        @endfor
-                    </div>
+                    @endforeach
                 </div>
-
-                <!-- Testimonial 2 -->
-                <div class="group bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 fade-in-up fade-in-delay-100">
-                    <div class="flex items-center mb-6">
-                        <img class="h-12 w-12 rounded-full ring-2 ring-white shadow-sm" src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=random" alt="Sarah Johnson">
-                        <div class="ml-4">
-                            <h4 class="text-lg font-semibold text-gray-900">Sarah Johnson</h4>
-                            <p class="text-sm text-gray-500">Data Science Student</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">"The platform is intuitive and the support team is always ready to help. I've gained valuable skills that helped me land my dream job!"</p>
-                    <div class="mt-6 flex text-yellow-400">
-                        @for($i = 0; $i < 5; $i++)
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                        @endfor
-                    </div>
+            @else
+                <div class="text-center py-12">
+                    <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">No testimonials yet</h3>
+                    <p class="text-gray-600">Be the first to share your learning experience!</p>
                 </div>
-
-                <!-- Testimonial 3 -->
-                <div class="group bg-white p-8 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100 fade-in-up fade-in-delay-200">
-                    <div class="flex items-center mb-6">
-                        <img class="h-12 w-12 rounded-full ring-2 ring-white shadow-sm" src="https://ui-avatars.com/api/?name=David+Patel&background=random" alt="David Patel">
-                        <div class="ml-4">
-                            <h4 class="text-lg font-semibold text-gray-900">David Patel</h4>
-                            <p class="text-sm text-gray-500">Business Student</p>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">"The quality of content and the interactive learning experience is outstanding. Highly recommended for anyone looking to upskill!"</p>
-                    <div class="mt-6 flex text-yellow-400">
-                        @for($i = 0; $i < 5; $i++)
-                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                        @endfor
-                    </div>
-                </div>
-            </div>
+            @endif
         </div>
     </section>
 

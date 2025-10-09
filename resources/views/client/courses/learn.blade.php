@@ -631,6 +631,85 @@ function setupLocalVideo() {
             showWarningModal('播放速度不能超过2倍速。');
         }
     });
+
+    // Add keyboard controls for 5-minute skipping
+    document.addEventListener('keydown', function(e) {
+        // Check if video element exists and is not in fullscreen mode with native controls
+        if (!video || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        switch(e.key) {
+            case 'ArrowLeft':
+                // Skip backward 5 minutes (300 seconds)
+                e.preventDefault();
+                const newTimeBackward = Math.max(0, video.currentTime - 300);
+                video.currentTime = newTimeBackward;
+                lastValidTime = newTimeBackward;
+                showSkipNotification('⏪ Skipped backward 5 minutes');
+                break;
+            
+            case 'ArrowRight':
+                // Skip forward 5 minutes (300 seconds)
+                e.preventDefault();
+                if (hasWatchedEntireVideo || video.currentTime >= video.duration - 300) {
+                    // Allow skipping if already watched or near the end
+                    const newTimeForward = Math.min(video.duration, video.currentTime + 300);
+                    video.currentTime = newTimeForward;
+                    lastValidTime = newTimeForward;
+                    showSkipNotification('⏩ Skipped forward 5 minutes');
+                } else {
+                    showWarningModal('Please watch the content before skipping forward.');
+                }
+                break;
+            
+            case 'ArrowUp':
+                // Volume up
+                e.preventDefault();
+                video.volume = Math.min(1, video.volume + 0.1);
+                showSkipNotification('🔊 Volume: ' + Math.round(video.volume * 100) + '%');
+                break;
+            
+            case 'ArrowDown':
+                // Volume down
+                e.preventDefault();
+                video.volume = Math.max(0, video.volume - 0.1);
+                showSkipNotification('🔉 Volume: ' + Math.round(video.volume * 100) + '%');
+                break;
+            
+            case ' ':
+            case 'k':
+                // Play/Pause
+                e.preventDefault();
+                if (video.paused) {
+                    video.play();
+                    showSkipNotification('▶️ Playing');
+                } else {
+                    video.pause();
+                    showSkipNotification('⏸️ Paused');
+                }
+                break;
+            
+            case 'f':
+                // Fullscreen toggle
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    video.requestFullscreen().catch(err => {
+                        console.log('Fullscreen error:', err);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+                break;
+            
+            case 'm':
+                // Mute/Unmute
+                e.preventDefault();
+                video.muted = !video.muted;
+                showSkipNotification(video.muted ? '🔇 Muted' : '🔊 Unmuted');
+                break;
+        }
+    });
 }
 
 function setupYoutubeVideo() {
@@ -1086,6 +1165,50 @@ function hideWarningModal() {
         modal.classList.add('hidden');
     }
 }
+
+// Show skip notification (for keyboard shortcuts)
+function showSkipNotification(message) {
+    // Remove existing notification if any
+    const existingNotification = document.getElementById('skipNotification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.id = 'skipNotification';
+    notification.className = 'fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 bg-opacity-90 text-white px-6 py-3 rounded-lg shadow-xl transition-all duration-300 ease-in-out';
+    notification.style.cssText = 'animation: slideDown 0.3s ease-out;';
+    notification.textContent = message;
+
+    // Add to body
+    document.body.appendChild(notification);
+
+    // Remove after 2 seconds with fade out
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translate(-50%, -10px)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 2000);
+}
+
+// Add CSS animation for notification
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -20px);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+`;
+document.head.appendChild(style);
 </script>
 @endpush
 

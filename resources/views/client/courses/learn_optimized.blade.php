@@ -544,6 +544,133 @@ function setupLocalVideo() {
             video.currentTime = videoProgress;
         }
     });
+
+    // Mouse seeking control - limit to 3 minutes forward skip
+    let isUserSeeking = false;
+    let seekStartTime = 0;
+    
+    video.addEventListener('seeking', function() {
+        isUserSeeking = true;
+        const currentTime = video.currentTime;
+        const skipDistance = currentTime - lastValidTime;
+        const maxMouseSeek = 180; // 3 minutes in seconds
+        
+        console.log('User seeking:', { currentTime, lastValidTime, skipDistance });
+        
+        // Allow backward seeking anytime
+        if (skipDistance < 0) {
+            lastValidTime = currentTime;
+            showSkipNotification('⏪ Rewinding');
+            return;
+        }
+        
+        // Check if skipping forward
+        if (skipDistance > maxMouseSeek && !hasWatchedEntireVideo) {
+            // Limit to 3 minutes forward
+            const allowedTime = lastValidTime + maxMouseSeek;
+            video.currentTime = allowedTime;
+            lastValidTime = allowedTime;
+            showWarningModal('You can only skip forward up to 3 minutes at a time. Please watch the content.');
+            console.log('Limited skip to:', allowedTime);
+        } else if (skipDistance > 0 && skipDistance <= maxMouseSeek) {
+            // Allow skip within 3-minute limit
+            lastValidTime = currentTime;
+            const minutes = Math.floor(skipDistance / 60);
+            const seconds = Math.floor(skipDistance % 60);
+            const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+            showSkipNotification('⏩ Forward ' + timeStr);
+        } else if (hasWatchedEntireVideo) {
+            // Allow any skip if video already completed
+            lastValidTime = currentTime;
+        }
+    });
+    
+    video.addEventListener('seeked', function() {
+        if (isUserSeeking) {
+            isUserSeeking = false;
+            console.log('Seek completed at:', video.currentTime);
+            saveProgress(video.currentTime);
+        }
+    });
+
+    // Add keyboard controls for 5-minute skipping
+    document.addEventListener('keydown', function(e) {
+        // Check if video element exists and is not in fullscreen mode with native controls
+        if (!video || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            return;
+        }
+
+        switch(e.key) {
+            case 'ArrowLeft':
+                // Skip backward 5 minutes (300 seconds)
+                e.preventDefault();
+                const newTimeBackward = Math.max(0, video.currentTime - 300);
+                video.currentTime = newTimeBackward;
+                lastValidTime = newTimeBackward;
+                showSkipNotification('⏪ Skipped backward 5 minutes');
+                break;
+            
+            case 'ArrowRight':
+                // Skip forward 5 minutes (300 seconds)
+                e.preventDefault();
+                if (hasWatchedEntireVideo || video.currentTime >= video.duration - 300) {
+                    // Allow skipping if already watched or near the end
+                    const newTimeForward = Math.min(video.duration, video.currentTime + 300);
+                    video.currentTime = newTimeForward;
+                    lastValidTime = newTimeForward;
+                    showSkipNotification('⏩ Skipped forward 5 minutes');
+                } else {
+                    showWarningModal('Please watch the content before skipping forward.');
+                }
+                break;
+            
+            case 'ArrowUp':
+                // Volume up
+                e.preventDefault();
+                video.volume = Math.min(1, video.volume + 0.1);
+                showSkipNotification('🔊 Volume: ' + Math.round(video.volume * 100) + '%');
+                break;
+            
+            case 'ArrowDown':
+                // Volume down
+                e.preventDefault();
+                video.volume = Math.max(0, video.volume - 0.1);
+                showSkipNotification('🔉 Volume: ' + Math.round(video.volume * 100) + '%');
+                break;
+            
+            case ' ':
+            case 'k':
+                // Play/Pause
+                e.preventDefault();
+                if (video.paused) {
+                    video.play();
+                    showSkipNotification('▶️ Playing');
+                } else {
+                    video.pause();
+                    showSkipNotification('⏸️ Paused');
+                }
+                break;
+            
+            case 'f':
+                // Fullscreen toggle
+                e.preventDefault();
+                if (!document.fullscreenElement) {
+                    video.requestFullscreen().catch(err => {
+                        console.log('Fullscreen error:', err);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+                break;
+            
+            case 'm':
+                // Mute/Unmute
+                e.preventDefault();
+                video.muted = !video.muted;
+                showSkipNotification(video.muted ? '🔇 Muted' : '🔊 Unmuted');
+                break;
+        }
+    });
 }
 
 function setupYoutubeVideo() {
@@ -878,6 +1005,50 @@ function hideWarningModal() {
         modal.classList.add('hidden');
     }
 }
+
+// Show skip notification (for keyboard shortcuts)
+function showSkipNotification(message) {
+    // Remove existing notification if any
+    const existingNotification = document.getElementById('skipNotification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.id = 'skipNotification';
+    notification.className = 'fixed top-24 left-1/2 transform -translate-x-1/2 z-50 bg-gray-900 bg-opacity-90 text-white px-6 py-3 rounded-lg shadow-xl transition-all duration-300 ease-in-out';
+    notification.style.cssText = 'animation: slideDown 0.3s ease-out;';
+    notification.textContent = message;
+
+    // Add to body
+    document.body.appendChild(notification);
+
+    // Remove after 2 seconds with fade out
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translate(-50%, -10px)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 2000);
+}
+
+// Add CSS animation for notification
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translate(-50%, -20px);
+        }
+        to {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+`;
+document.head.appendChild(style);
 </script>
 @endpush
 

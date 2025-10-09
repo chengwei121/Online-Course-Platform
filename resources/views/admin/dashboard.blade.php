@@ -1996,6 +1996,8 @@ function initializeChart() {
     const ctx = document.getElementById('analyticsChart');
     if (!ctx) return;
     
+    console.log('Initializing chart with data:', chartData);
+    
     analyticsChart = new Chart(ctx, {
         type: 'line',
         data: {
@@ -2362,6 +2364,9 @@ function updateChart(period) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Chart data received:', data);
+        console.log('Period:', period);
+        
         if (analyticsChart) {
             analyticsChart.data.labels = data.labels || [];
             analyticsChart.data.datasets[0].data = data.enrollments || [];

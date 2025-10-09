@@ -18,59 +18,54 @@
     @stack('styles')
 </head>
 <body>
-    <!-- Global Loading Screen -->
-    <div id="globalLoadingScreen" class="global-loading-screen">
-        <div class="loading-container">
-            <div class="loading-content">
-                <div class="loading-logo">
-                    <i class="fas fa-graduation-cap fa-3x text-primary mb-3"></i>
-                    <h4 class="text-primary">Online Course Platform</h4>
-                </div>
-                
-                <div class="loading-spinner">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                </div>
-                
-                <div class="loading-text mt-3">
-                    <p class="mb-1">Loading admin panel...</p>
-                    <small class="text-muted" id="loadingDetails">Preparing your dashboard</small>
-                </div>
-                
-                <div class="loading-progress mt-3">
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                             role="progressbar" style="width: 0%" id="loadingProgressBar"></div>
-                    </div>
-                </div>
+    <!-- Toast Notifications Container (Fixed Top Right) -->
+    <div class="toast-container">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show toast-alert" role="alert">
+                <i class="fas fa-check-circle"></i>
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            
-            <!-- Error State -->
-            <div class="loading-error" id="loadingError" style="display: none;">
-                <div class="text-center">
-                    <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                    <h5 class="text-warning">Loading Taking Too Long</h5>
-                    <p class="text-muted mb-4">
-                        The page is taking longer than expected to load. This might be due to a slow connection or server issues.
-                    </p>
-                    <div class="d-flex gap-3 justify-content-center">
-                        <button class="btn btn-primary" onclick="retryPageLoad()">
-                            <i class="fas fa-redo me-2"></i>Refresh & Try Again
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="goToDashboard()">
-                            <i class="fas fa-home me-2"></i>Go to Dashboard
-                        </button>
-                    </div>
-                    <div class="mt-3">
-                        <small class="text-muted">
-                            If the problem persists, please contact the system administrator.
-                        </small>
-                    </div>
-                </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
+                <i class="fas fa-exclamation-circle"></i>
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
+        @endif
+
+        @if (session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show toast-alert" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                {{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('info'))
+            <div class="alert alert-info alert-dismissible fade show toast-alert" role="alert">
+                <i class="fas fa-info-circle"></i>
+                {{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Validation Errors:</strong>
+                <ul class="mb-0 mt-2 ps-3">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
     </div>
+
     <div class="container-fluid">
         <div class="row">
             <!-- Sidebar -->
@@ -234,38 +229,6 @@
                     </div>
                 </nav>
 
-                <!-- Toast Notifications Container (Top Right) -->
-                <div class="toast-container">
-                    @if (session('success'))
-                        <div class="alert alert-success alert-dismissible fade show toast-alert" role="alert">
-                            <i class="fas fa-check-circle"></i>
-                            {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
-                    @if (session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
-                            <i class="fas fa-exclamation-circle"></i>
-                            {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <strong>Validation Errors:</strong>
-                            <ul class="mb-0 mt-2 ps-3">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-                </div>
-
                 <!-- Page Content -->
                 <div class="container-fluid">
 
@@ -288,197 +251,6 @@
     
     <!-- Admin Custom JS -->
     <script>
-        // Global loading system
-        let loadingTimeout;
-        let loadingStartTime;
-        let progressInterval;
-        
-        // Loading messages for different stages
-        const loadingMessages = [
-            "Preparing your dashboard",
-            "Loading user data",
-            "Fetching recent activities", 
-            "Loading course information",
-            "Preparing charts and analytics",
-            "Almost ready..."
-        ];
-        
-        // Initialize loading screen
-        function initializeLoadingScreen() {
-            loadingStartTime = Date.now();
-            showLoadingScreen();
-            startProgressAnimation();
-            cycleLoadingMessages();
-            
-            // Set timeout for 10 seconds
-            loadingTimeout = setTimeout(() => {
-                showLoadingError();
-            }, 10000);
-        }
-        
-        // Show loading screen
-        function showLoadingScreen() {
-            const loadingScreen = document.getElementById('globalLoadingScreen');
-            if (loadingScreen) {
-                loadingScreen.style.display = 'flex';
-                loadingScreen.style.opacity = '1';
-            }
-        }
-        
-        // Hide loading screen
-        function hideLoadingScreen() {
-            const loadingScreen = document.getElementById('globalLoadingScreen');
-            if (loadingScreen) {
-                loadingScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loadingScreen.style.display = 'none';
-                }, 300);
-            }
-            
-            // Clear timeouts and intervals
-            if (loadingTimeout) clearTimeout(loadingTimeout);
-            if (progressInterval) clearInterval(progressInterval);
-        }
-        
-        // Start progress bar animation
-        function startProgressAnimation() {
-            const progressBar = document.getElementById('loadingProgressBar');
-            if (!progressBar) return;
-            
-            let progress = 0;
-            progressInterval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress > 90) progress = 90; // Don't complete until page loads
-                progressBar.style.width = progress + '%';
-            }, 200);
-        }
-        
-        // Cycle through loading messages
-        function cycleLoadingMessages() {
-            const loadingDetails = document.getElementById('loadingDetails');
-            if (!loadingDetails) return;
-            
-            let messageIndex = 0;
-            const messageInterval = setInterval(() => {
-                if (messageIndex < loadingMessages.length - 1) {
-                    messageIndex++;
-                    loadingDetails.textContent = loadingMessages[messageIndex];
-                } else {
-                    clearInterval(messageInterval);
-                }
-            }, 1500);
-            
-            // Clear interval when page loads
-            window.addEventListener('load', () => {
-                clearInterval(messageInterval);
-            });
-        }
-        
-        // Show loading error
-        function showLoadingError() {
-            const loadingContent = document.querySelector('.loading-content');
-            const loadingError = document.getElementById('loadingError');
-            
-            if (loadingContent) loadingContent.style.display = 'none';
-            if (loadingError) loadingError.style.display = 'block';
-            
-            // Clear progress interval
-            if (progressInterval) clearInterval(progressInterval);
-        }
-        
-        // Retry page load
-        function retryPageLoad() {
-            location.reload();
-        }
-        
-        // Go to dashboard
-        function goToDashboard() {
-            window.location.href = "{{ route('admin.dashboard') }}";
-        }
-        
-        // Page loaded successfully
-        function pageLoadComplete() {
-            // Complete the progress bar
-            const progressBar = document.getElementById('loadingProgressBar');
-            if (progressBar) {
-                progressBar.style.width = '100%';
-            }
-            
-            // Update loading message
-            const loadingDetails = document.getElementById('loadingDetails');
-            if (loadingDetails) {
-                loadingDetails.textContent = 'Loading complete!';
-            }
-            
-            // Hide loading screen after short delay
-            setTimeout(() => {
-                hideLoadingScreen();
-            }, 500);
-        }
-        
-        // Initialize loading on page start
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeLoadingScreen();
-            
-            // Check if page content is loaded
-            const checkPageLoad = setInterval(() => {
-                // Check if main content elements are present
-                const mainContent = document.querySelector('.main-content');
-                const containerFluid = document.querySelector('.container-fluid');
-                
-                // Page is ready when container-fluid has content or document is complete
-                if (mainContent && containerFluid && (containerFluid.children.length > 0 || document.readyState === 'complete')) {
-                    clearInterval(checkPageLoad);
-                    pageLoadComplete();
-                }
-            }, 100);
-            
-            // Fallback: hide loading after page is fully loaded
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    const loadingScreen = document.getElementById('globalLoadingScreen');
-                    if (loadingScreen && loadingScreen.style.display !== 'none') {
-                        pageLoadComplete();
-                    }
-                }, 500);
-            });
-        });
-        
-        // Handle navigation loading for admin pages
-        function showNavigationLoading() {
-            const loadingScreen = document.getElementById('globalLoadingScreen');
-            const loadingContent = document.querySelector('.loading-content');
-            const loadingError = document.getElementById('loadingError');
-            
-            if (loadingError) loadingError.style.display = 'none';
-            if (loadingContent) loadingContent.style.display = 'block';
-            
-            showLoadingScreen();
-            startProgressAnimation();
-            
-            // Reset timeout
-            if (loadingTimeout) clearTimeout(loadingTimeout);
-            loadingTimeout = setTimeout(() => {
-                showLoadingError();
-            }, 10000);
-        }
-        
-        // Add loading to all admin navigation links
-        document.addEventListener('DOMContentLoaded', function() {
-            const adminLinks = document.querySelectorAll('.nav-link[href*="admin"], .btn[href*="admin"]');
-            adminLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    // Only show loading for different pages
-                    const currentUrl = window.location.pathname;
-                    const targetUrl = this.getAttribute('href');
-                    
-                    if (targetUrl && targetUrl !== currentUrl && !targetUrl.startsWith('#')) {
-                        showNavigationLoading();
-                    }
-                });
-            });
-        });
-        
         // Toggle sidebar on mobile
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');

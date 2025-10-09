@@ -5,7 +5,7 @@
 @section('content')
 <div class="container-fluid">
     <!-- Course Header -->
-    <div class="row mb-4">
+    <div class="row mb-3">
         <div class="col-12">
             <div class="card bg-primary text-white">
                 <div class="card-body position-relative">
@@ -84,7 +84,7 @@
         <!-- Main Content -->
         <div class="col-lg-8">
             <!-- Course Overview -->
-            <div class="card mb-4">
+            <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-info-circle me-2"></i>Course Overview
@@ -147,7 +147,7 @@
             </div>
 
             <!-- Course Lessons -->
-            <div class="card mb-4">
+            <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-play-circle me-2"></i>Course Content
@@ -188,17 +188,17 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="text-center py-5">
+                        <div class="text-center py-4">
                             <i class="fas fa-play-circle display-4 text-muted mb-3"></i>
                             <h5 class="text-muted">No lessons yet</h5>
-                            <p class="text-muted">This course doesn't have any lessons yet.</p>
+                            <p class="text-muted mb-0">This course doesn't have any lessons yet.</p>
                         </div>
                     @endif
                 </div>
             </div>
 
             <!-- Recent Reviews -->
-            <div class="card mb-4">
+            <div class="card mb-3">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-star me-2"></i>Student Reviews
@@ -234,10 +234,10 @@
                             </div>
                         @endforeach
                     @else
-                        <div class="text-center py-4">
-                            <i class="fas fa-star display-4 text-muted mb-3"></i>
+                        <div class="text-center py-3">
+                            <i class="fas fa-star display-4 text-muted mb-2"></i>
                             <h5 class="text-muted">No reviews yet</h5>
-                            <p class="text-muted">This course hasn't received any reviews yet.</p>
+                            <p class="text-muted mb-0">This course hasn't received any reviews yet.</p>
                         </div>
                     @endif
                 </div>
@@ -247,7 +247,7 @@
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Course Statistics -->
-            <div class="card mb-4">
+            <div class="card mb-3">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-chart-bar me-2"></i>Course Analytics
@@ -292,7 +292,7 @@
             </div>
 
             <!-- Course Actions -->
-            <div class="card bg-success text-white mb-4">
+            <div class="card bg-success text-white mb-3">
                 <div class="card-header border-0">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-cogs me-2"></i>Course Management

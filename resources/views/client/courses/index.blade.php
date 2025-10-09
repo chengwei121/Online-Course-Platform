@@ -5,47 +5,6 @@
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 <style>
-    /* Loading Screen */
-    .loading-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: rgba(255, 255, 255, 0.9);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-    }
-
-    .loading-screen.hidden {
-        display: none;
-    }
-
-    .loading-spinner {
-        text-align: center;
-        background-color: white;
-        padding: 2rem;
-        border-radius: 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .spinner {
-        width: 50px;
-        height: 50px;
-        margin: 0 auto;
-        border: 5px solid #f3f3f3;
-        border-top: 5px solid #3498db;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-
     .course-card {
     position: relative;
         overflow: hidden;
@@ -378,14 +337,6 @@
 @endpush
 
 @section('content')
-<!-- Loading Screen -->
-<div id="loadingScreen" class="loading-screen hidden">
-    <div class="loading-spinner">
-        <div class="spinner"></div>
-        <p class="mt-4 text-gray-700 text-lg font-medium">Loading...</p>
-    </div>
-</div>
-
 <!-- Main Content with proper spacing from header -->
 <div class="pt-24 pb-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

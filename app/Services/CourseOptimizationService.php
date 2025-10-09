@@ -47,8 +47,18 @@ class CourseOptimizationService
         
         return Cache::remember($cacheKey, config('performance.cache_duration.courses'), function() use ($slug) {
             return Course::with([
-                'instructor:id,name,profile_picture',
-                'lessons:id,course_id,title,duration,video_url',
+                'instructor' => function($query) {
+                    $query->select('id', 'name', 'profile_picture', 'qualification', 'bio')
+                          ->withCount([
+                              'courses' => function($q) {
+                                  $q->where('status', 'published');
+                              }
+                          ]);
+                },
+                'lessons' => function($query) {
+                    $query->select('id', 'course_id', 'title', 'duration', 'video_url', 'order')
+                          ->orderBy('order');
+                },
                 'category:id,name',
                 'enrollments:id,course_id'
             ])
