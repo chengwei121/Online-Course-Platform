@@ -45,13 +45,37 @@ class ClientController extends Controller
             abort(404);
         }
         
-        $client->load(['enrollments.course.category']);
+        $client->load(['enrollments.course.lessons']);
+        
+        // OPTIMIZED: Get all completed lessons in ONE query
+        $completedLessonIds = $client->lessonProgress()
+            ->where('completed', true)
+            ->pluck('lesson_id')
+            ->toArray();
+        
+        // OPTIMIZED: Calculate course completion stats
+        $completedCourses = 0;
+        $inProgressCourses = 0;
+        
+        foreach ($client->enrollments as $enrollment) {
+            $totalLessons = $enrollment->course->lessons->count();
+            if ($totalLessons > 0) {
+                $courseLessonIds = $enrollment->course->lessons->pluck('id')->toArray();
+                $completedLessons = count(array_intersect($completedLessonIds, $courseLessonIds));
+                
+                if ($completedLessons >= $totalLessons) {
+                    $completedCourses++;
+                } elseif ($completedLessons > 0) {
+                    $inProgressCourses++;
+                }
+            }
+        }
         
         // Calculate statistics
         $stats = [
             'total_enrollments' => $client->enrollments->count(),
-            'completed_courses' => $this->getCompletedCoursesCount($client),
-            'in_progress_courses' => $this->getInProgressCoursesCount($client),
+            'completed_courses' => $completedCourses,
+            'in_progress_courses' => $inProgressCourses,
             'total_spent' => $client->enrollments->sum(function($enrollment) {
                 return $enrollment->course->is_free ? 0 : $enrollment->course->price;
             }),
@@ -121,92 +145,112 @@ class ClientController extends Controller
         $perPage = 10;
         $page = $request->get('page', 1);
         $offset = ($page - 1) * $perPage;
-        $filter = $request->get('filter', 'all'); // all, completed, in_progress, not_started
+        $filter = $request->get('filter', 'all');
         
-        // Get lesson progress activities with completion status
+        // OPTIMIZED: Pre-calculate all course progress data in ONE query
+        $enrollments = $client->enrollments()
+            ->with(['course.lessons'])
+            ->get();
+        
+        // OPTIMIZED: Get ALL completed lessons for this student in ONE query
+        $completedLessonIds = $client->lessonProgress()
+            ->where('completed', true)
+            ->pluck('lesson_id')
+            ->toArray();
+        
+        // OPTIMIZED: Build course progress cache
+        $courseProgressCache = [];
+        foreach ($enrollments as $enrollment) {
+            $course = $enrollment->course;
+            $courseId = $course->id;
+            $totalLessons = $course->lessons->count();
+            
+            // Count completed lessons for this course
+            $courseLessonIds = $course->lessons->pluck('id')->toArray();
+            $completedLessons = count(array_intersect($completedLessonIds, $courseLessonIds));
+            
+            $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+            
+            // Determine course status
+            $courseStatus = 'not_started';
+            if ($totalLessons > 0) {
+                if ($completedLessons >= $totalLessons) {
+                    $courseStatus = 'completed';
+                } elseif ($completedLessons > 0) {
+                    $courseStatus = 'in_progress';
+                }
+            }
+            
+            $courseProgressCache[$courseId] = [
+                'total_lessons' => $totalLessons,
+                'completed_lessons' => $completedLessons,
+                'progress_percentage' => $progressPercentage,
+                'course_status' => $courseStatus,
+                'course_title' => $course->title
+            ];
+        }
+        
+        // OPTIMIZED: Get lesson progress with pre-loaded data
         $lessonProgress = $client->lessonProgress()
             ->with(['lesson.course'])
             ->orderBy('updated_at', 'desc')
             ->get()
-            ->map(function($progress) use ($client) {
+            ->map(function($progress) use ($courseProgressCache) {
                 $course = $progress->lesson->course;
-                $totalLessons = $course->lessons->count();
-                $completedLessons = $client->lessonProgress()
-                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('completed', true)
-                    ->count();
-                $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
+                $courseId = $course->id;
+                $cached = $courseProgressCache[$courseId] ?? null;
                 
-                // More precise course status logic
-                $courseStatus = 'not_started';
-                if ($totalLessons > 0) {
-                    if ($completedLessons >= $totalLessons) {
-                        $courseStatus = 'completed';
-                    } elseif ($completedLessons > 0) {
-                        $courseStatus = 'in_progress';
-                    }
+                if (!$cached) {
+                    return null;
                 }
                 
                 return [
                     'type' => 'lesson_progress',
                     'title' => $progress->completed ? 'Completed Lesson' : 'Started Lesson',
-                    'description' => "Lesson: {$progress->lesson->title} in {$progress->lesson->course->title}",
+                    'description' => "Lesson: {$progress->lesson->title} in {$course->title}",
                     'date' => $progress->updated_at,
                     'status' => $progress->completed ? 'completed' : 'in_progress',
-                    'course' => $progress->lesson->course->title,
-                    'course_id' => $course->id,
-                    'progress_percentage' => $progressPercentage,
-                    'completed_lessons' => $completedLessons,
-                    'total_lessons' => $totalLessons,
-                    'course_status' => $courseStatus
+                    'course' => $cached['course_title'],
+                    'course_id' => $courseId,
+                    'progress_percentage' => $cached['progress_percentage'],
+                    'completed_lessons' => $cached['completed_lessons'],
+                    'total_lessons' => $cached['total_lessons'],
+                    'course_status' => $cached['course_status']
                 ];
-            });
+            })
+            ->filter();
         
-        // Get enrollment activities with completion status
-        $enrollmentActivities = $client->enrollments()
-            ->with('course')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function($enrollment) use ($client) {
-                $course = $enrollment->course;
-                $totalLessons = $course->lessons->count();
-                $completedLessons = $client->lessonProgress()
-                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('completed', true)
-                    ->count();
-                $progressPercentage = $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0;
-                
-                // More precise course status logic
-                $courseStatus = 'not_started';
-                if ($totalLessons > 0) {
-                    if ($completedLessons >= $totalLessons) {
-                        $courseStatus = 'completed';
-                    } elseif ($completedLessons > 0) {
-                        $courseStatus = 'in_progress';
-                    }
-                }
-                
-                return [
-                    'type' => 'enrollment',
-                    'title' => 'Enrolled in Course',
-                    'description' => "Course: {$enrollment->course->title}",
-                    'date' => $enrollment->created_at,
-                    'status' => 'enrolled',
-                    'course' => $enrollment->course->title,
-                    'course_id' => $course->id,
-                    'progress_percentage' => $progressPercentage,
-                    'completed_lessons' => $completedLessons,
-                    'total_lessons' => $totalLessons,
-                    'course_status' => $courseStatus
-                ];
-            });
+        // OPTIMIZED: Get enrollment activities using cached data
+        $enrollmentActivities = $enrollments->map(function($enrollment) use ($courseProgressCache) {
+            $course = $enrollment->course;
+            $courseId = $course->id;
+            $cached = $courseProgressCache[$courseId] ?? null;
+            
+            if (!$cached) {
+                return null;
+            }
+            
+            return [
+                'type' => 'enrollment',
+                'title' => 'Enrolled in Course',
+                'description' => "Course: {$course->title}",
+                'date' => $enrollment->created_at,
+                'status' => 'enrolled',
+                'course' => $cached['course_title'],
+                'course_id' => $courseId,
+                'progress_percentage' => $cached['progress_percentage'],
+                'completed_lessons' => $cached['completed_lessons'],
+                'total_lessons' => $cached['total_lessons'],
+                'course_status' => $cached['course_status']
+            ];
+        })
+        ->filter();
         
-        // Merge all activities and remove duplicates by course_id to ensure accurate filtering
+        // Merge and deduplicate
         $allActivities = $lessonProgress->merge($enrollmentActivities)
             ->sortByDesc('date')
             ->groupBy('course_id')
             ->map(function($courseActivities) {
-                // For each course, take the most recent activity
                 return $courseActivities->first();
             })
             ->values();
@@ -235,104 +279,18 @@ class ClientController extends Controller
             'next_page_url' => $page < ceil($total / $perPage) ? request()->fullUrlWithQuery(['page' => $page + 1]) : null,
         ];
         
-        // Get filter statistics using the same logic as the activities filtering
-        // This ensures the filter counts match the actual filtered results
-        $allActivitiesForStats = $lessonProgress->merge($enrollmentActivities)
-            ->groupBy('course_id')
-            ->map(function($courseActivities) {
-                return $courseActivities->first();
-            })
-            ->values();
-        
-        $completed = $allActivitiesForStats->where('course_status', 'completed')->count();
-        $inProgress = $allActivitiesForStats->where('course_status', 'in_progress')->count(); 
-        $notStarted = $allActivitiesForStats->where('course_status', 'not_started')->count();
-        
-        // Keep the detailed debug info from enrollments for verification
-        $allEnrollments = $client->enrollments()->with(['course.lessons'])->get();
-        $debugInfo = [];
-        
-        foreach ($allEnrollments as $enrollment) {
-            $course = $enrollment->course;
-            $totalLessons = $course->lessons->count();
-            
-            $completedLessons = $client->lessonProgress()
-                ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                ->where('completed', true)
-                ->count();
-            
-            $status = 'not_started';
-            if ($totalLessons > 0) {
-                if ($completedLessons >= $totalLessons) {
-                    $status = 'completed';
-                } elseif ($completedLessons > 0) {
-                    $status = 'in_progress';
-                }
-            }
-            
-            $debugInfo[] = [
-                'course' => $course->title,
-                'total_lessons' => $totalLessons,
-                'completed_lessons' => $completedLessons,
-                'status' => $status,
-                'progress_percentage' => $totalLessons > 0 ? round(($completedLessons / $totalLessons) * 100) : 0
-            ];
-        }
+        // OPTIMIZED: Calculate stats from cached data
+        $completed = collect($courseProgressCache)->where('course_status', 'completed')->count();
+        $inProgress = collect($courseProgressCache)->where('course_status', 'in_progress')->count();
+        $notStarted = collect($courseProgressCache)->where('course_status', 'not_started')->count();
         
         $filterStats = [
-            'all' => $allActivitiesForStats->count(),
+            'all' => count($courseProgressCache),
             'completed' => $completed,
             'in_progress' => $inProgress,
-            'not_started' => $notStarted,
-            'debug' => $debugInfo // Add debug info for verification
+            'not_started' => $notStarted
         ];
         
         return view('admin.clients.activities', compact('client', 'activities', 'pagination', 'filter', 'filterStats'));
-    }
-    
-    private function getCompletedCoursesCount(User $client)
-    {
-        $completedCount = 0;
-        
-        foreach ($client->enrollments as $enrollment) {
-            $course = $enrollment->course;
-            $totalLessons = $course->lessons->count();
-            
-            if ($totalLessons > 0) {
-                $completedLessons = $client->lessonProgress()
-                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('completed', true)
-                    ->count();
-                
-                if ($completedLessons >= $totalLessons) {
-                    $completedCount++;
-                }
-            }
-        }
-        
-        return $completedCount;
-    }
-    
-    private function getInProgressCoursesCount(User $client)
-    {
-        $inProgressCount = 0;
-        
-        foreach ($client->enrollments as $enrollment) {
-            $course = $enrollment->course;
-            $totalLessons = $course->lessons->count();
-            
-            if ($totalLessons > 0) {
-                $completedLessons = $client->lessonProgress()
-                    ->whereIn('lesson_id', $course->lessons->pluck('id'))
-                    ->where('completed', true)
-                    ->count();
-                
-                if ($completedLessons > 0 && $completedLessons < $totalLessons) {
-                    $inProgressCount++;
-                }
-            }
-        }
-        
-        return $inProgressCount;
     }
 }

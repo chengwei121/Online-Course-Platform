@@ -16,15 +16,18 @@
                 </ol>
             </nav>
         </div>
-        <div class="btn-group">
-            <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit Student
+        <div class="d-flex gap-2">
+            <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to List
             </a>
             <a href="{{ route('admin.clients.activities', $client) }}" class="btn btn-info">
-                <i class="fas fa-history"></i> View Activities
+                <i class="fas fa-history me-1"></i>View Activities
             </a>
             <a href="{{ route('admin.clients.enrollments', $client) }}" class="btn btn-success">
-                <i class="fas fa-graduation-cap"></i> View Enrollments
+                <i class="fas fa-graduation-cap me-1"></i>View Enrollments
+            </a>
+            <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-1"></i>Edit Profile
             </a>
         </div>
     </div>
@@ -202,41 +205,6 @@
                             <p class="text-muted">No learning progress to display.</p>
                         </div>
                     @endif
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 col-6 mb-3">
-                            <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-warning w-100">
-                                <i class="fas fa-edit mb-2"></i><br>
-                                <small>Edit Profile</small>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <a href="{{ route('admin.clients.enrollments', $client) }}" class="btn btn-success w-100">
-                                <i class="fas fa-graduation-cap mb-2"></i><br>
-                                <small>View Enrollments</small>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <a href="{{ route('admin.clients.activities', $client) }}" class="btn btn-info w-100">
-                                <i class="fas fa-history mb-2"></i><br>
-                                <small>View Activities</small>
-                            </a>
-                        </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <a href="{{ route('admin.clients.index') }}" class="btn btn-secondary w-100">
-                                <i class="fas fa-arrow-left mb-2"></i><br>
-                                <small>Back to List</small>
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

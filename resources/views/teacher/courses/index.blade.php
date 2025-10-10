@@ -85,7 +85,11 @@
                             <div class="col-4">
                                 <div class="bg-light rounded p-1">
                                     <small class="text-muted d-block" style="font-size: 0.7rem;">Price</small>
-                                    <span class="fw-bold small text-success">RM{{ number_format($course->price, 0) }}</span>
+                                    @if($course->price == 0)
+                                        <span class="fw-bold small text-success">Free</span>
+                                    @else
+                                        <span class="fw-bold small text-success">RM{{ number_format($course->price, 0) }}</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>

@@ -13,9 +13,26 @@ class CategoryController extends Controller
     /**
      * Display a listing of the categories.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Category::withCount('courses')->orderBy('created_at', 'desc')->paginate(10);
+        $categories = Category::withCount('courses');
+        
+        // Search functionality
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $categories->where(function($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('description', 'like', "%{$search}%")
+                      ->orWhere('slug', 'like', "%{$search}%");
+            });
+        }
+        
+        $categories = $categories->orderBy('created_at', 'desc')->paginate(10);
+        
+        // Append search parameter to pagination links
+        if ($request->has('search')) {
+            $categories->appends(['search' => $request->search]);
+        }
         
         return view('admin.categories.index', compact('categories'));
     }

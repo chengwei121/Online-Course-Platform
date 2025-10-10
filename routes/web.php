@@ -127,6 +127,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('payments/{enrollment}', [App\Http\Controllers\Admin\PaymentController::class, 'show'])->name('payments.show');
     Route::patch('payments/{enrollment}/status', [App\Http\Controllers\Admin\PaymentController::class, 'updateStatus'])->name('payments.update-status');
     Route::get('payments-statistics', [App\Http\Controllers\Admin\PaymentController::class, 'statistics'])->name('payments.statistics');
+    Route::get('payments-statistics-export', [App\Http\Controllers\Admin\PaymentController::class, 'exportStatistics'])->name('payments.statistics.export');
     Route::get('payments-export', [App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
     
     // Payment AJAX endpoints
@@ -162,6 +163,35 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::post('test/send', [App\Http\Controllers\Admin\EmailTestController::class, 'sendTest'])->name('test.send');
         Route::get('test/preview', [App\Http\Controllers\Admin\EmailTestController::class, 'preview'])->name('test.preview');
     });
+    
+    // Toast Notifications Demo & Testing
+    Route::get('toast-demo', function () {
+        return view('admin.toast-demo');
+    })->name('toast.demo');
+    
+    Route::get('toast-test/{type}', function ($type) {
+        switch ($type) {
+            case 'success':
+                return redirect()->route('admin.toast.demo')
+                    ->with('success', 'This is a success message! Your operation completed successfully.');
+            case 'error':
+                return redirect()->route('admin.toast.demo')
+                    ->with('error', 'This is an error message! Something went wrong with your request.');
+            case 'warning':
+                return redirect()->route('admin.toast.demo')
+                    ->with('warning', 'This is a warning message! Please review your actions carefully.');
+            case 'info':
+                return redirect()->route('admin.toast.demo')
+                    ->with('info', 'This is an info message! Here is some useful information for you.');
+            case 'multiple':
+                session()->flash('success', 'First success message!');
+                session()->flash('info', 'An informational message.');
+                session()->flash('warning', 'A warning message to consider.');
+                return redirect()->route('admin.toast.demo');
+            default:
+                return redirect()->route('admin.toast.demo');
+        }
+    })->name('toast.test');
 });
 
 // Temporary chart data route outside middleware for debugging

@@ -122,14 +122,18 @@
                 Categories List
             </h6>
             <div class="d-flex gap-2">
-                <div class="input-group input-group-sm" style="width: 250px;">
+                <div class="input-group input-group-sm" style="width: 300px;">
                     <input type="text" class="form-control bg-light border-0 small" 
-                           placeholder="Search categories..." id="searchInput">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-light" type="button" onclick="searchCategories()">
-                            <i class="fas fa-search fa-sm"></i>
-                        </button>
-                    </div>
+                           placeholder="Search categories..." id="searchInput"
+                           value="{{ request('search') }}">
+                    <button class="btn btn-outline-light" type="button" onclick="searchCategories()" title="Search">
+                        <i class="fas fa-search fa-sm"></i>
+                    </button>
+                    @if(request('search'))
+                    <button class="btn btn-outline-light" type="button" onclick="clearSearch()" title="Clear search">
+                        <i class="fas fa-times fa-sm"></i>
+                    </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -211,13 +215,22 @@
                         <tr>
                             <td colspan="6" class="text-center py-4">
                                 <div class="text-muted">
-                                    <i class="fas fa-folder-open fa-3x mb-3"></i>
-                                    <h5>No Categories Found</h5>
-                                    <p>Start by creating your first course category.</p>
-                                    <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
-                                        <i class="fas fa-plus me-1"></i>
-                                        Create Category
-                                    </a>
+                                    <i class="fas fa-search fa-3x mb-3"></i>
+                                    @if(request('search'))
+                                        <h5>No Categories Found</h5>
+                                        <p>No categories match your search "{{ request('search') }}"</p>
+                                        <button onclick="clearSearch()" class="btn btn-outline-primary">
+                                            <i class="fas fa-times me-1"></i>
+                                            Clear Search
+                                        </button>
+                                    @else
+                                        <h5>No Categories Found</h5>
+                                        <p>Start by creating your first course category.</p>
+                                        <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Create Category
+                                        </a>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
@@ -226,15 +239,29 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            @if($categories->hasPages())
+            <!-- Search Info & Pagination -->
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <div class="text-muted">
-                    Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }} categories
+                    @if(request('search'))
+                        <div class="mb-2">
+                            <span class="badge bg-info">
+                                <i class="fas fa-search me-1"></i>
+                                Search: "{{ request('search') }}"
+                            </span>
+                            <button onclick="clearSearch()" class="btn btn-sm btn-outline-secondary ms-2">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    @endif
+                    @if($categories->total() > 0)
+                        Showing {{ $categories->firstItem() }} to {{ $categories->lastItem() }} of {{ $categories->total() }} 
+                        {{ Str::plural('category', $categories->total()) }}
+                    @endif
                 </div>
-                {{ $categories->links() }}
+                @if($categories->hasPages())
+                    {{ $categories->links() }}
+                @endif
             </div>
-            @endif
         </div>
     </div>
 </div>
@@ -327,9 +354,20 @@ function refreshTable() {
 }
 
 function searchCategories() {
-    const searchTerm = document.getElementById('searchInput').value;
-    // Simple search implementation - you can enhance this with AJAX
+    const searchTerm = document.getElementById('searchInput').value.trim();
+    
+    if (searchTerm === '') {
+        // If empty, redirect to index without search parameter
+        window.location.href = `{{ route('admin.categories.index') }}`;
+        return;
+    }
+    
     window.location.href = `{{ route('admin.categories.index') }}?search=${encodeURIComponent(searchTerm)}`;
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    window.location.href = `{{ route('admin.categories.index') }}`;
 }
 
 function exportCategories(format) {
@@ -343,5 +381,12 @@ document.getElementById('searchInput').addEventListener('keypress', function(e) 
         searchCategories();
     }
 });
+
+// Focus on search input if search parameter exists
+@if(request('search'))
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('searchInput').focus();
+});
+@endif
 </script>
 @endpush

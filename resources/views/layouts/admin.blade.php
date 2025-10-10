@@ -18,12 +18,12 @@
     @stack('styles')
 </head>
 <body>
-    <!-- Toast Notifications Container (Fixed Top Right) -->
+    <!-- Toast Notifications Container (Fixed Top Right) - No Layout Shift -->
     <div class="toast-container">
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show toast-alert" role="alert">
                 <i class="fas fa-check-circle"></i>
-                {{ session('success') }}
+                <strong>Success!</strong> {{ session('success') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -31,7 +31,7 @@
         @if (session('error'))
             <div class="alert alert-danger alert-dismissible fade show toast-alert" role="alert">
                 <i class="fas fa-exclamation-circle"></i>
-                {{ session('error') }}
+                <strong>Error!</strong> {{ session('error') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -39,7 +39,7 @@
         @if (session('warning'))
             <div class="alert alert-warning alert-dismissible fade show toast-alert" role="alert">
                 <i class="fas fa-exclamation-triangle"></i>
-                {{ session('warning') }}
+                <strong>Warning!</strong> {{ session('warning') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -47,7 +47,7 @@
         @if (session('info'))
             <div class="alert alert-info alert-dismissible fade show toast-alert" role="alert">
                 <i class="fas fa-info-circle"></i>
-                {{ session('info') }}
+                <strong>Info:</strong> {{ session('info') }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
@@ -450,77 +450,44 @@
         window.showErrorNotification = showErrorNotification;
         window.showSuccessNotification = showSuccessNotification;
         
-        // Auto-close toast alerts after 5 seconds
+        // Auto-close toast alerts after 5 seconds (Top Right Corner Toasts)
         document.addEventListener('DOMContentLoaded', function() {
             const toastAlerts = document.querySelectorAll('.toast-alert');
             toastAlerts.forEach(function(alert) {
+                // Slide in animation is handled by CSS
+                
                 // Auto-close after 5 seconds
                 setTimeout(function() {
                     if (alert && alert.parentNode) {
-                        // Use Bootstrap's dismiss method
-                        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-                        bsAlert.close();
-                    }
-                }, 5000);
-            });
-            
-            // Keep legacy alerts (non-toast) for backward compatibility
-            const flashMessages = document.querySelectorAll('.alert:not(.position-fixed):not(.toast-alert)');
-            flashMessages.forEach(function(alert) {
-                // Add a progress bar to show remaining time
-                const progressBar = document.createElement('div');
-                progressBar.style.cssText = `
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    height: 3px;
-                    background-color: rgba(255,255,255,0.7);
-                    width: 100%;
-                    transform-origin: left;
-                    animation: alertProgress 5s linear forwards;
-                `;
-                
-                // Add CSS for the progress animation
-                if (!document.getElementById('alertProgressCSS')) {
-                    const style = document.createElement('style');
-                    style.id = 'alertProgressCSS';
-                    style.textContent = `
-                        @keyframes alertProgress {
-                            from { transform: scaleX(1); }
-                            to { transform: scaleX(0); }
-                        }
-                        .alert { position: relative; overflow: hidden; }
-                        .sidebar {
-                            position: sticky !important;
-                            top: 0 !important;
-                            height: 100vh !important;
-                            overflow: visible !important;
-                            overflow-y: visible !important;
-                        }
-                        .sidebar .position-sticky {
-                            height: auto !important;
-                            overflow: visible !important;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                }
-                
-                alert.appendChild(progressBar);
-                
-                // Auto-close after 5 seconds
-                setTimeout(function() {
-                    if (alert.parentNode) {
-                        // Fade out effect
-                        alert.style.transition = 'opacity 0.5s ease-out';
-                        alert.style.opacity = '0';
+                        // Fade out with slide animation
+                        alert.style.animation = 'fadeOut 0.3s ease-in forwards';
                         
+                        // Remove from DOM after animation
                         setTimeout(function() {
-                            if (alert.parentNode) {
-                                alert.remove();
+                            if (alert && alert.parentNode) {
+                                const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+                                bsAlert.close();
                             }
-                        }, 500);
+                        }, 300);
                     }
                 }, 5000);
+                
+                // Add hover effect to pause auto-close
+                let autoCloseTimer = null;
+                let remainingTime = 5000;
+                let startTime = Date.now();
+                
+                alert.addEventListener('mouseenter', function() {
+                    // Pause the auto-close animation
+                    remainingTime = remainingTime - (Date.now() - startTime);
+                    alert.style.animationPlayState = 'paused';
+                });
+                
+                alert.addEventListener('mouseleave', function() {
+                    // Resume the auto-close
+                    startTime = Date.now();
+                    alert.style.animationPlayState = 'running';
+                });
             });
         });
     </script>

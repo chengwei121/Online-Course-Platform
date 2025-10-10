@@ -14,7 +14,12 @@
                     <i class="fas fa-arrow-left me-1"></i>
                     Back to Payments
                 </a>
-                <button type="button" class="btn btn-sm btn-outline-success" onclick="exportStatistics()">
+                <button type="button" 
+                        class="btn btn-sm btn-outline-success {{ !request('start_date') && !request('end_date') && $period === 'all' ? 'export-disabled' : '' }}" 
+                        onclick="exportStatistics()"
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="bottom" 
+                        title="{{ !request('start_date') && !request('end_date') && $period === 'all' ? 'Please apply a filter before exporting' : 'Export statistics as CSV' }}">
                     <i class="fas fa-download me-1"></i>
                     Export Report
                 </button>
@@ -300,6 +305,35 @@
     border-bottom: 3px solid #1e293b;
 }
 
+/* Export button disabled state */
+.export-disabled {
+    opacity: 0.6;
+    cursor: not-allowed !important;
+    position: relative;
+}
+
+.export-disabled:hover {
+    opacity: 0.7;
+}
+
+.export-disabled::after {
+    content: '⚠';
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #f59e0b;
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
 /* Optimize spacing and layout */
 .container-fluid {
     padding-top: 0 !important;
@@ -516,6 +550,12 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
     // Date Range Form Validation
     const dateRangeForm = document.getElementById('dateRangeForm');
     const startDateInput = document.getElementById('start_date');
@@ -789,20 +829,89 @@ function exportStatistics() {
     // Show loading state
     const btn = event.target;
     const originalText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing...';
+    
+    // Get current filter parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const period = urlParams.get('period') || '{{ $period }}';
+    const startDate = urlParams.get('start_date') || '{{ request("start_date") }}';
+    const endDate = urlParams.get('end_date') || '{{ request("end_date") }}';
+    
+    // Check if any filter is applied (not 'all' period and no custom date range)
+    const hasCustomDateRange = startDate && endDate;
+    const hasPeriodFilter = period && period !== 'all';
+    
+    if (!hasCustomDateRange && !hasPeriodFilter) {
+        // Show warning message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning alert-dismissible fade show position-fixed';
+        alertDiv.style.cssText = 'top: 80px; right: 20px; z-index: 9999; min-width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+        alertDiv.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-2" style="font-size: 20px;"></i>
+                <div>
+                    <strong>Filter Required!</strong>
+                    <p class="mb-0 mt-1" style="font-size: 13px;">Please select a time period or date range before exporting statistics.</p>
+                </div>
+                <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 6 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 6000);
+        
+        // Scroll to filter section
+        document.getElementById('dateRangeForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        return; // Exit function without exporting
+    }
+    
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Preparing Export...';
     btn.disabled = true;
     
-    // Simulate export process (replace with actual export logic)
+    // Build export URL
+    let exportUrl = '{{ route("admin.payments.statistics.export") }}';
+    const params = new URLSearchParams();
+    
+    if (period) params.append('period', period);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    
+    if (params.toString()) {
+        exportUrl += '?' + params.toString();
+    }
+    
+    // Create a temporary link and trigger download
+    const link = document.createElement('a');
+    link.href = exportUrl;
+    link.download = 'payment-statistics.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Reset button after a short delay
     setTimeout(() => {
         btn.innerHTML = originalText;
         btn.disabled = false;
         
-        if (typeof showSuccessNotification === 'function') {
-            showSuccessNotification('Statistics export feature will be implemented soon!');
-        } else {
-            alert('Statistics export feature will be implemented soon!');
-        }
-    }, 2000);
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Export Successful!</strong> Your statistics report has been downloaded.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alertDiv);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }, 1000);
 }
 </script>
 @endpush

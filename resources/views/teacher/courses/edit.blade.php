@@ -226,7 +226,11 @@
                             <small class="text-muted">Lessons</small>
                         </div>
                         <div class="col-6">
-                            <h4 class="text-warning mb-1">RM{{ number_format($course->price, 2) }}</h4>
+                            @if($course->price == 0)
+                                <h4 class="text-success mb-1">Free</h4>
+                            @else
+                                <h4 class="text-warning mb-1">RM{{ number_format($course->price, 2) }}</h4>
+                            @endif
                             <small class="text-muted">Course Price</small>
                         </div>
                         <div class="col-6">

@@ -20,23 +20,47 @@
 
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 1.75rem;
     }
 
     .stat-card {
         background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        border-left: 4px solid;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        padding: 1.75rem 1.5rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border-left: 5px solid;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }
 
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        opacity: 0.05;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card.total::before { background: #2c3e50; }
+    .stat-card.active::before { background: #3498db; }
+    .stat-card.completed::before { background: #27ae60; }
+    .stat-card.courses::before { background: #34495e; }
+
     .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+    }
+
+    .stat-card:hover::before {
+        transform: scale(1.2);
+        opacity: 0.08;
     }
 
     .stat-card.total { border-left-color: #2c3e50; }
@@ -63,16 +87,38 @@
 
     .filter-section {
         background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
+        padding: 1.75rem;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        margin-bottom: 1.75rem;
+        border: 1px solid #f0f0f0;
+    }
+
+    .filter-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .filter-header i {
+        font-size: 1.25rem;
+        color: #2c3e50;
+        margin-right: 0.75rem;
+    }
+
+    .filter-header h5 {
+        margin: 0;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1.125rem;
     }
 
     .filter-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
+        grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr;
+        gap: 1.25rem;
         align-items: end;
     }
 
@@ -82,65 +128,104 @@
 
     .form-label {
         font-weight: 600;
-        color: #374151;
+        color: #4b5563;
         margin-bottom: 0.5rem;
         font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .form-label i {
+        margin-right: 0.5rem;
+        color: #6b7280;
+        font-size: 0.8125rem;
     }
 
     .form-control {
         border: 2px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 0.75rem;
-        transition: border-color 0.2s ease;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        transition: all 0.2s ease;
+        font-size: 0.9375rem;
     }
 
     .form-control:focus {
         border-color: #2c3e50;
-        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.1);
+        box-shadow: 0 0 0 4px rgba(44, 62, 80, 0.1);
+        outline: none;
+    }
+
+    .form-control:hover {
+        border-color: #cbd5e1;
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.75rem;
     }
 
     .btn-filter {
         background: linear-gradient(135deg, #2c3e50, #34495e);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        padding: 0.875rem 1.75rem;
+        border-radius: 10px;
         font-weight: 600;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 10px rgba(44, 62, 80, 0.2);
     }
 
     .btn-filter:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(44, 62, 80, 0.3);
+        background: linear-gradient(135deg, #34495e, #2c3e50);
     }
 
     .btn-clear {
-        background: #f7fafc;
-        color: #4a5568;
-        border: 2px solid #e2e8f0;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        background: white;
+        color: #6b7280;
+        border: 2px solid #e5e7eb;
+        padding: 0.875rem 1.75rem;
+        border-radius: 10px;
         font-weight: 600;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .btn-clear:hover {
-        background: #edf2f7;
-        border-color: #cbd5e0;
+        background: #f9fafb;
+        border-color: #d1d5db;
+        color: #374151;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .students-table {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         overflow: hidden;
+        border: 1px solid #f0f0f0;
     }
 
     .table-header {
-        background: linear-gradient(135deg, #2d3748, #4a5568);
+        background: linear-gradient(135deg, #2c3e50, #34495e);
         color: white;
-        padding: 1rem 1.5rem;
+        padding: 1.25rem 1.75rem;
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.125rem;
+    }
+
+    .table-header i {
+        font-size: 1.25rem;
     }
 
     .table {
@@ -148,28 +233,58 @@
     }
 
     .table th {
-        background: #f7fafc;
+        background: linear-gradient(180deg, #f9fafb, #f3f4f6);
         border: none;
-        padding: 1rem;
+        padding: 1.125rem 1.25rem;
         font-weight: 600;
-        color: #2d3748;
-        font-size: 0.875rem;
+        color: #374151;
+        font-size: 0.8125rem;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.075em;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f9fafb;
+        transform: scale(1.005);
     }
 
     .table td {
-        padding: 1rem;
-        border-top: 1px solid #e2e8f0;
+        padding: 1.125rem 1.25rem;
+        border-top: 1px solid #f0f0f0;
         vertical-align: middle;
+        font-size: 0.9375rem;
+        color: #374151;
     }
 
     .student-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
         object-fit: cover;
-        margin-right: 0.75rem;
+        margin-right: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .student-avatar-placeholder {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.875rem;
+        margin-right: 1rem;
+        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.3);
     }
 
     .student-info {
@@ -178,97 +293,145 @@
     }
 
     .student-details h6 {
-        margin: 0;
+        margin: 0 0 0.25rem 0;
         font-weight: 600;
         color: #2d3748;
+        font-size: 0.9375rem;
     }
 
     .student-details p {
         margin: 0;
-        font-size: 0.875rem;
+        font-size: 0.8125rem;
         color: #718096;
     }
 
-    .enrollment-badge {
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
+    .student-details p i {
+        opacity: 0.7;
         font-size: 0.75rem;
-        font-weight: 600;
+    }
+
+    .enrollment-badge {
+        padding: 0.375rem 0.875rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .enrollment-badge.active {
-        background: #c6f6d5;
-        color: #22543d;
+        background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        color: #1a5928;
     }
 
     .enrollment-badge.completed {
-        background: #bee3f8;
-        color: #2a4365;
+        background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+        color: #1e4d8b;
     }
 
     .enrollment-badge.pending {
-        background: #fefcbf;
-        color: #744210;
+        background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        color: #8b4513;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
 
     .btn-action {
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
+        padding: 0.625rem 1.125rem;
+        border-radius: 10px;
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         text-decoration: none;
-        transition: all 0.2s ease;
-        margin-right: 0.5rem;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .btn-view {
-        background: #e6fffa;
-        color: #234e52;
-        border: 1px solid #81e6d9;
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        color: white;
+        box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3);
     }
 
     .btn-view:hover {
-        background: #b2f5ea;
-        color: #234e52;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(44, 62, 80, 0.4);
+        background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        color: white;
         text-decoration: none;
     }
 
     .btn-message {
-        background: #fef5e7;
-        color: #744210;
-        border: 1px solid #f6e05e;
+        background: white;
+        color: #667eea;
+        border-color: #667eea;
     }
 
     .btn-message:hover {
-        background: #fed7aa;
-        color: #744210;
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
         text-decoration: none;
     }
 
     .no-students {
         text-align: center;
-        padding: 4rem 2rem;
-        color: #718096;
+        padding: 5rem 2rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     }
 
     .no-students i {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        color: #cbd5e0;
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        color: #e2e8f0;
+        display: block;
+    }
+
+    .no-students h4 {
+        color: #2d3748;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        font-size: 1.5rem;
+    }
+
+    .no-students p {
+        color: #718096;
+        font-size: 1rem;
+        margin-bottom: 0;
     }
 
     .pagination-wrapper {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 0 0 12px 12px;
-        border-top: 1px solid #e2e8f0;
+        background: linear-gradient(180deg, #ffffff, #f9fafb);
+        padding: 1.75rem 2rem;
+        border-radius: 0 0 16px 16px;
+        border-top: 2px solid #f0f0f0;
     }
 
     .pagination-info {
-        color: #718096;
-        font-size: 0.875rem;
+        color: #6b7280;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .pagination-info i {
+        color: #9ca3af;
     }
 
     .pagination {
@@ -277,34 +440,36 @@
     }
 
     .pagination .page-item {
-        margin: 0 0.125rem;
+        margin: 0 0.25rem;
     }
 
     .pagination .page-link {
-        border: 1px solid #e2e8f0;
-        color: #4a5568;
-        padding: 0.5rem 0.75rem;
-        border-radius: 6px;
+        border: 2px solid #e5e7eb;
+        color: #4b5563;
+        padding: 0.625rem 0.875rem;
+        border-radius: 10px;
         font-size: 0.875rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
+        font-weight: 600;
+        transition: all 0.3s ease;
         background: white;
+        min-width: 42px;
+        text-align: center;
     }
 
     .pagination .page-link:hover {
-        background: #f7fafc;
-        border-color: #cbd5e0;
+        background: #f3f4f6;
+        border-color: #d1d5db;
         color: #2c3e50;
         text-decoration: none;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(44, 62, 80, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .pagination .page-item.active .page-link {
-        background: linear-gradient(135deg, #2c3e50, #34495e);
-        border-color: #2c3e50;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-color: #667eea;
         color: white;
-        box-shadow: 0 2px 8px rgba(44, 62, 80, 0.3);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
     .pagination .page-item.active .page-link:hover {
@@ -350,9 +515,45 @@
             margin-bottom: 1rem;
         }
 
+        .students-header h1 {
+            font-size: 1.5rem;
+        }
+
         .stats-grid {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .filter-actions {
+            flex-direction: column;
+        }
+
+        .btn-filter,
+        .btn-clear {
+            width: 100%;
+        }
+
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
         }
 
         .filter-grid {
@@ -459,16 +660,26 @@
 
         <!-- Filters -->
         <div class="filter-section">
+            <div class="filter-header">
+                <i class="fas fa-sliders-h"></i>
+                <h5>Filter Students</h5>
+            </div>
             <form method="GET" action="{{ route('teacher.students.index') }}">
                 <div class="filter-grid">
                     <div class="form-group">
-                        <label class="form-label">Search Students</label>
+                        <label class="form-label">
+                            <i class="fas fa-search"></i>
+                            Search Students
+                        </label>
                         <input type="text" name="search" class="form-control" 
                                placeholder="Search by name or email..." 
                                value="{{ request('search') }}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Filter by Course</label>
+                        <label class="form-label">
+                            <i class="fas fa-book"></i>
+                            Course
+                        </label>
                         <select name="course_id" class="form-control">
                             <option value="">All Courses</option>
                             @foreach($courses as $course)
@@ -480,7 +691,10 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Enrollment Status</label>
+                        <label class="form-label">
+                            <i class="fas fa-user-check"></i>
+                            Status
+                        </label>
                         <select name="status" class="form-control">
                             <option value="">All Statuses</option>
                             <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
@@ -489,24 +703,24 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Sort By</label>
+                        <label class="form-label">
+                            <i class="fas fa-sort"></i>
+                            Sort By
+                        </label>
                         <select name="sort_by" class="form-control">
                             <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Name</option>
                             <option value="email" {{ request('sort_by') == 'email' ? 'selected' : '' }}>Email</option>
                             <option value="joined" {{ request('sort_by') == 'joined' ? 'selected' : '' }}>Join Date</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-filter">
-                                <i class="fas fa-filter me-2"></i>Filter
-                            </button>
-                            <a href="{{ route('teacher.students.index') }}" class="btn btn-clear">
-                                <i class="fas fa-times me-2"></i>Clear
-                            </a>
-                        </div>
-                    </div>
+                </div>
+                <div class="filter-actions" style="margin-top: 1.25rem;">
+                    <button type="submit" class="btn btn-filter">
+                        <i class="fas fa-filter"></i> Apply Filters
+                    </button>
+                    <a href="{{ route('teacher.students.index') }}" class="btn btn-clear">
+                        <i class="fas fa-redo"></i> Reset Filters
+                    </a>
                 </div>
             </form>
         </div>
@@ -514,10 +728,12 @@
         <!-- Students Table -->
         <div class="students-table">
             <div class="table-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-list me-2"></i>
-                    Students List ({{ $students->total() }} total)
-                </h5>
+                <i class="fas fa-table"></i>
+                <span>Students List</span>
+                <span style="margin-left: auto; font-size: 0.875rem; opacity: 0.9;">
+                    <i class="fas fa-users" style="font-size: 0.875rem;"></i>
+                    {{ $students->total() }} total students
+                </span>
             </div>
 
             @if($students->count() > 0)
@@ -562,7 +778,7 @@
                                 <tr>
                                     <td>
                                         <div class="student-info">
-                                            @if($student->avatar && file_exists(public_path($student->avatar)))
+                                            @if(isset($student->avatar) && $student->avatar && @file_exists(public_path($student->avatar)))
                                                 <img src="{{ asset($student->avatar) }}" 
                                                      alt="{{ $student->name }}" 
                                                      class="student-avatar"
@@ -574,7 +790,7 @@
                                             @endif
                                             <div class="student-details">
                                                 <h6>{{ $student->name }}</h6>
-                                                @if($student->phone)
+                                                @if(isset($student->phone) && $student->phone)
                                                     <p><i class="fas fa-phone me-1"></i>{{ $student->phone }}</p>
                                                 @endif
                                             </div>
@@ -591,23 +807,41 @@
                                         @endphp
                                         
                                         @if($activeEnrollments > 0)
-                                            <span class="enrollment-badge active">{{ $activeEnrollments }} Active</span>
+                                            <span class="enrollment-badge active">
+                                                <i class="fas fa-circle"></i>
+                                                {{ $activeEnrollments }} Active
+                                            </span>
                                         @endif
                                         
                                         @if($completedEnrollments > 0)
-                                            <span class="enrollment-badge completed">{{ $completedEnrollments }} Completed</span>
+                                            <span class="enrollment-badge completed">
+                                                <i class="fas fa-check-circle"></i>
+                                                {{ $completedEnrollments }} Completed
+                                            </span>
+                                        @endif
+
+                                        @if($activeEnrollments == 0 && $completedEnrollments == 0)
+                                            <span class="enrollment-badge pending">
+                                                <i class="fas fa-clock"></i>
+                                                Pending
+                                            </span>
                                         @endif
                                     </td>
-                                    <td>{{ $student->created_at->format('M d, Y') }}</td>
-                                    <td class="text-center">
-                                        <a href="{{ route('teacher.students.show', $student->id) }}" 
-                                           class="btn-action btn-view">
-                                            <i class="fas fa-eye me-1"></i>View
-                                        </a>
-                                        <a href="#" class="btn-action btn-message" 
-                                           onclick="openMessageModal({{ $student->id }}, '{{ $student->name }}')">
-                                            <i class="fas fa-envelope me-1"></i>Message
-                                        </a>
+                                    <td>
+                                        <i class="fas fa-calendar-alt" style="color: #9ca3af; font-size: 0.875rem;"></i>
+                                        {{ \Carbon\Carbon::parse($student->created_at)->format('M d, Y') }}
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <a href="{{ route('teacher.students.show', $student->id) }}" 
+                                               class="btn-action btn-view">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            <a href="#" class="btn-action btn-message" 
+                                               onclick="openMessageModal({{ $student->id }}, '{{ $student->name }}'); return false;">
+                                                <i class="fas fa-envelope"></i> Message
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
@@ -620,9 +854,10 @@
                     @if($students->hasPages())
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="pagination-info">
-                                <small class="text-muted">
+                                <i class="fas fa-info-circle"></i>
+                                <span>
                                     Showing {{ $students->firstItem() }} to {{ $students->lastItem() }} of {{ $students->total() }} students
-                                </small>
+                                </span>
                             </div>
                             
                             <nav aria-label="Students pagination">

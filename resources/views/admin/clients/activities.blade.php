@@ -120,64 +120,6 @@
         </div>
     </div>
 
-    <!-- Debug Information (Temporary) -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-info text-white">
-            <h6 class="mb-0">Debug: Real Data Verification</h6>
-        </div>
-        <div class="card-body">
-            <p><strong>Real Course Status Counts:</strong></p>
-            <div class="row text-center mb-3">
-                <div class="col-3">
-                    <div class="bg-primary text-white rounded p-2">
-                        <h5 class="mb-0">{{ $filterStats['all'] }}</h5>
-                        <small>Total</small>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="bg-success text-white rounded p-2">
-                        <h5 class="mb-0">{{ $filterStats['completed'] }}</h5>
-                        <small>Completed</small>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="bg-warning text-white rounded p-2">
-                        <h5 class="mb-0">{{ $filterStats['in_progress'] }}</h5>
-                        <small>In Progress</small>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="bg-secondary text-white rounded p-2">
-                        <h5 class="mb-0">{{ $filterStats['not_started'] }}</h5>
-                        <small>Not Started</small>
-                    </div>
-                </div>
-            </div>
-            
-            @if(isset($filterStats['debug']) && count($filterStats['debug']) > 0)
-                <details>
-                    <summary class="btn btn-outline-info btn-sm">Show Detailed Course Breakdown</summary>
-                    <div class="mt-3">
-                        @foreach($filterStats['debug'] as $debug)
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                <div>
-                                    <strong>{{ $debug['course'] }}</strong>
-                                    <span class="badge bg-{{ $debug['status'] === 'completed' ? 'success' : ($debug['status'] === 'in_progress' ? 'warning' : 'secondary') }} ms-2">
-                                        {{ ucfirst(str_replace('_', ' ', $debug['status'])) }}
-                                    </span>
-                                </div>
-                                <div class="text-end">
-                                    <div class="text-muted small">{{ $debug['completed_lessons'] }}/{{ $debug['total_lessons'] }} lessons</div>
-                                    <div class="text-primary fw-bold">{{ $debug['progress_percentage'] }}%</div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </details>
-            @endif
-        </div>
-    </div>
-
     <!-- Activities -->
     <div class="card shadow">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">

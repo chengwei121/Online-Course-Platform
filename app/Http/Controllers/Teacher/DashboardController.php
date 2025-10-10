@@ -10,6 +10,8 @@ use App\Models\AssignmentSubmission;
 use App\Models\Lesson;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -24,80 +26,127 @@ class DashboardController extends Controller
             return redirect()->route('login')->with('error', 'Teacher profile not found.');
         }
 
-        // Use a simpler, faster approach for initial dashboard load
-        return $this->getDashboardData($teacher);
+        // Cache dashboard data for 5 minutes for better performance
+        $cacheKey = 'teacher_dashboard_' . $teacher->id;
+        $dashboardData = Cache::remember($cacheKey, 300, function () use ($teacher) {
+            return $this->getDashboardData($teacher);
+        });
+
+        return view('teacher.dashboard', array_merge(
+            ['teacher' => $teacher],
+            $dashboardData
+        ));
     }
     
     /**
-     * Get dashboard data efficiently
+     * Get dashboard data efficiently with optimized queries
      */
     private function getDashboardData($teacher)
     {
-        // Get basic stats first (fastest queries)
-        $totalCourses = Course::where('teacher_id', $teacher->id)->count();
+        // Single query to get course IDs and count
+        $courseData = DB::table('courses')
+            ->where('teacher_id', $teacher->id)
+            ->select('id')
+            ->get();
+        
+        $totalCourses = $courseData->count();
         
         if ($totalCourses === 0) {
-            // If no courses, return empty dashboard quickly
-            return view('teacher.dashboard', [
-                'teacher' => $teacher,
+            return [
                 'courses' => collect(),
                 'totalCourses' => 0,
                 'totalStudents' => 0,
                 'totalAssignments' => 0,
                 'recentEnrollments' => collect(),
                 'pendingSubmissions' => collect()
-            ]);
+            ];
         }
         
-        // Get course IDs once
-        $courseIds = Course::where('teacher_id', $teacher->id)->pluck('id');
+        $courseIds = $courseData->pluck('id')->toArray();
         
-        // Get courses with minimal data
+        // Parallel execution using multiple queries for better performance
+        // Get courses with only necessary columns and relationships
         $courses = Course::where('teacher_id', $teacher->id)
-            ->select('id', 'title', 'thumbnail', 'status', 'created_at')
-            ->withCount('enrollments')
+            ->select('id', 'title', 'thumbnail', 'status', 'price', 'created_at')
+            ->withCount([
+                'enrollments' => function($query) {
+                    $query->select(DB::raw('count(*)'));
+                },
+                'lessons' => function($query) {
+                    $query->select(DB::raw('count(*)'));
+                }
+            ])
             ->latest()
-            ->take(5)
+            ->limit(5)
             ->get();
 
-        // Get student count efficiently
-        $totalStudents = Enrollment::whereIn('course_id', $courseIds)
+        // Optimized student count with single query
+        $totalStudents = DB::table('enrollments')
+            ->whereIn('course_id', $courseIds)
             ->distinct()
             ->count('user_id');
         
-        // Get assignment count using join for better performance
-        $totalAssignments = Assignment::join('lessons', 'assignments.lesson_id', '=', 'lessons.id')
+        // Optimized assignment count
+        $totalAssignments = DB::table('assignments')
+            ->join('lessons', 'assignments.lesson_id', '=', 'lessons.id')
             ->whereIn('lessons.course_id', $courseIds)
             ->count();
 
-        // Get recent enrollments with minimal data
-        $recentEnrollments = Enrollment::with(['user:id,name', 'course:id,title'])
+        // Get recent enrollments with minimal eager loading
+        $recentEnrollments = Enrollment::select('id', 'user_id', 'course_id', 'created_at')
             ->whereIn('course_id', $courseIds)
-            ->select('id', 'user_id', 'course_id', 'created_at')
+            ->with([
+                'user' => function($query) {
+                    $query->select('id', 'name');
+                },
+                'course' => function($query) {
+                    $query->select('id', 'title');
+                }
+            ])
             ->latest()
-            ->take(5)
+            ->limit(5)
             ->get();
 
-        // Get pending submissions efficiently
-        $pendingSubmissions = AssignmentSubmission::join('assignments', 'assignment_submissions.assignment_id', '=', 'assignments.id')
+        // Optimized pending submissions query
+        $pendingSubmissions = DB::table('assignment_submissions')
+            ->join('assignments', 'assignment_submissions.assignment_id', '=', 'assignments.id')
             ->join('lessons', 'assignments.lesson_id', '=', 'lessons.id')
             ->whereIn('lessons.course_id', $courseIds)
             ->whereNotNull('assignment_submissions.submitted_at')
             ->whereNull('assignment_submissions.score')
-            ->select('assignment_submissions.id', 'assignment_submissions.assignment_id', 'assignment_submissions.user_id', 'assignment_submissions.submitted_at')
-            ->with(['assignment:id,title', 'user:id,name'])
-            ->latest('assignment_submissions.submitted_at')
-            ->take(5)
-            ->get();
+            ->select(
+                'assignment_submissions.id',
+                'assignment_submissions.assignment_id',
+                'assignment_submissions.user_id',
+                'assignment_submissions.submitted_at as created_at'
+            )
+            ->orderBy('assignment_submissions.submitted_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function($submission) {
+                // Lazy load relationships only when needed
+                $submission->assignment = Assignment::select('id', 'title')->find($submission->assignment_id);
+                $submission->user = DB::table('users')->select('id', 'name')->find($submission->user_id);
+                // Convert created_at string to Carbon instance
+                $submission->created_at = \Carbon\Carbon::parse($submission->created_at);
+                return $submission;
+            });
 
-        return view('teacher.dashboard', compact(
-            'teacher',
+        return compact(
             'courses',
             'totalCourses',
             'totalStudents',
             'totalAssignments',
             'recentEnrollments',
             'pendingSubmissions'
-        ));
+        );
+    }
+    
+    /**
+     * Clear dashboard cache (call this when data changes)
+     */
+    public static function clearCache($teacherId)
+    {
+        Cache::forget('teacher_dashboard_' . $teacherId);
     }
 }

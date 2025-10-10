@@ -256,6 +256,176 @@ class PaymentController extends Controller
     }
     
     /**
+     * Export payment statistics report
+     */
+    public function exportStatistics(Request $request)
+    {
+        // Get period from request
+        $period = $request->get('period', 'all');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        
+        // Base query
+        $query = Enrollment::with(['user', 'course', 'course.category'])
+            ->whereHas('course', function($q) {
+                $q->where('is_free', false);
+            })
+            ->where('payment_status', 'completed');
+        
+        // Apply date filters
+        if ($startDate && $endDate) {
+            $query->whereBetween('enrolled_at', [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ]);
+        } else {
+            switch($period) {
+                case 'day':
+                    $query->whereDate('enrolled_at', today());
+                    break;
+                case 'week':
+                    $query->whereBetween('enrolled_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'month':
+                    $query->whereMonth('enrolled_at', now()->month)
+                          ->whereYear('enrolled_at', now()->year);
+                    break;
+                case 'year':
+                    $query->whereYear('enrolled_at', now()->year);
+                    break;
+            }
+        }
+        
+        $payments = $query->orderBy('enrolled_at', 'desc')->get();
+        
+        // Calculate statistics
+        $totalRevenue = $payments->sum('amount_paid');
+        $totalTransactions = $payments->count();
+        $avgTransaction = $totalTransactions > 0 ? $totalRevenue / $totalTransactions : 0;
+        
+        // Top courses
+        $topCourses = $payments->groupBy('course_id')
+            ->map(function($group) {
+                return [
+                    'course' => $group->first()->course->title,
+                    'category' => $group->first()->course->category->name,
+                    'sales' => $group->count(),
+                    'revenue' => $group->sum('amount_paid')
+                ];
+            })
+            ->sortByDesc('revenue')
+            ->take(10);
+        
+        // Top customers
+        $topCustomers = $payments->groupBy('user_id')
+            ->map(function($group) {
+                return [
+                    'name' => $group->first()->user->name,
+                    'email' => $group->first()->user->email,
+                    'purchases' => $group->count(),
+                    'total_spent' => $group->sum('amount_paid')
+                ];
+            })
+            ->sortByDesc('total_spent')
+            ->take(10);
+        
+        // Generate filename
+        $periodLabel = $startDate && $endDate 
+            ? 'custom-' . Carbon::parse($startDate)->format('Ymd') . '-' . Carbon::parse($endDate)->format('Ymd')
+            : $period;
+        $filename = 'payment-statistics-' . $periodLabel . '-' . now()->format('Ymd-His') . '.csv';
+        
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+        
+        $callback = function() use ($payments, $totalRevenue, $totalTransactions, $avgTransaction, $topCourses, $topCustomers, $period, $startDate, $endDate) {
+            $file = fopen('php://output', 'w');
+            
+            // Report Header
+            fputcsv($file, ['PAYMENT STATISTICS REPORT']);
+            fputcsv($file, ['Generated on:', now()->format('F d, Y H:i:s')]);
+            
+            if ($startDate && $endDate) {
+                fputcsv($file, ['Period:', 'Custom Range (' . Carbon::parse($startDate)->format('M d, Y') . ' - ' . Carbon::parse($endDate)->format('M d, Y') . ')']);
+            } else {
+                fputcsv($file, ['Period:', ucfirst($period)]);
+            }
+            fputcsv($file, []);
+            
+            // Summary Statistics
+            fputcsv($file, ['SUMMARY STATISTICS']);
+            fputcsv($file, ['Total Revenue:', 'RM' . number_format($totalRevenue, 2)]);
+            fputcsv($file, ['Total Transactions:', $totalTransactions]);
+            fputcsv($file, ['Average Transaction:', 'RM' . number_format($avgTransaction, 2)]);
+            fputcsv($file, []);
+            
+            // Top Courses
+            fputcsv($file, ['TOP PERFORMING COURSES']);
+            fputcsv($file, ['Rank', 'Course Name', 'Category', 'Sales', 'Revenue']);
+            $rank = 1;
+            foreach ($topCourses as $course) {
+                fputcsv($file, [
+                    $rank++,
+                    $course['course'],
+                    $course['category'],
+                    $course['sales'],
+                    'RM' . number_format($course['revenue'], 2)
+                ]);
+            }
+            fputcsv($file, []);
+            
+            // Top Customers
+            fputcsv($file, ['TOP CUSTOMERS BY SPENDING']);
+            fputcsv($file, ['Rank', 'Customer Name', 'Email', 'Total Purchases', 'Total Spent']);
+            $rank = 1;
+            foreach ($topCustomers as $customer) {
+                fputcsv($file, [
+                    $rank++,
+                    $customer['name'],
+                    $customer['email'],
+                    $customer['purchases'],
+                    'RM' . number_format($customer['total_spent'], 2)
+                ]);
+            }
+            fputcsv($file, []);
+            
+            // All Transactions
+            fputcsv($file, ['ALL TRANSACTIONS']);
+            fputcsv($file, [
+                'Transaction ID',
+                'Date',
+                'Time',
+                'Student Name',
+                'Student Email',
+                'Course Title',
+                'Category',
+                'Amount',
+                'Status'
+            ]);
+            
+            foreach ($payments as $payment) {
+                fputcsv($file, [
+                    '#' . str_pad($payment->id, 6, '0', STR_PAD_LEFT),
+                    $payment->enrolled_at->format('M d, Y'),
+                    $payment->enrolled_at->format('h:i A'),
+                    $payment->user->name,
+                    $payment->user->email,
+                    $payment->course->title,
+                    $payment->course->category->name,
+                    'RM' . number_format($payment->amount_paid, 2),
+                    ucfirst($payment->payment_status)
+                ]);
+            }
+            
+            fclose($file);
+        };
+        
+        return response()->stream($callback, 200, $headers);
+    }
+    
+    /**
      * Get real-time payment statistics for AJAX updates
      */
     public function getRealtimeStats(Request $request)

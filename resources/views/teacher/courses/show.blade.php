@@ -123,7 +123,11 @@
                                     <div class="d-flex align-items-center justify-content-center">
                                         <i class="fas fa-coins fa-2x text-success me-2"></i>
                                         <div>
-                                            <h4 class="mb-0 text-success">RM{{ number_format($course->price, 0) }}</h4>
+                                            @if($course->price == 0)
+                                                <h4 class="mb-0 text-success">Free</h4>
+                                            @else
+                                                <h4 class="mb-0 text-success">RM{{ number_format($course->price, 0) }}</h4>
+                                            @endif
                                             <small class="text-muted">Price</small>
                                         </div>
                                     </div>
@@ -382,7 +386,11 @@
                                     <div class="d-flex align-items-center justify-content-center mb-2">
                                         <i class="fas fa-coins fa-2x text-success me-3"></i>
                                         <div>
-                                            <h3 class="mb-0 text-success">RM{{ number_format(($course->enrollments_count ?? 0) * $course->price, 2) }}</h3>
+                                            @if($course->price == 0)
+                                                <h3 class="mb-0 text-success">Free Course</h3>
+                                            @else
+                                                <h3 class="mb-0 text-success">RM{{ number_format(($course->enrollments_count ?? 0) * $course->price, 2) }}</h3>
+                                            @endif
                                             <p class="mb-0 text-muted">Total Revenue</p>
                                         </div>
                                     </div>

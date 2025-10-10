@@ -9,12 +9,13 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class StudentsController extends Controller
 {
     /**
-     * Display a listing of students for the authenticated teacher
+     * Display a listing of students for the authenticated teacher (OPTIMIZED)
      */
     public function index(Request $request)
     {
@@ -24,21 +25,45 @@ class StudentsController extends Controller
             return redirect()->route('teacher.dashboard')->with('error', 'Teacher profile not found.');
         }
 
-        // Get the teacher's courses
-        $teacherCourses = Course::where('teacher_id', $teacher->id)->pluck('id');
+        // Cache course IDs for this teacher (5 minutes)
+        $cacheKey = 'teacher_courses_' . $teacher->id;
+        $teacherCourses = Cache::remember($cacheKey, 300, function () use ($teacher) {
+            return DB::table('courses')
+                ->where('teacher_id', $teacher->id)
+                ->pluck('id')
+                ->toArray();
+        });
 
-        // Base query for students enrolled in teacher's courses
-        $query = User::select('users.*', 'students.phone', 'students.bio', 'students.date_of_birth', 'students.address', 'students.avatar')
+        if (empty($teacherCourses)) {
+            return view('teacher.students.index', [
+                'students' => collect()->paginate(15),
+                'courses' => collect(),
+                'stats' => [
+                    'total_students' => 0,
+                    'active_enrollments' => 0,
+                    'completed_enrollments' => 0,
+                    'total_courses' => 0
+                ]
+            ]);
+        }
+
+        // Build optimized query with only necessary columns
+        $query = DB::table('users')
+            ->select(
+                'users.id',
+                'users.name',
+                'users.email',
+                'users.created_at',
+                'students.avatar',
+                DB::raw('COUNT(DISTINCT enrollments.id) as enrollments_count')
+            )
             ->join('enrollments', 'users.id', '=', 'enrollments.user_id')
             ->leftJoin('students', 'users.id', '=', 'students.user_id')
             ->whereIn('enrollments.course_id', $teacherCourses)
             ->where('users.role', 'student')
-            ->with(['enrollments' => function($query) use ($teacherCourses) {
-                $query->whereIn('course_id', $teacherCourses)->with('course');
-            }])
-            ->distinct();
+            ->groupBy('users.id', 'users.name', 'users.email', 'users.created_at', 'students.avatar');
 
-        // Search functionality
+        // Apply filters
         if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
@@ -47,23 +72,17 @@ class StudentsController extends Controller
             });
         }
 
-        // Filter by course
         if ($request->filled('course_id')) {
             $courseId = $request->get('course_id');
-            $query->whereHas('enrollments', function($q) use ($courseId) {
-                $q->where('course_id', $courseId);
-            });
+            $query->where('enrollments.course_id', $courseId);
         }
 
-        // Filter by enrollment status
         if ($request->filled('status')) {
             $status = $request->get('status');
-            $query->whereHas('enrollments', function($q) use ($status, $teacherCourses) {
-                $q->where('status', $status)->whereIn('course_id', $teacherCourses);
-            });
+            $query->where('enrollments.status', $status);
         }
 
-        // Sort options
+        // Apply sorting
         $sortBy = $request->get('sort_by', 'name');
         $sortOrder = $request->get('sort_order', 'asc');
         
@@ -80,30 +99,63 @@ class StudentsController extends Controller
                 break;
         }
 
-        // Paginate results
-        $students = $query->paginate(15)->withQueryString();
+        // Paginate with custom paginator
+        $perPage = 15;
+        $page = $request->get('page', 1);
+        $total = $query->count(DB::raw('DISTINCT users.id'));
+        
+        $students = $query->offset(($page - 1) * $perPage)
+            ->limit($perPage)
+            ->get()
+            ->map(function($student) use ($teacherCourses) {
+                // Lazy load enrollments only for current page
+                $student->enrollments = DB::table('enrollments')
+                    ->whereIn('course_id', $teacherCourses)
+                    ->where('user_id', $student->id)
+                    ->get();
+                return $student;
+            });
 
-        // Get teacher's courses for filter dropdown
-        $courses = Course::where('teacher_id', $teacher->id)
-            ->select('id', 'title')
-            ->orderBy('title')
-            ->get();
+        // Convert to Laravel paginator
+        $students = new \Illuminate\Pagination\LengthAwarePaginator(
+            $students,
+            $total,
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        // Statistics
-        $stats = [
-            'total_students' => User::join('enrollments', 'users.id', '=', 'enrollments.user_id')
-                ->whereIn('enrollments.course_id', $teacherCourses)
-                ->where('users.role', 'student')
-                ->distinct('users.id')
-                ->count(),
-            'active_enrollments' => Enrollment::whereIn('course_id', $teacherCourses)
-                ->where('status', 'active')
-                ->count(),
-            'completed_enrollments' => Enrollment::whereIn('course_id', $teacherCourses)
-                ->where('status', 'completed')
-                ->count(),
-            'total_courses' => $teacherCourses->count()
-        ];
+        // Get courses for dropdown (cached)
+        $coursesCacheKey = 'teacher_courses_dropdown_' . $teacher->id;
+        $courses = Cache::remember($coursesCacheKey, 600, function () use ($teacher) {
+            return DB::table('courses')
+                ->where('teacher_id', $teacher->id)
+                ->select('id', 'title')
+                ->orderBy('title')
+                ->get();
+        });
+
+        // Optimized statistics (cached for 2 minutes)
+        $statsCacheKey = 'teacher_students_stats_' . $teacher->id;
+        $stats = Cache::remember($statsCacheKey, 120, function () use ($teacherCourses) {
+            return [
+                'total_students' => DB::table('users')
+                    ->join('enrollments', 'users.id', '=', 'enrollments.user_id')
+                    ->whereIn('enrollments.course_id', $teacherCourses)
+                    ->where('users.role', 'student')
+                    ->distinct('users.id')
+                    ->count('users.id'),
+                'active_enrollments' => DB::table('enrollments')
+                    ->whereIn('course_id', $teacherCourses)
+                    ->where('status', 'active')
+                    ->count(),
+                'completed_enrollments' => DB::table('enrollments')
+                    ->whereIn('course_id', $teacherCourses)
+                    ->where('status', 'completed')
+                    ->count(),
+                'total_courses' => count($teacherCourses)
+            ];
+        });
 
         return view('teacher.students.index', compact('students', 'courses', 'stats'));
     }

@@ -100,7 +100,11 @@
                                     <td>
                                         <strong>{{ $course->title }}</strong>
                                         <br>
-                                        <small class="text-muted">RM{{ number_format($course->price, 2) }}</small>
+                                        @if($course->price == 0)
+                                            <small class="text-success fw-bold">Free</small>
+                                        @else
+                                            <small class="text-muted">RM{{ number_format($course->price, 2) }}</small>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="badge bg-primary">{{ $course->enrollments_count }}</span>
