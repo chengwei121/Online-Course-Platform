@@ -11,12 +11,12 @@
     }
 
     .page-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
         color: white;
         padding: 2rem;
         border-radius: 16px;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
     }
 
     .page-header h1 {
@@ -50,7 +50,7 @@
     .profile-picture-section {
         text-align: center;
         padding: 2rem;
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        background: linear-gradient(135deg, #ecf0f1 0%, #bdc3c7 100%);
         border-radius: 12px;
         margin-bottom: 2rem;
     }
@@ -70,7 +70,7 @@
         width: 150px;
         height: 150px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -95,7 +95,7 @@
 
     .form-label i {
         margin-right: 0.5rem;
-        color: #667eea;
+        color: #3498db;
     }
 
     .form-control {
@@ -107,8 +107,8 @@
     }
 
     .form-control:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        border-color: #3498db;
+        box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.1);
         outline: none;
     }
 
@@ -117,19 +117,20 @@
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
         border: none;
         padding: 0.875rem 2rem;
         border-radius: 10px;
         font-weight: 600;
         color: white;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
     }
 
     .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        background: linear-gradient(135deg, #34495e 0%, #3498db 100%);
     }
 
     .btn-danger {
@@ -181,8 +182,8 @@
     }
 
     .password-requirements {
-        background: #f0f9ff;
-        border: 2px solid #bfdbfe;
+        background: #e8f4f8;
+        border: 2px solid #3498db;
         border-radius: 10px;
         padding: 1rem;
         margin-top: 1rem;
@@ -190,14 +191,14 @@
 
     .password-requirements h6 {
         font-weight: 600;
-        color: #1e40af;
+        color: #2c3e50;
         margin-bottom: 0.5rem;
     }
 
     .password-requirements ul {
         margin: 0;
         padding-left: 1.5rem;
-        color: #3b82f6;
+        color: #2c3e50;
     }
 
     .password-requirements li {
@@ -205,15 +206,15 @@
     }
 
     .info-card {
-        background: #f0f9ff;
-        border-left: 4px solid #3b82f6;
+        background: #e8f4f8;
+        border-left: 4px solid #3498db;
         padding: 1rem 1.5rem;
         border-radius: 8px;
         margin-bottom: 1.5rem;
     }
 
     .info-card i {
-        color: #3b82f6;
+        color: #3498db;
         margin-right: 0.5rem;
     }
 
@@ -225,7 +226,7 @@
     }
 
     .stat-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 12px;
@@ -289,11 +290,15 @@
 
         <!-- Profile Picture Section -->
         <div class="profile-picture-section">
+            <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
+                <i class="fas fa-camera"></i> Profile Picture
+            </h5>
             @if($teacher->profile_picture)
                 <img src="{{ asset('storage/' . $teacher->profile_picture) }}" 
                      alt="Profile Picture" 
                      class="profile-picture-preview"
-                     id="profilePicturePreview">
+                     id="profilePicturePreview"
+                     onerror="this.onerror=null; this.style.display='none'; document.getElementById('profilePicturePlaceholder').style.display='flex';">
             @else
                 <div class="profile-picture-placeholder" id="profilePicturePlaceholder">
                     {{ strtoupper(substr($teacher->name, 0, 2)) }}
@@ -571,14 +576,23 @@ function previewImage(input) {
         const reader = new FileReader();
         
         reader.onload = function(e) {
-            const preview = document.getElementById('profilePicturePreview');
+            let preview = document.getElementById('profilePicturePreview');
             const placeholder = document.getElementById('profilePicturePlaceholder');
             
             if (preview) {
+                // Update existing image
                 preview.src = e.target.result;
+                preview.style.display = 'block';
             } else if (placeholder) {
                 // Replace placeholder with image
-                placeholder.outerHTML = `<img src="${e.target.result}" alt="Profile Picture" class="profile-picture-preview" id="profilePicturePreview">`;
+                placeholder.style.display = 'none';
+                placeholder.insertAdjacentHTML('afterend', 
+                    `<img src="${e.target.result}" 
+                          alt="Profile Picture" 
+                          class="profile-picture-preview" 
+                          id="profilePicturePreview" 
+                          style="display: block;">`
+                );
             }
         }
         
