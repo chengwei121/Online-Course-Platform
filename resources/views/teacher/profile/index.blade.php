@@ -297,8 +297,8 @@
             <div class="col-md-6">
                 <p class="mb-2"><strong><i class="fas fa-building text-primary"></i> Department:</strong> {{ $teacher->department ?: 'Not set' }}</p>
                 <p class="mb-2"><strong><i class="fas fa-money-bill-wave text-primary"></i> Hourly Rate:</strong> RM {{ number_format($teacher->hourly_rate ?? 0, 2) }} <span class="badge bg-info text-white">Admin Set</span></p>
-                <p class="mb-2"><strong><i class="fas fa-calendar text-primary"></i> Account Created:</strong> {{ $user->created_at->format('d M Y') }}</p>
-                <p class="mb-2"><strong><i class="fas fa-clock text-primary"></i> Last Updated:</strong> {{ $teacher->updated_at->format('d M Y, g:i A') }}</p>
+                <p class="mb-2"><strong><i class="fas fa-calendar text-primary"></i> Account Created:</strong> {{ $user->created_at ? $user->created_at->format('d M Y') : 'N/A' }}</p>
+                <p class="mb-2"><strong><i class="fas fa-clock text-primary"></i> Last Updated:</strong> {{ $teacher->updated_at ? $teacher->updated_at->format('d M Y, g:i A') : 'N/A' }}</p>
             </div>
         </div>
     </div>
