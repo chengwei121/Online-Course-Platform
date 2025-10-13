@@ -46,7 +46,6 @@ class ProfileController extends Controller
             'bio' => ['nullable', 'string', 'max:1000'],
             'qualification' => ['required', 'string', 'max:255'],
             'department' => ['required', 'string', 'max:255'],
-            'hourly_rate' => ['nullable', 'numeric', 'min:0'],
             'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
         
@@ -64,7 +63,7 @@ class ProfileController extends Controller
             $teacher->bio = $validated['bio'];
             $teacher->qualification = $validated['qualification'];
             $teacher->department = $validated['department'];
-            $teacher->hourly_rate = $validated['hourly_rate'];
+            // Note: hourly_rate is NOT updated - only admin can modify
             
             // Handle profile picture upload
             if ($request->hasFile('profile_picture')) {

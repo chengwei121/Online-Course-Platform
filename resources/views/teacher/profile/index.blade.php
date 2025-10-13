@@ -284,22 +284,42 @@
         </div>
     @endif
 
+    <!-- Current Profile Summary -->
+    <div class="profile-card" style="background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%); border-left: 4px solid #3498db;">
+        <h3><i class="fas fa-info-circle"></i> Your Current Profile</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-2"><strong><i class="fas fa-user text-primary"></i> Name:</strong> {{ $teacher->name }}</p>
+                <p class="mb-2"><strong><i class="fas fa-envelope text-primary"></i> Email:</strong> {{ $user->email }}</p>
+                <p class="mb-2"><strong><i class="fas fa-phone text-primary"></i> Phone:</strong> {{ $teacher->phone ?: 'Not set' }}</p>
+                <p class="mb-2"><strong><i class="fas fa-graduation-cap text-primary"></i> Qualification:</strong> {{ $teacher->qualification ?: 'Not set' }}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-2"><strong><i class="fas fa-building text-primary"></i> Department:</strong> {{ $teacher->department ?: 'Not set' }}</p>
+                <p class="mb-2"><strong><i class="fas fa-money-bill-wave text-primary"></i> Hourly Rate:</strong> RM {{ number_format($teacher->hourly_rate ?? 0, 2) }} <span class="badge bg-info text-white">Admin Set</span></p>
+                <p class="mb-2"><strong><i class="fas fa-calendar text-primary"></i> Account Created:</strong> {{ $user->created_at->format('d M Y') }}</p>
+                <p class="mb-2"><strong><i class="fas fa-clock text-primary"></i> Last Updated:</strong> {{ $teacher->updated_at->format('d M Y, g:i A') }}</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Profile Information Card -->
     <div class="profile-card">
-        <h3><i class="fas fa-user-edit"></i> Profile Information</h3>
+        <h3><i class="fas fa-user-edit"></i> Update Profile Information</h3>
 
         <!-- Profile Picture Section -->
         <div class="profile-picture-section">
             <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
-                <i class="fas fa-camera"></i> Profile Picture
+                <i class="fas fa-camera"></i> Current Profile Picture
             </h5>
             
             {{-- Display current profile picture or placeholder --}}
-            @if($teacher->profile_picture && file_exists(public_path('storage/' . $teacher->profile_picture)))
+            @if($teacher->profile_picture)
                 <img src="{{ asset('storage/' . $teacher->profile_picture) }}" 
                      alt="Profile Picture" 
                      class="profile-picture-preview"
-                     id="profilePicturePreview">
+                     id="profilePicturePreview"
+                     onerror="this.style.display='none'; document.getElementById('profilePicturePlaceholder').style.display='flex';">
                 <div class="profile-picture-placeholder" id="profilePicturePlaceholder" style="display: none;">
                     {{ strtoupper(substr($teacher->name, 0, 2)) }}
                 </div>
@@ -314,19 +334,11 @@
                 </div>
             @endif
             
-            {{-- Debug info (remove after testing) --}}
-            <small class="d-block mt-2 text-muted">
-                @if($teacher->profile_picture)
-                    <i class="fas fa-info-circle"></i> Current: {{ $teacher->profile_picture }}
-                    <br>
-                    <i class="fas fa-folder"></i> Full path: storage/{{ $teacher->profile_picture }}
-                @else
-                    <i class="fas fa-info-circle"></i> No profile picture uploaded yet
-                @endif
-            </small>
-            
             <div class="mt-3">
                 @if($teacher->profile_picture)
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-check-circle text-success"></i> Picture uploaded
+                    </p>
                     <form action="{{ route('teacher.profile.remove-picture') }}" method="POST" style="display: inline;">
                         @csrf
                         @method('DELETE')
@@ -334,6 +346,10 @@
                             <i class="fas fa-trash"></i> Remove Picture
                         </button>
                     </form>
+                @else
+                    <p class="text-muted mb-2">
+                        <i class="fas fa-info-circle"></i> No picture uploaded yet
+                    </p>
                 @endif
             </div>
         </div>
@@ -450,25 +466,23 @@
                     </div>
                 </div>
 
-                <!-- Hourly Rate -->
+                <!-- Hourly Rate (Read-Only) -->
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-money-bill-wave"></i> Hourly Rate (RM)
+                            <i class="fas fa-money-bill-wave"></i> Hourly Rate (Set by Admin)
                         </label>
                         <div class="input-group">
-                            <span class="input-group-text">RM</span>
-                            <input type="number" 
-                                   name="hourly_rate" 
-                                   class="form-control @error('hourly_rate') is-invalid @enderror" 
-                                   value="{{ old('hourly_rate', $teacher->hourly_rate) }}"
-                                   min="0"
-                                   step="0.01"
-                                   placeholder="0.00">
+                            <span class="input-group-text bg-light">RM</span>
+                            <input type="text" 
+                                   class="form-control bg-light" 
+                                   value="{{ number_format($teacher->hourly_rate ?? 0, 2) }}"
+                                   readonly
+                                   style="cursor: not-allowed;">
                         </div>
-                        @error('hourly_rate')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <small class="text-muted">
+                            <i class="fas fa-lock"></i> Only administrators can modify this rate
+                        </small>
                     </div>
                 </div>
 
