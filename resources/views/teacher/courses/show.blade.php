@@ -67,7 +67,7 @@
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top"
                                         title="{{ $course->status === 'published' ? 'Hide course from students' : 'Make course available to students' }}"
-                                        onclick="return confirm(@json($course->status === 'published' ? 'Unpublish this course?' : 'Publish this course?'))">
+                                        onclick="return confirm('{{ $course->status === &quot;published&quot; ? &quot;Unpublish this course?&quot; : &quot;Publish this course?&quot; }}')">
                                     <i class="fas fa-{{ $course->status === 'published' ? 'eye-slash' : 'eye' }}"></i>
                                     <span class="btn-text">{{ $course->status === 'published' ? 'Unpublish' : 'Publish' }}</span>
                                 </button>

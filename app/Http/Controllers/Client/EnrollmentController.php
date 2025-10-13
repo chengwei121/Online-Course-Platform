@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Notifications\StudentEnrolledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -40,7 +41,7 @@ class EnrollmentController extends Controller
         }
 
         // Create enrollment for free course
-        Enrollment::create([
+        $enrollment = Enrollment::create([
             'user_id' => Auth::id(),
             'course_id' => $course->id,
             'payment_status' => 'completed', // Free courses are automatically completed
@@ -48,6 +49,11 @@ class EnrollmentController extends Controller
             'enrolled_at' => now(),
             'status' => 'in_progress'
         ]);
+
+        // Notify the teacher about new enrollment
+        if ($course->teacher && $course->teacher->user) {
+            $course->teacher->user->notify(new StudentEnrolledNotification(Auth::user(), $course, $enrollment));
+        }
 
         return redirect()->route('client.courses.learn', $course->slug)
             ->with('success', 'Successfully enrolled in the free course. Start learning now!');

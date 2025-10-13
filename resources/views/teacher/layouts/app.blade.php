@@ -139,17 +139,16 @@
                                 Students
                             </a>
                         </li>
-                        
-                        <!-- ANALYTICS & REPORTS SECTION -->
-                        <li class="nav-section-header mt-3">
-                            <small class="text-white-50 text-uppercase fw-bold px-3 py-2 d-block">
-                                <i class="fas fa-chart-bar me-2"></i>Analytics & Reports
-                            </small>
-                        </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-file-alt me-2"></i>
-                                Reports
+                            <a class="nav-link {{ request()->routeIs('teacher.notifications.*') ? 'active' : '' }}" 
+                               href="{{ route('teacher.notifications.index') }}">
+                                <i class="fas fa-bell me-2"></i>
+                                Notifications
+                                @if(auth()->user()->unreadNotifications->count() > 0)
+                                    <span class="badge bg-danger rounded-pill ms-2">
+                                        {{ auth()->user()->unreadNotifications->count() }}
+                                    </span>
+                                @endif
                             </a>
                         </li>
                         

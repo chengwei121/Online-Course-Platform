@@ -7,6 +7,7 @@ use App\Models\Enrollment;
 use App\Services\PayPalService;
 use App\Services\PaymentOptimizationService;
 use App\Mail\PaymentReceiptMail;
+use App\Notifications\StudentEnrolledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -174,6 +175,17 @@ class PayPalController extends Controller
                     } catch (\Exception $emailError) {
                         // Log email error but don't fail the payment process
                         Log::error("Failed to send payment receipt email: " . $emailError->getMessage());
+                    }
+
+                    // Notify the teacher about new enrollment
+                    try {
+                        if ($course->teacher && $course->teacher->user) {
+                            $course->teacher->user->notify(new StudentEnrolledNotification($user, $course, $enrollment));
+                            Log::info("Teacher notified about new enrollment for course: {$course->title}");
+                        }
+                    } catch (\Exception $notifyError) {
+                        // Log notification error but don't fail the payment process
+                        Log::error("Failed to notify teacher: " . $notifyError->getMessage());
                     }
 
                     // Clear session data

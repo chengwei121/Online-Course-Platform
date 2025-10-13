@@ -85,7 +85,8 @@ class User extends Authenticatable
         return $this->hasOne(Teacher::class);
     }
 
-    public function notifications()
+    // Custom notifications relationship (renamed to avoid conflict with Notifiable trait)
+    public function customNotifications()
     {
         return $this->hasMany(Notification::class);
     }

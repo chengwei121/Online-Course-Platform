@@ -371,21 +371,6 @@
         text-decoration: none;
     }
 
-    .btn-message {
-        background: white;
-        color: #667eea;
-        border-color: #667eea;
-    }
-
-    .btn-message:hover {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
-        text-decoration: none;
-    }
-
     .no-students {
         text-align: center;
         padding: 5rem 2rem;
@@ -782,7 +767,7 @@
                                                 <img src="{{ asset($student->avatar) }}" 
                                                      alt="{{ $student->name }}" 
                                                      class="student-avatar"
-                                                     onerror="this.onerror=null; this.src='{{ asset('images/default-avatar.svg') }}'">
+                                                     onerror="this.onerror=null; this.src='{{ asset(&quot;images/default-avatar.svg&quot;) }}'">
                                             @else
                                                 <div class="student-avatar-placeholder">
                                                     {{ strtoupper(substr($student->name, 0, 2)) }}
@@ -835,11 +820,7 @@
                                         <div class="action-buttons">
                                             <a href="{{ route('teacher.students.show', $student->id) }}" 
                                                class="btn-action btn-view">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
-                                            <a href="#" class="btn-action btn-message" 
-                                               onclick="openMessageModal({{ $student->id }}, '{{ $student->name }}'); return false;">
-                                                <i class="fas fa-envelope"></i> Message
+                                                <i class="fas fa-eye"></i> View Details
                                             </a>
                                         </div>
                                     </td>
@@ -955,61 +936,10 @@
     </div>
 </div>
 
-<!-- Message Modal -->
-<div class="modal fade" id="messageModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Send Message</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="messageForm">
-                    <input type="hidden" id="studentId" name="student_id">
-                    <div class="mb-3">
-                        <label class="form-label">To: <span id="studentName"></span></label>
-                    </div>
-                    <div class="mb-3">
-                        <label for="messageText" class="form-label">Message</label>
-                        <textarea class="form-control" id="messageText" name="message" rows="4" required></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="sendMessage()">Send Message</button>
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
 <script>
-function openMessageModal(studentId, studentName) {
-    document.getElementById('studentId').value = studentId;
-    document.getElementById('studentName').textContent = studentName;
-    document.getElementById('messageText').value = '';
-    
-    var messageModal = new bootstrap.Modal(document.getElementById('messageModal'));
-    messageModal.show();
-}
-
-function sendMessage() {
-    const studentId = document.getElementById('studentId').value;
-    const message = document.getElementById('messageText').value;
-    
-    if (!message.trim()) {
-        alert('Please enter a message.');
-        return;
-    }
-    
-    // Here you would typically send an AJAX request
-    // For now, just show a placeholder message
-    alert('Message functionality will be implemented soon.');
-    
-    var messageModal = bootstrap.Modal.getInstance(document.getElementById('messageModal'));
-    messageModal.hide();
-}
+// No additional scripts needed
 </script>
 @endpush

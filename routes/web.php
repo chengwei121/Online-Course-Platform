@@ -291,7 +291,11 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     // Students management
     Route::get('students', [App\Http\Controllers\Teacher\StudentsController::class, 'index'])->name('students.index');
     Route::get('students/{student}', [App\Http\Controllers\Teacher\StudentsController::class, 'show'])->name('students.show');
-    Route::post('students/{student}/message', [App\Http\Controllers\Teacher\StudentsController::class, 'sendMessage'])->name('students.message');
+    
+    // Notifications
+    Route::get('notifications', [App\Http\Controllers\Teacher\NotificationsController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/mark-all-read', [App\Http\Controllers\Teacher\NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('notifications/{id}', [App\Http\Controllers\Teacher\NotificationsController::class, 'destroy'])->name('notifications.destroy');
     
     // Teacher logout
     Route::post('logout', [App\Http\Controllers\Teacher\AuthController::class, 'logout'])->name('logout');
