@@ -284,26 +284,6 @@
         </div>
     @endif
 
-    <!-- Current Profile Summary -->
-    <div class="profile-card" style="background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%); border-left: 4px solid #3498db;">
-        <h3><i class="fas fa-info-circle"></i> Your Current Profile</h3>
-        
-        <div class="row">
-            <div class="col-md-6">
-                <p class="mb-2"><strong><i class="fas fa-user text-primary"></i> Name:</strong> {{ $teacher->name ?: 'Not set' }}</p>
-                <p class="mb-2"><strong><i class="fas fa-envelope text-primary"></i> Email:</strong> {{ $user->email ?: 'Not set' }}</p>
-                <p class="mb-2"><strong><i class="fas fa-phone text-primary"></i> Phone:</strong> {{ $teacher->phone ?: 'Not set' }}</p>
-                <p class="mb-2"><strong><i class="fas fa-graduation-cap text-primary"></i> Qualification:</strong> {{ $teacher->qualification ?: 'Not set' }}</p>
-            </div>
-            <div class="col-md-6">
-                <p class="mb-2"><strong><i class="fas fa-building text-primary"></i> Department:</strong> {{ $teacher->department ?: 'Not set' }}</p>
-                <p class="mb-2"><strong><i class="fas fa-money-bill-wave text-primary"></i> Hourly Rate:</strong> RM {{ number_format($teacher->hourly_rate ?? 0, 2) }} <span class="badge bg-info text-white">Admin Set</span></p>
-                <p class="mb-2"><strong><i class="fas fa-calendar text-primary"></i> Account Created:</strong> {{ $user->created_at ? $user->created_at->format('d M Y') : 'N/A' }}</p>
-                <p class="mb-2"><strong><i class="fas fa-clock text-primary"></i> Last Updated:</strong> {{ $teacher->updated_at ? $teacher->updated_at->format('d M Y, g:i A') : 'N/A' }}</p>
-            </div>
-        </div>
-    </div>
-
     <!-- Profile Information Card -->
     <div class="profile-card">
         <h3><i class="fas fa-user-edit"></i> Update Profile Information</h3>
@@ -339,6 +319,12 @@
                 @if($teacher->profile_picture)
                     <p class="text-muted mb-2">
                         <i class="fas fa-check-circle text-success"></i> Picture uploaded
+                        <br>
+                        <small class="text-info">
+                            <i class="fas fa-image"></i> Path: {{ $teacher->profile_picture }}
+                            <br>
+                            <i class="fas fa-link"></i> URL: {{ asset('storage/' . $teacher->profile_picture) }}
+                        </small>
                     </p>
                     <form action="{{ route('teacher.profile.remove-picture') }}" method="POST" style="display: inline;">
                         @csrf
