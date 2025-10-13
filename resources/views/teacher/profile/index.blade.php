@@ -319,12 +319,6 @@
                 @if($teacher->profile_picture)
                     <p class="text-muted mb-2">
                         <i class="fas fa-check-circle text-success"></i> Picture uploaded
-                        <br>
-                        <small class="text-info">
-                            <i class="fas fa-image"></i> Path: {{ $teacher->profile_picture }}
-                            <br>
-                            <i class="fas fa-link"></i> URL: {{ asset('storage/' . $teacher->profile_picture) }}
-                        </small>
                     </p>
                     <form action="{{ route('teacher.profile.remove-picture') }}" method="POST" style="display: inline;">
                         @csrf
