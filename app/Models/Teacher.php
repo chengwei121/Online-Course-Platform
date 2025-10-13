@@ -17,6 +17,8 @@ class Teacher extends Model
         'email',
         'phone',
         'qualification',
+        'specialization',
+        'experience_years',
         'bio',
         'profile_picture',
         'department',

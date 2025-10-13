@@ -293,17 +293,37 @@
             <h5 class="mb-3" style="color: #2c3e50; font-weight: 600;">
                 <i class="fas fa-camera"></i> Profile Picture
             </h5>
-            @if($teacher->profile_picture)
+            
+            {{-- Display current profile picture or placeholder --}}
+            @if($teacher->profile_picture && file_exists(public_path('storage/' . $teacher->profile_picture)))
                 <img src="{{ asset('storage/' . $teacher->profile_picture) }}" 
                      alt="Profile Picture" 
                      class="profile-picture-preview"
-                     id="profilePicturePreview"
-                     onerror="this.onerror=null; this.style.display='none'; document.getElementById('profilePicturePlaceholder').style.display='flex';">
+                     id="profilePicturePreview">
+                <div class="profile-picture-placeholder" id="profilePicturePlaceholder" style="display: none;">
+                    {{ strtoupper(substr($teacher->name, 0, 2)) }}
+                </div>
             @else
+                <img src="" 
+                     alt="Profile Picture" 
+                     class="profile-picture-preview"
+                     id="profilePicturePreview"
+                     style="display: none;">
                 <div class="profile-picture-placeholder" id="profilePicturePlaceholder">
                     {{ strtoupper(substr($teacher->name, 0, 2)) }}
                 </div>
             @endif
+            
+            {{-- Debug info (remove after testing) --}}
+            <small class="d-block mt-2 text-muted">
+                @if($teacher->profile_picture)
+                    <i class="fas fa-info-circle"></i> Current: {{ $teacher->profile_picture }}
+                    <br>
+                    <i class="fas fa-folder"></i> Full path: storage/{{ $teacher->profile_picture }}
+                @else
+                    <i class="fas fa-info-circle"></i> No profile picture uploaded yet
+                @endif
+            </small>
             
             <div class="mt-3">
                 @if($teacher->profile_picture)
