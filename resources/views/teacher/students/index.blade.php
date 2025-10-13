@@ -767,7 +767,7 @@
                                                 <img src="{{ asset($student->avatar) }}" 
                                                      alt="{{ $student->name }}" 
                                                      class="student-avatar"
-                                                     onerror="this.onerror=null; this.src='{{ asset(&quot;images/default-avatar.svg&quot;) }}'">
+                                                     onerror="this.onerror=null; this.src='{{ asset('images/default-avatar.svg') }}'">
                                             @else
                                                 <div class="student-avatar-placeholder">
                                                     {{ strtoupper(substr($student->name, 0, 2)) }}
