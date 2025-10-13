@@ -35,8 +35,17 @@ class StudentsController extends Controller
         });
 
         if (empty($teacherCourses)) {
+            // Create an empty paginator manually
+            $emptyPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+                [], // Empty items
+                0,  // Total items
+                15, // Per page
+                1,  // Current page
+                ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+            );
+            
             return view('teacher.students.index', [
-                'students' => collect()->paginate(15),
+                'students' => $emptyPaginator,
                 'courses' => collect(),
                 'stats' => [
                     'total_students' => 0,
