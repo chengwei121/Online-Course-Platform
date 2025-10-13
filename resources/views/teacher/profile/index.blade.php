@@ -319,7 +319,7 @@
                      alt="Profile Picture" 
                      class="profile-picture-preview"
                      id="profilePicturePreview"
-                     onerror="this.style.display='none'; document.getElementById('profilePicturePlaceholder').style.display='flex';">
+                     onerror="console.error('Image failed to load:', this.src); this.style.display='none'; document.getElementById('profilePicturePlaceholder').style.display='flex';">
                 <div class="profile-picture-placeholder" id="profilePicturePlaceholder" style="display: none;">
                     {{ strtoupper(substr($teacher->name, 0, 2)) }}
                 </div>
@@ -338,6 +338,12 @@
                 @if($teacher->profile_picture)
                     <p class="text-muted mb-2">
                         <i class="fas fa-check-circle text-success"></i> Picture uploaded
+                        <br>
+                        <small class="text-info">
+                            <i class="fas fa-image"></i> Path: {{ $teacher->profile_picture }}
+                            <br>
+                            <i class="fas fa-link"></i> URL: {{ asset('storage/' . $teacher->profile_picture) }}
+                        </small>
                     </p>
                     <form action="{{ route('teacher.profile.remove-picture') }}" method="POST" style="display: inline;">
                         @csrf
@@ -399,6 +405,11 @@
                         <label class="form-label">
                             <i class="fas fa-phone"></i> Phone Number (Malaysia) <span class="text-danger">*</span>
                         </label>
+                        @if($teacher->phone)
+                            <div class="mb-1">
+                                <small class="text-success"><i class="fas fa-check-circle"></i> Current: <strong>+60 {{ $teacher->phone }}</strong></small>
+                            </div>
+                        @endif
                         <div class="input-group">
                             <span class="input-group-text">🇲🇾 +60</span>
                             <input type="text" 
@@ -424,6 +435,11 @@
                         <label class="form-label">
                             <i class="fas fa-graduation-cap"></i> Qualification <span class="text-danger">*</span>
                         </label>
+                        @if($teacher->qualification)
+                            <div class="mb-1">
+                                <small class="text-success"><i class="fas fa-check-circle"></i> Current: <strong>{{ $teacher->qualification }}</strong></small>
+                            </div>
+                        @endif
                         <select name="qualification" 
                                 class="form-control @error('qualification') is-invalid @enderror" 
                                 required>
@@ -447,6 +463,11 @@
                         <label class="form-label">
                             <i class="fas fa-building"></i> Department <span class="text-danger">*</span>
                         </label>
+                        @if($teacher->department)
+                            <div class="mb-1">
+                                <small class="text-success"><i class="fas fa-check-circle"></i> Current: <strong>{{ $teacher->department }}</strong></small>
+                            </div>
+                        @endif
                         <select name="department" 
                                 class="form-control @error('department') is-invalid @enderror" 
                                 required>
@@ -534,6 +555,23 @@
     <div class="profile-card">
         <h3><i class="fas fa-lock"></i> Change Password</h3>
 
+        <!-- Current Password Display -->
+        <div class="alert alert-info mb-3" style="background: #e8f4f8; border-left: 4px solid #3498db;">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">
+                        <strong><i class="fas fa-shield-alt"></i> Current Password:</strong>
+                        <span class="ms-2" style="letter-spacing: 3px; font-family: monospace;">••••••••</span>
+                    </p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> Last changed: {{ $user->updated_at ? $user->updated_at->format('d M Y') : 'N/A' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
         <div class="info-card">
             <i class="fas fa-info-circle"></i>
             <strong>Important:</strong> You will remain logged in after changing your password.
@@ -548,15 +586,17 @@
                 <div class="col-md-12">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-key"></i> Current Password
+                            <i class="fas fa-key"></i> Enter Current Password to Verify
                         </label>
                         <input type="password" 
                                name="current_password" 
                                class="form-control @error('current_password') is-invalid @enderror"
+                               placeholder="Enter your current password"
                                required>
                         @error('current_password')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                        <small class="text-muted">You must enter your current password to make changes</small>
                     </div>
                 </div>
 
