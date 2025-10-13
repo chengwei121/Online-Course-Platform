@@ -343,16 +343,16 @@
             @method('PUT')
 
             <div class="row">
-                <!-- User Name -->
+                <!-- Full Name -->
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-user"></i> Account Name (Login Name)
+                            <i class="fas fa-user"></i> Full Name <span class="text-danger">*</span>
                         </label>
                         <input type="text" 
                                name="name" 
                                class="form-control @error('name') is-invalid @enderror" 
-                               value="{{ old('name', $user->name) }}"
+                               value="{{ old('name', $teacher->name) }}"
                                required>
                         @error('name')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -360,11 +360,11 @@
                     </div>
                 </div>
 
-                <!-- Email -->
+                <!-- Email Address -->
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-envelope"></i> Email Address
+                            <i class="fas fa-envelope"></i> Email Address <span class="text-danger">*</span>
                         </label>
                         <input type="email" 
                                name="email" 
@@ -377,37 +377,28 @@
                     </div>
                 </div>
 
-                <!-- Teacher Display Name -->
+                <!-- Phone Number (Malaysia) -->
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-chalkboard-teacher"></i> Teacher Display Name
+                            <i class="fas fa-phone"></i> Phone Number (Malaysia) <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                               name="teacher_name" 
-                               class="form-control @error('teacher_name') is-invalid @enderror" 
-                               value="{{ old('teacher_name', $teacher->name) }}"
-                               required>
-                        @error('teacher_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                <!-- Phone -->
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-phone"></i> Phone Number
-                        </label>
-                        <input type="text" 
-                               name="phone" 
-                               class="form-control @error('phone') is-invalid @enderror" 
-                               value="{{ old('phone', $teacher->phone) }}"
-                               placeholder="+60 12-345 6789">
+                        <div class="input-group">
+                            <span class="input-group-text">🇲🇾 +60</span>
+                            <input type="text" 
+                                   name="phone" 
+                                   class="form-control @error('phone') is-invalid @enderror" 
+                                   id="phone"
+                                   value="{{ old('phone', $teacher->phone) }}"
+                                   placeholder="12-345-6789"
+                                   pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}"
+                                   title="Please enter a valid Malaysian phone number (e.g., 12-345-6789)"
+                                   required>
+                        </div>
                         @error('phone')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
+                        <small class="form-text text-muted">Format: XX-XXX-XXXX (without +60 prefix)</small>
                     </div>
                 </div>
 
@@ -415,50 +406,67 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-graduation-cap"></i> Qualification
+                            <i class="fas fa-graduation-cap"></i> Qualification <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                               name="qualification" 
-                               class="form-control @error('qualification') is-invalid @enderror" 
-                               value="{{ old('qualification', $teacher->qualification) }}"
-                               placeholder="e.g., PhD in Computer Science">
+                        <select name="qualification" 
+                                class="form-control @error('qualification') is-invalid @enderror" 
+                                required>
+                            <option value="">Select Qualification</option>
+                            <option value="Certificate" {{ old('qualification', $teacher->qualification) === 'Certificate' ? 'selected' : '' }}>Certificate</option>
+                            <option value="Diploma" {{ old('qualification', $teacher->qualification) === 'Diploma' ? 'selected' : '' }}>Diploma</option>
+                            <option value="Bachelor's Degree" {{ old('qualification', $teacher->qualification) === "Bachelor's Degree" ? 'selected' : '' }}>Bachelor's Degree</option>
+                            <option value="Master's Degree" {{ old('qualification', $teacher->qualification) === "Master's Degree" ? 'selected' : '' }}>Master's Degree</option>
+                            <option value="PhD/Doctorate" {{ old('qualification', $teacher->qualification) === 'PhD/Doctorate' ? 'selected' : '' }}>PhD/Doctorate</option>
+                            <option value="Professional Certification" {{ old('qualification', $teacher->qualification) === 'Professional Certification' ? 'selected' : '' }}>Professional Certification</option>
+                        </select>
                         @error('qualification')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <!-- Specialization -->
+                <!-- Department -->
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-star"></i> Specialization
+                            <i class="fas fa-building"></i> Department <span class="text-danger">*</span>
                         </label>
-                        <input type="text" 
-                               name="specialization" 
-                               class="form-control @error('specialization') is-invalid @enderror" 
-                               value="{{ old('specialization', $teacher->specialization) }}"
-                               placeholder="e.g., Web Development, AI">
-                        @error('specialization')
+                        <select name="department" 
+                                class="form-control @error('department') is-invalid @enderror" 
+                                required>
+                            <option value="">Select Department</option>
+                            <option value="Information Technology" {{ old('department', $teacher->department) === 'Information Technology' ? 'selected' : '' }}>Information Technology</option>
+                            <option value="Computer Science" {{ old('department', $teacher->department) === 'Computer Science' ? 'selected' : '' }}>Computer Science</option>
+                            <option value="Software Engineering" {{ old('department', $teacher->department) === 'Software Engineering' ? 'selected' : '' }}>Software Engineering</option>
+                            <option value="Information Systems" {{ old('department', $teacher->department) === 'Information Systems' ? 'selected' : '' }}>Information Systems</option>
+                            <option value="Computer Engineering" {{ old('department', $teacher->department) === 'Computer Engineering' ? 'selected' : '' }}>Computer Engineering</option>
+                            <option value="Cybersecurity" {{ old('department', $teacher->department) === 'Cybersecurity' ? 'selected' : '' }}>Cybersecurity</option>
+                            <option value="Data Science" {{ old('department', $teacher->department) === 'Data Science' ? 'selected' : '' }}>Data Science</option>
+                            <option value="Artificial Intelligence" {{ old('department', $teacher->department) === 'Artificial Intelligence' ? 'selected' : '' }}>Artificial Intelligence</option>
+                        </select>
+                        @error('department')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <!-- Experience Years -->
+                <!-- Hourly Rate -->
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="form-label">
-                            <i class="fas fa-clock"></i> Years of Experience
+                            <i class="fas fa-money-bill-wave"></i> Hourly Rate (RM)
                         </label>
-                        <input type="number" 
-                               name="experience_years" 
-                               class="form-control @error('experience_years') is-invalid @enderror" 
-                               value="{{ old('experience_years', $teacher->experience_years) }}"
-                               min="0"
-                               max="50"
-                               placeholder="e.g., 5">
-                        @error('experience_years')
+                        <div class="input-group">
+                            <span class="input-group-text">RM</span>
+                            <input type="number" 
+                                   name="hourly_rate" 
+                                   class="form-control @error('hourly_rate') is-invalid @enderror" 
+                                   value="{{ old('hourly_rate', $teacher->hourly_rate) }}"
+                                   min="0"
+                                   step="0.01"
+                                   placeholder="0.00">
+                        </div>
+                        @error('hourly_rate')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -591,6 +599,19 @@
 
 @push('scripts')
 <script>
+// Phone number formatting for Malaysian format
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) value = value.substring(0, 2) + '-' + value.substring(2);
+            if (value.length >= 6) value = value.substring(0, 6) + '-' + value.substring(6, 10);
+            e.target.value = value;
+        });
+    }
+});
+
 function previewImage(input) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();

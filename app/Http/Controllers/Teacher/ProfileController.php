@@ -42,12 +42,11 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'teacher_name' => ['required', 'string', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['required', 'string', 'max:20'],
             'bio' => ['nullable', 'string', 'max:1000'],
-            'qualification' => ['nullable', 'string', 'max:255'],
-            'specialization' => ['nullable', 'string', 'max:255'],
-            'experience_years' => ['nullable', 'integer', 'min:0', 'max:50'],
+            'qualification' => ['required', 'string', 'max:255'],
+            'department' => ['required', 'string', 'max:255'],
+            'hourly_rate' => ['nullable', 'numeric', 'min:0'],
             'profile_picture' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
         
@@ -58,13 +57,14 @@ class ProfileController extends Controller
             $user->email = $validated['email'];
             $user->save();
             
-            // Update teacher information
-            $teacher->name = $validated['teacher_name'];
+            // Update teacher information  
+            $teacher->name = $validated['name'];
+            $teacher->email = $validated['email'];
             $teacher->phone = $validated['phone'];
             $teacher->bio = $validated['bio'];
             $teacher->qualification = $validated['qualification'];
-            $teacher->specialization = $validated['specialization'];
-            $teacher->experience_years = $validated['experience_years'];
+            $teacher->department = $validated['department'];
+            $teacher->hourly_rate = $validated['hourly_rate'];
             
             // Handle profile picture upload
             if ($request->hasFile('profile_picture')) {
