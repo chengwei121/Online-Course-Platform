@@ -18,11 +18,15 @@ class ProfileController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $teacher = $user->teacher;
+        // Force fresh query to get latest data
+        $teacher = $user->teacher()->first();
         
         if (!$teacher) {
             return redirect()->route('teacher.dashboard')->with('error', 'Teacher profile not found.');
         }
+        
+        // Refresh the model to ensure we have the latest data
+        $teacher->refresh();
         
         return view('teacher.profile.index', compact('user', 'teacher'));
     }
