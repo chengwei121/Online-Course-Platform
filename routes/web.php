@@ -35,57 +35,61 @@ Route::get('/clear-cache', function() {
 
 // Home Route (Welcome Page) - Optimized with caching
 Route::get('/', function () {
-    // Cache all welcome page data for 15 minutes (900 seconds)
-    $welcomeData = Cache::remember('welcome_page_data', 900, function () {
+    // Cache welcome page data for 2 hours (7200 seconds) - increased from 15 min
+    $welcomeData = Cache::remember('welcome_page_data_v2', 7200, function () {
         return [
-            'featuredCourses' => Course::with(['teacher:id,name,profile_picture', 'category:id,name'])
-                ->select('id', 'title', 'slug', 'description', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at')
+            // Optimized: Only load essential fields
+            'featuredCourses' => Course::with(['teacher:id,name', 'category:id,name'])
+                ->select('id', 'title', 'slug', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at')
                 ->where('status', 'published')
                 ->latest()
                 ->take(6)
                 ->get(),
             
-            'instructors' => Teacher::select('id', 'name', 'qualification', 'bio', 'profile_picture')
-                ->withCount('courses')
-                ->orderByDesc('courses_count')
-                ->take(3)
-                ->get(),
-
-            'trendingCourses' => Course::with(['category:id,name', 'teacher:id,name,profile_picture'])
-                ->select('id', 'title', 'slug', 'description', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at')
-                ->where('status', 'published')
-                ->withCount('enrollments')
-                ->orderByDesc('enrollments_count')
-                ->orderByDesc('average_rating')
-                ->orderByDesc('created_at')
-                ->take(8)
-                ->get(),
+            // Cache stats separately with longer duration
+            'stats' => Cache::remember('welcome_stats_v2', 3600, function() {
+                return [
+                    'total_courses' => Course::where('status', 'published')->count(),
+                    'total_students' => Student::count(),
+                    'total_instructors' => Teacher::where('status', 'active')->count(),
+                    'success_rate' => 95,
+                ];
+            }),
             
-            'stats' => [
-                'total_courses' => Course::where('status', 'published')->count(),
-                'total_students' => Student::count(),
-                'total_instructors' => Teacher::where('status', 'active')->count(),
-                'success_rate' => 95,
-            ],
+            // Optimized: Removed heavy withCount, load lighter version
+            'trendingCourses' => Cache::remember('trending_courses_v2', 3600, function() {
+                return Course::with(['category:id,name'])
+                    ->select('id', 'title', 'slug', 'price', 'thumbnail', 'category_id', 'average_rating', 'created_at')
+                    ->where('status', 'published')
+                    ->where('average_rating', '>=', 4)
+                    ->orderByDesc('average_rating')
+                    ->orderByDesc('created_at')
+                    ->take(8)
+                    ->get();
+            }),
             
-            'testimonials' => CourseReview::with(['user:id,name', 'course:id,title'])
-                ->select('id', 'user_id', 'course_id', 'rating', 'comment', 'created_at')
-                ->whereIn('rating', [4, 5])
-                ->whereNotNull('comment')
-                ->where('comment', '!=', '')
-                ->latest()
-                ->take(3)
-                ->get(),
+            'testimonials' => Cache::remember('testimonials_v2', 3600, function() {
+                return CourseReview::with(['user:id,name', 'course:id,title'])
+                    ->select('id', 'user_id', 'course_id', 'rating', 'comment', 'created_at')
+                    ->whereIn('rating', [4, 5])
+                    ->whereNotNull('comment')
+                    ->where('comment', '!=', '')
+                    ->latest()
+                    ->take(3)
+                    ->get();
+            }),
+            
+            // Optimized: Simplified instructors query
+            'instructors' => Cache::remember('top_instructors_v2', 3600, function() {
+                return Teacher::select('id', 'name', 'bio', 'profile_picture')
+                    ->where('status', 'active')
+                    ->take(3)
+                    ->get();
+            }),
         ];
     });
     
-    return view('welcome', [
-        'featuredCourses' => $welcomeData['featuredCourses'],
-        'instructors' => $welcomeData['instructors'],
-        'trendingCourses' => $welcomeData['trendingCourses'],
-        'stats' => $welcomeData['stats'],
-        'testimonials' => $welcomeData['testimonials'],
-    ]);
+    return view('welcome', $welcomeData);
 })->name('welcome');
 
 // Authentication Routes
@@ -194,80 +198,46 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     })->name('toast.test');
 });
 
-// Temporary chart data route outside middleware for debugging
+// Dashboard API routes (required for production)
 Route::get('admin/dashboard/chart-data', [App\Http\Controllers\Admin\DashboardController::class, 'getChartDataAjax'])
     ->middleware(['auth', 'admin'])
     ->name('admin.dashboard.chart-data');
 
-// Real-time stats route
 Route::get('admin/dashboard/realtime-stats', [App\Http\Controllers\Admin\DashboardController::class, 'getRealtimeStats'])
     ->middleware(['auth', 'admin'])
     ->name('admin.dashboard.realtime-stats');
 
-// Performance metrics route
 Route::get('admin/dashboard/performance-metrics', [App\Http\Controllers\Admin\DashboardController::class, 'getPerformanceMetricsAjax'])
     ->middleware(['auth', 'admin'])
     ->name('admin.dashboard.performance-metrics');
 
-// Test loading screen route
-Route::get('admin/dashboard/test-loading', [App\Http\Controllers\Admin\DashboardController::class, 'testLoading'])
-    ->middleware(['auth', 'admin'])
-    ->name('admin.dashboard.test-loading');
+// Debug/Test routes (only available in local environment)
+if (app()->environment('local', 'development')) {
+    Route::get('admin/dashboard/test-loading', [App\Http\Controllers\Admin\DashboardController::class, 'testLoading'])
+        ->middleware(['auth', 'admin'])
+        ->name('admin.dashboard.test-loading');
 
-// Test chart data route
-Route::get('admin/dashboard/test-chart', function() {
-    $controller = new App\Http\Controllers\Admin\DashboardController();
-    $reflection = new ReflectionClass($controller);
-    $method = $reflection->getMethod('getOptimizedChartData');
-    $method->setAccessible(true);
-    
-    $monthData = $method->invoke($controller, 'month');
-    $yearData = $method->invoke($controller, 'year');
-    $weekData = $method->invoke($controller, 'week');
-    
-    return response()->json([
-        'month' => $monthData,
-        'year' => $yearData,
-        'week' => $weekData
-    ]);
-})->middleware(['auth', 'admin']);
+    Route::get('admin/dashboard/test-chart', function() {
+        $controller = new App\Http\Controllers\Admin\DashboardController();
+        $reflection = new ReflectionClass($controller);
+        $method = $reflection->getMethod('getOptimizedChartData');
+        $method->setAccessible(true);
+        
+        $monthData = $method->invoke($controller, 'month');
+        $yearData = $method->invoke($controller, 'year');
+        $weekData = $method->invoke($controller, 'week');
+        
+        return response()->json([
+            'month' => $monthData,
+            'year' => $yearData,
+            'week' => $weekData
+        ]);
+    })->middleware(['auth', 'admin']);
+}
 
 // Teacher Routes (Authentication handled by admin)
 Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middleware\TeacherMiddleware::class])->group(function () {
     Route::get('dashboard', [App\Http\Controllers\Teacher\DashboardController::class, 'index'])->name('dashboard');
-    
-    // Fast dashboard route for quick initial load
-    Route::get('dashboard/quick', function() {
-        $teacher = Auth::user()->teacher;
-        if (!$teacher) {
-            return redirect()->route('login');
-        }
-        
-        return view('teacher.dashboard-quick', [
-            'teacher' => $teacher,
-            'totalCourses' => Course::where('teacher_id', $teacher->id)->count(),
-        ]);
-    })->name('dashboard.quick');
-    
-    // Debug route to check authentication
-    Route::get('debug-auth', function() {
-        $user = \Illuminate\Support\Facades\Auth::user();
-        $teacher = $user ? $user->teacher : null;
-        
-        return response()->json([
-            'user' => $user ? [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $user->role
-            ] : null,
-            'teacher' => $teacher ? [
-                'id' => $teacher->id,
-                'name' => $teacher->name
-            ] : null,
-            'courses_count' => $teacher ? App\Models\Course::where('teacher_id', $teacher->id)->count() : 0
-        ]);
-    })->name('debug-auth');
     
     // Course management
     Route::get('courses/by-category', [App\Http\Controllers\Teacher\CourseController::class, 'getCoursesByCategory'])->name('courses.by-category');
