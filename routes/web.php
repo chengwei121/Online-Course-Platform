@@ -267,6 +267,12 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::post('notifications/mark-all-read', [App\Http\Controllers\Teacher\NotificationsController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
     Route::delete('notifications/{id}', [App\Http\Controllers\Teacher\NotificationsController::class, 'destroy'])->name('notifications.destroy');
     
+    // Profile management
+    Route::get('profile', [App\Http\Controllers\Teacher\ProfileController::class, 'index'])->name('profile.index');
+    Route::put('profile', [App\Http\Controllers\Teacher\ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::put('profile/password', [App\Http\Controllers\Teacher\ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    Route::delete('profile/picture', [App\Http\Controllers\Teacher\ProfileController::class, 'removeProfilePicture'])->name('profile.remove-picture');
+    
     // Teacher logout
     Route::post('logout', [App\Http\Controllers\Teacher\AuthController::class, 'logout'])->name('logout');
 });

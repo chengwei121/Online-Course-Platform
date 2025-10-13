@@ -159,6 +159,13 @@
                             </small>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('teacher.profile.*') ? 'active' : '' }}" 
+                               href="{{ route('teacher.profile.index') }}">
+                                <i class="fas fa-user-circle me-2"></i>
+                                My Profile
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit" class="nav-link border-0 bg-transparent text-white w-100 text-start">
