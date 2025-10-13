@@ -288,19 +288,6 @@
     <div class="profile-card" style="background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f2 100%); border-left: 4px solid #3498db;">
         <h3><i class="fas fa-info-circle"></i> Your Current Profile</h3>
         
-        {{-- Debug Info - Remove after checking --}}
-        @if(config('app.debug'))
-        <div class="alert alert-warning mb-3">
-            <strong>Debug Info:</strong><br>
-            Teacher ID: {{ $teacher->id ?? 'NULL' }}<br>
-            Phone (raw): "{{ $teacher->phone ?? 'NULL' }}"<br>
-            Qualification (raw): "{{ $teacher->qualification ?? 'NULL' }}"<br>
-            Department (raw): "{{ $teacher->department ?? 'NULL' }}"<br>
-            Specialization (raw): "{{ $teacher->specialization ?? 'NULL' }}"<br>
-            Experience Years (raw): "{{ $teacher->experience_years ?? 'NULL' }}"
-        </div>
-        @endif
-        
         <div class="row">
             <div class="col-md-6">
                 <p class="mb-2"><strong><i class="fas fa-user text-primary"></i> Name:</strong> {{ $teacher->name ?: 'Not set' }}</p>
@@ -352,12 +339,6 @@
                 @if($teacher->profile_picture)
                     <p class="text-muted mb-2">
                         <i class="fas fa-check-circle text-success"></i> Picture uploaded
-                        <br>
-                        <small class="text-info">
-                            <i class="fas fa-image"></i> Path: {{ $teacher->profile_picture }}
-                            <br>
-                            <i class="fas fa-link"></i> URL: {{ asset('storage/' . $teacher->profile_picture) }}
-                        </small>
                     </p>
                     <form action="{{ route('teacher.profile.remove-picture') }}" method="POST" style="display: inline;">
                         @csrf
