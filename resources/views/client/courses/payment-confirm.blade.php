@@ -159,10 +159,10 @@
                 <div class="card-body p-5">
                     @if(session('payment_success'))
                         <!-- Success Message -->
-                        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+                        <div class="alert alert-success alert-dismissible fade show mb-5" role="alert">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check-circle fa-2x text-success me-3"></i>
-                                <div>
+                                <div class="flex-grow-1">
                                     <h5 class="alert-heading mb-1">Payment Successful!</h5>
                                     <p class="mb-0">{{ session('payment_success') }}</p>
                                 </div>
@@ -171,100 +171,141 @@
                         </div>
                         
                         <!-- Course Access Section -->
-                        <div class="text-center mb-4">
-                            <div class="bg-light rounded p-4">
-                                <i class="fas fa-graduation-cap fa-3x text-primary mb-3"></i>
-                                <h4 class="text-primary mb-2">Welcome to Your Course!</h4>
-                                <p class="text-muted mb-3">You now have lifetime access to all course materials</p>
+                        <div class="text-center my-5 py-4">
+                            <div class="bg-light rounded-3 p-5 shadow-sm">
+                                <div class="mb-4">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" 
+                                         style="width: 80px; height: 80px;">
+                                        <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                                    </div>
+                                </div>
+                                <h4 class="text-primary mb-3 fw-bold">Welcome to Your Course!</h4>
+                                <p class="text-muted mb-4 fs-5">You now have lifetime access to all course materials</p>
                                 <a href="{{ route('client.courses.show', $course->slug) }}" 
-                                   class="btn btn-primary btn-lg">
+                                   class="btn btn-primary btn-lg px-5 py-3 shadow-sm">
                                     <i class="fas fa-play-circle me-2"></i>Start Learning Now
                                 </a>
                             </div>
                         </div>
+                        
+                        <!-- Divider -->
+                        <hr class="my-5">
                     @endif
                     
                     <!-- Course Information -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <img src="{{ $course->thumbnail_url }}" 
-                                 alt="{{ $course->title }}" 
-                                 class="img-fluid rounded"
-                                 style="height: 110px; width: 100%; object-fit: cover;">
-                        </div>
-                        <div class="col-md-8">
-                            <h6 class="fw-bold mb-1">{{ $course->title }}</h6>
-                            <p class="text-muted mb-2 small">{{ $course->category->name ?? 'Uncategorized' }}</p>
-                            <div class="row g-2">
-                                <div class="col-sm-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-user-tie text-primary me-2"></i>
-                                        <span>{{ $course->instructor->name ?? 'Unknown Instructor' }}</span>
-                                    </div>
+                    <div class="card border-0 bg-light mb-4">
+                        <div class="card-body p-4">
+                            <h6 class="text-muted text-uppercase small mb-3">
+                                <i class="fas fa-book me-2"></i>Course Details
+                            </h6>
+                            <div class="row align-items-center">
+                                <div class="col-md-4 mb-3 mb-md-0">
+                                    <img src="{{ $course->thumbnail_url }}" 
+                                         alt="{{ $course->title }}" 
+                                         class="img-fluid rounded shadow-sm"
+                                         style="height: 120px; width: 100%; object-fit: cover;">
                                 </div>
-                                <div class="col-sm-6">
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-play-circle text-primary me-2"></i>
-                                        <span>{{ $course->lessons->count() }} Lessons</span>
+                                <div class="col-md-8">
+                                    <h5 class="fw-bold mb-2">{{ $course->title }}</h5>
+                                    <p class="text-muted mb-3">
+                                        <i class="fas fa-tag me-1"></i>{{ $course->category->name ?? 'Uncategorized' }}
+                                    </p>
+                                    <div class="row g-3">
+                                        <div class="col-sm-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-tie text-primary me-2"></i>
+                                                <small>{{ $course->instructor->name ?? 'Unknown Instructor' }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-play-circle text-primary me-2"></i>
+                                                <small>{{ $course->lessons->count() }} Lessons</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <hr>
-
                     <!-- Payment Summary -->
-                    <div class="row mb-3">
+                    <div class="row g-4 mb-4">
                         <div class="col-md-5">
-                            <div class="bg-light rounded p-2">
-                                <small class="fw-bold d-block mb-1">Total Amount:</small>
-                                <h5 class="text-primary mb-0">RM{{ number_format($course->price, 2) }}</h5>
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4 text-center">
+                                    <small class="text-muted text-uppercase d-block mb-2">Total Amount</small>
+                                    <h3 class="text-primary fw-bold mb-0">RM{{ number_format($course->price, 2) }}</h3>
+                                </div>
                             </div>
                         </div>
                         
                         <div class="col-md-7">
-                            <small class="fw-bold d-block mb-2">What's Included:</small>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <small><i class="fas fa-check text-success me-2"></i>Lifetime access</small>
-                                </div>
-                                <div class="col-6">
-                                    <small><i class="fas fa-check text-success me-2"></i>{{ $course->lessons->count() }} lessons</small>
-                                </div>
-                                <div class="col-6">
-                                    <small><i class="fas fa-check text-success me-2"></i>Assignments</small>
-                                </div>
-                                <div class="col-6">
-                                    <small><i class="fas fa-check text-success me-2"></i>Certificate</small>
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <small class="text-muted text-uppercase d-block mb-3">What's Included</small>
+                                    <div class="row g-3">
+                                        <div class="col-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <small>Lifetime access</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <small>{{ $course->lessons->count() }} lessons</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <small>Assignments</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-check-circle text-success me-2"></i>
+                                                <small>Certificate</small>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <hr>
-
                     <!-- Payment Information -->
-                    <div class="mb-3">
-                        <small class="fw-bold d-block mb-2">Payment Method</small>
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small mb-3">
+                            <i class="fas fa-credit-card me-2"></i>Payment Method
+                        </h6>
                         @if(session('course_purchased'))
-                            <div class="alert alert-success py-2 mb-0 d-flex align-items-center">
-                                <div class="me-2">
-                                    <i class="fas fa-check-circle fa-lg text-success"></i>
-                                </div>
-                                <div>
-                                    <small class="fw-bold d-block text-success">Payment Completed</small>
-                                    <small class="text-muted">Successfully paid via PayPal</small>
+                            <div class="card border-success bg-success bg-opacity-10">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fas fa-check-circle fa-2x text-success"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-success mb-1">Payment Completed</div>
+                                            <small class="text-muted">Successfully paid via PayPal</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         @else
-                            <div class="alert alert-primary py-2 mb-0 d-flex align-items-center">
-                                <div class="me-2">
-                                    <i class="fab fa-paypal fa-lg text-primary"></i>
-                                </div>
-                                <div>
-                                    <small class="fw-bold d-block">Pay with PayPal</small>
-                                    <small class="text-muted">Secure payment - redirected to PayPal</small>
+                            <div class="card border-primary bg-primary bg-opacity-10">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="fab fa-paypal fa-2x text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-primary mb-1">Pay with PayPal</div>
+                                            <small class="text-muted">Secure payment - redirected to PayPal</small>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         @endif
@@ -272,54 +313,65 @@
 
                     @if(session('course_purchased'))
                         <!-- Already Purchased - Navigation Options -->
-                        <div class="row align-items-center pt-2">
-                            <div class="col-md-6">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-check-circle text-success me-2"></i>
-                                    <span class="text-success fw-bold">Course Purchased Successfully</span>
+                        <div class="card border-0 bg-light mt-4">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-success bg-opacity-10 rounded-circle p-2 me-3">
+                                                <i class="fas fa-check-circle text-success fa-lg"></i>
+                                            </div>
+                                            <span class="text-success fw-bold">Course Purchased Successfully</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-md-end">
+                                        <a href="{{ route('client.courses.index') }}" 
+                                           class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">
+                                            <i class="fas fa-list me-1"></i>Browse Courses
+                                        </a>
+                                        
+                                        <a href="{{ route('client.courses.show', $course->slug) }}" 
+                                           class="btn btn-success shadow-sm">
+                                            <i class="fas fa-play-circle me-1"></i>
+                                            Access Course
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <a href="{{ route('client.courses.index') }}" 
-                                   class="btn btn-outline-secondary me-2">
-                                    <i class="fas fa-list me-1"></i>Browse Courses
-                                </a>
-                                
-                                <a href="{{ route('client.courses.show', $course->slug) }}" 
-                                   class="btn btn-success">
-                                    <i class="fas fa-play-circle me-1"></i>
-                                    Access Course
-                                </a>
                             </div>
                         </div>
                     @else
                         <!-- Terms and Buttons -->
-                        <div class="row align-items-center pt-2">
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="terms" required>
-                                    <label class="form-check-label small" for="terms">
-                                        I agree to the <a href="#" class="text-primary">Terms</a> and <a href="#" class="text-primary">Privacy Policy</a>
-                                    </label>
+                        <div class="card border-0 bg-light mt-4">
+                            <div class="card-body p-4">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="terms" required>
+                                            <label class="form-check-label" for="terms">
+                                                I agree to the <a href="#" class="text-primary fw-bold">Terms</a> and 
+                                                <a href="#" class="text-primary fw-bold">Privacy Policy</a>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-md-end">
+                                        <a href="{{ route('client.courses.show', $course->slug) }}" 
+                                           class="btn btn-outline-secondary me-2 mb-2 mb-sm-0">
+                                            <i class="fas fa-arrow-left me-1"></i>Back
+                                        </a>
+                                        
+                                        <form id="paymentForm" action="{{ route('client.paypal.pay', $course) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="submit" 
+                                                    id="proceedPayment"
+                                                    class="btn btn-primary btn-lg shadow-sm"
+                                                    data-amount="{{ number_format($course->price, 2) }}"
+                                                    disabled>
+                                                <i class="fas fa-lock me-2"></i>
+                                                Pay RM{{ number_format($course->price, 2) }}
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <a href="{{ route('client.courses.show', $course->slug) }}" 
-                                   class="btn btn-outline-secondary btn-sm me-2">
-                                    <i class="fas fa-arrow-left"></i>
-                                </a>
-                                
-                                <form id="paymentForm" action="{{ route('client.paypal.pay', $course) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" 
-                                            id="proceedPayment"
-                                            class="btn btn-primary"
-                                            data-amount="{{ number_format($course->price, 2) }}"
-                                            disabled>
-                                        <i class="fas fa-lock me-1"></i>
-                                        Pay RM{{ number_format($course->price, 2) }}
-                                    </button>
-                                </form>
                             </div>
                         </div>
                     @endif

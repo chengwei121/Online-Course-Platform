@@ -11,16 +11,22 @@ class AssignmentSubmission extends Model
 
     protected $fillable = [
         'user_id',
+        'student_id',
         'assignment_id',
         'submission_text',
         'submission_file',
         'score',
         'feedback',
-        'submitted_at'
+        'status',
+        'submitted_at',
+        'graded_at',
+        'graded_by',
+        'private_notes'
     ];
 
     protected $casts = [
-        'submitted_at' => 'datetime'
+        'submitted_at' => 'datetime',
+        'graded_at' => 'datetime'
     ];
 
     public function user()
@@ -28,8 +34,18 @@ class AssignmentSubmission extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
+
     public function assignment()
     {
         return $this->belongsTo(Assignment::class);
+    }
+
+    public function gradedBy()
+    {
+        return $this->belongsTo(User::class, 'graded_by');
     }
 } 

@@ -33,59 +33,52 @@ Route::get('/clear-cache', function() {
     return "All caches cleared successfully! <br><a href='/client/courses'>Go to courses</a>";
 })->name('clear-cache');
 
-// Home Route (Welcome Page) - Optimized with caching
+// Home Route (Welcome Page) - Highly Optimized with aggressive caching
 Route::get('/', function () {
-    // Cache welcome page data for 2 hours (7200 seconds) - increased from 15 min
-    $welcomeData = Cache::remember('welcome_page_data_v2', 7200, function () {
+    // Single cache key for entire welcome page - 4 hours
+    $welcomeData = Cache::remember('welcome_page_complete_v4', 14400, function () {
         return [
-            // Optimized: Only load essential fields
             'featuredCourses' => Course::with(['teacher:id,name', 'category:id,name'])
-                ->select('id', 'title', 'slug', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at')
+                ->select('id', 'title', 'slug', 'price', 'thumbnail', 'teacher_id', 'category_id', 'average_rating', 'created_at', 'is_free')
                 ->where('status', 'published')
                 ->latest()
-                ->take(6)
+                ->limit(6)
                 ->get(),
             
-            // Cache stats separately with longer duration
-            'stats' => Cache::remember('welcome_stats_v2', 3600, function() {
-                return [
-                    'total_courses' => Course::where('status', 'published')->count(),
-                    'total_students' => Student::count(),
-                    'total_instructors' => Teacher::where('status', 'active')->count(),
-                    'success_rate' => 95,
-                ];
-            }),
+            'stats' => [
+                'total_courses' => Course::where('status', 'published')->count(),
+                'total_students' => Student::count(),
+                'total_instructors' => Teacher::where('status', 'active')->count(),
+                'success_rate' => 95,
+            ],
             
-            // Optimized: Removed heavy withCount, load lighter version
-            'trendingCourses' => Cache::remember('trending_courses_v2', 3600, function() {
-                return Course::with(['category:id,name'])
-                    ->select('id', 'title', 'slug', 'price', 'thumbnail', 'category_id', 'average_rating', 'created_at')
-                    ->where('status', 'published')
-                    ->where('average_rating', '>=', 4)
-                    ->orderByDesc('average_rating')
-                    ->orderByDesc('created_at')
-                    ->take(8)
-                    ->get();
-            }),
+            'trendingCourses' => Course::with(['category:id,name', 'teacher:id,name'])
+                ->select('id', 'title', 'slug', 'price', 'thumbnail', 'category_id', 'teacher_id', 'average_rating', 'created_at', 'is_free', 'duration', 'learning_hours')
+                ->withCount('enrollments')
+                ->where('status', 'published')
+                ->where('average_rating', '>=', 4)
+                ->orderByDesc('average_rating')
+                ->orderByDesc('enrollments_count')
+                ->limit(8)
+                ->get(),
             
-            'testimonials' => Cache::remember('testimonials_v2', 3600, function() {
-                return CourseReview::with(['user:id,name', 'course:id,title'])
-                    ->select('id', 'user_id', 'course_id', 'rating', 'comment', 'created_at')
-                    ->whereIn('rating', [4, 5])
-                    ->whereNotNull('comment')
-                    ->where('comment', '!=', '')
-                    ->latest()
-                    ->take(3)
-                    ->get();
-            }),
+            'testimonials' => CourseReview::with(['user:id,name,avatar', 'course:id,title'])
+                ->select('id', 'user_id', 'course_id', 'rating', 'comment', 'created_at')
+                ->whereIn('rating', [4, 5])
+                ->whereNotNull('comment')
+                ->where('comment', '!=', '')
+                ->latest()
+                ->limit(3)
+                ->get(),
             
-            // Optimized: Simplified instructors query
-            'instructors' => Cache::remember('top_instructors_v2', 3600, function() {
-                return Teacher::select('id', 'name', 'bio', 'profile_picture')
-                    ->where('status', 'active')
-                    ->take(3)
-                    ->get();
-            }),
+            'instructors' => Teacher::select('id', 'name', 'bio', 'profile_picture', 'qualification')
+                ->withCount(['courses' => function($query) {
+                    $query->where('status', 'published');
+                }])
+                ->where('status', 'active')
+                ->orderByDesc('courses_count')
+                ->limit(3)
+                ->get(),
         ];
     });
     
@@ -257,6 +250,12 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::get('courses/{course}/lessons/{lesson}/assignments/{assignment}/edit', [App\Http\Controllers\Teacher\AssignmentController::class, 'edit'])->name('assignments.edit');
     Route::put('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'update'])->name('assignments.update');
     Route::delete('courses/{course}/lessons/{lesson}/assignments/{assignment}', [App\Http\Controllers\Teacher\AssignmentController::class, 'destroy'])->name('assignments.destroy');
+    
+    // Assignment submissions & grading
+    Route::get('assignments', [App\Http\Controllers\TeacherAssignmentController::class, 'index'])->name('assignments.index');
+    Route::get('assignments/{assignment}/submissions', [App\Http\Controllers\TeacherAssignmentController::class, 'submissions'])->name('assignments.submissions');
+    Route::get('submissions/{submission}/grade', [App\Http\Controllers\TeacherAssignmentController::class, 'gradeForm'])->name('submissions.grade');
+    Route::put('submissions/{submission}', [App\Http\Controllers\TeacherAssignmentController::class, 'updateGrade'])->name('submissions.update');
     
     // Students management
     Route::get('students', [App\Http\Controllers\Teacher\StudentsController::class, 'index'])->name('students.index');

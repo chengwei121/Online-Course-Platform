@@ -147,14 +147,15 @@
                                             </iframe>
                                         @endif
                                     @else
-                                        {{-- Optimized uploaded video --}}
+                                        {{-- Optimized uploaded video - Free seeking enabled --}}
                                         <video 
                                             id="lessonVideo" 
                                             class="absolute top-0 left-0 w-full h-full object-contain" 
                                             controls 
                                             playsinline
                                             preload="metadata"
-                                            crossorigin="anonymous">
+                                            crossorigin="anonymous"
+                                            disablePictureInPicture="false">
                                             <source src="{{ $lesson->getDisplayVideoUrl() }}" type="video/mp4">
                                             <p class="text-white text-center p-4">
                                                 Your browser does not support the video tag. 
@@ -224,15 +225,73 @@
                                     </div>
                                 </div>
                             @else
-                                <button type="button" 
-                                        id="markCompleteBtn"
-                                        onclick="markAsComplete()"
-                                        class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 gpu-accelerated">
-                                    <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Mark as Complete
-                                </button>
+                                @php
+                                    // Check if all assignments are submitted
+                                    $hasAssignments = !$course->is_free && $lesson->assignments && $lesson->assignments->count() > 0;
+                                    $allAssignmentsComplete = true;
+                                    $incompleteCount = 0;
+                                    
+                                    if ($hasAssignments) {
+                                        foreach ($lesson->assignments as $assignment) {
+                                            $submission = $submissions->where('assignment_id', $assignment->id)->first();
+                                            if (!$submission || $submission->status !== 'submitted') {
+                                                $allAssignmentsComplete = false;
+                                                $incompleteCount++;
+                                            }
+                                        }
+                                    }
+                                    
+                                    $canComplete = !$hasAssignments || $allAssignmentsComplete;
+                                @endphp
+                                
+                                @if(!$canComplete)
+                                    <!-- Disabled button with tooltip -->
+                                    <div class="relative group">
+                                        <button type="button" 
+                                                id="markCompleteBtn"
+                                                disabled
+                                                class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-gray-300 rounded-lg text-base font-semibold text-gray-400 bg-gray-100 cursor-not-allowed transition-colors duration-200">
+                                            <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                            </svg>
+                                            Mark as Complete (Locked)
+                                        </button>
+                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                                            <div class="bg-gray-900 text-white text-sm rounded-lg py-2 px-4 whitespace-nowrap">
+                                                Complete {{ $incompleteCount }} assignment{{ $incompleteCount > 1 ? 's' : '' }} first
+                                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                                    <div class="border-8 border-transparent border-t-gray-900"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Warning message -->
+                                    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <div class="flex items-start">
+                                            <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                            </svg>
+                                            <div>
+                                                <h4 class="text-sm font-semibold text-yellow-800 mb-1">Complete Assignments Required</h4>
+                                                <p class="text-sm text-yellow-700">
+                                                    You must submit {{ $incompleteCount }} assignment{{ $incompleteCount > 1 ? 's' : '' }} before marking this lesson as complete.
+                                                    Scroll down to view and complete the assignments.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <button type="button" 
+                                            id="markCompleteBtn"
+                                            onclick="markAsComplete()"
+                                            class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 gpu-accelerated">
+                                        <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                        Mark as Complete
+                                    </button>
+                                @endif
                             @endif
 
                             <!-- Lazy-loaded Assignments Section -->
@@ -241,33 +300,84 @@
                                     <h2 class="text-xl font-semibold text-gray-900 mb-6">Assignments</h2>
                                     <div class="space-y-4">
                                         @foreach($lesson->assignments as $assignment)
-                                            <div class="bg-gray-50 rounded-xl p-6">
-                                                <h3 class="text-lg font-medium text-gray-900 mb-3">{{ $assignment->title }}</h3>
-                                                <p class="text-gray-600 mb-4">{{ $assignment->description }}</p>
-                                                
-                                                @php
-                                                    $submission = $submissions->where('assignment_id', $assignment->id)->first();
-                                                @endphp
-
-                                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                                    <div>
-                                                        <span class="text-sm text-gray-500">Due: {{ $assignment->due_date->format('M d, Y') }}</span>
-                                                        @if($submission)
-                                                            <span class="ml-4 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $submission->status === 'submitted' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                                                {{ ucfirst($submission->status) }}
+                                            <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow duration-200">
+                                                <div class="flex items-start justify-between mb-4">
+                                                    <div class="flex-1">
+                                                        <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $assignment->title }}</h3>
+                                                        
+                                                        <!-- Assignment Metadata -->
+                                                        <div class="flex flex-wrap gap-3 mb-3">
+                                                            <span class="inline-flex items-center text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                                                </svg>
+                                                                {{ ucfirst($assignment->type) }}
                                                             </span>
-                                                        @endif
+                                                            
+                                                            @if($assignment->difficulty)
+                                                            <span class="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full
+                                                                {{ $assignment->difficulty === 'easy' ? 'bg-green-100 text-green-700' : '' }}
+                                                                {{ $assignment->difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                                                {{ $assignment->difficulty === 'hard' ? 'bg-red-100 text-red-700' : '' }}">
+                                                                {{ ucfirst($assignment->difficulty) }}
+                                                            </span>
+                                                            @endif
+
+                                                            @if($assignment->points)
+                                                            <span class="inline-flex items-center text-xs font-medium text-indigo-600 bg-indigo-100 px-2.5 py-1 rounded-full">
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                                                                </svg>
+                                                                {{ $assignment->points }} pts
+                                                            </span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    @php
+                                                        $submission = $submissions->where('assignment_id', $assignment->id)->first();
+                                                    @endphp
+                                                    
+                                                    @if($submission)
+                                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold {{ $submission->status === 'submitted' ? 'bg-green-100 text-green-800' : ($submission->status === 'graded' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800') }}">
+                                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                            </svg>
+                                                            {{ ucfirst($submission->status) }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                
+                                                @if($assignment->description)
+                                                    <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ Str::limit($assignment->description, 150) }}</p>
+                                                @else
+                                                    <p class="text-gray-400 text-sm italic mb-4">Click to view assignment details and instructions.</p>
+                                                @endif
+                                                
+                                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-gray-100">
+                                                    <div class="flex items-center text-sm text-gray-500">
+                                                        <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                                        </svg>
+                                                        <span class="font-medium">Due:</span>&nbsp;{{ $assignment->due_date->format('M d, Y') }}
                                                     </div>
                                                     
                                                     @if(!$submission)
                                                         <a href="{{ route('client.assignments.show', $assignment->id) }}" 
-                                                           class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200">
+                                                           class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                                            </svg>
                                                             Start Assignment
                                                         </a>
                                                     @else
                                                         <a href="{{ route('client.assignments.show', $assignment->id) }}" 
-                                                           class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
-                                                            View Submission
+                                                           class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                            </svg>
+                                                            View Details
                                                         </a>
                                                     @endif
                                                 </div>
@@ -349,22 +459,7 @@
     </div>
 </div>
 
-<div id="warningModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl p-8 max-w-sm w-full mx-4 shadow-xl transform transition-all gpu-accelerated">
-        <div class="text-center">
-            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-yellow-100 mb-5">
-                <svg class="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-900 mb-3">Skip Limit Reached</h3>
-            <p class="text-base text-gray-600">You cannot skip video content.</p>
-            <button onclick="hideWarningModal()" class="mt-6 w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
-                OK
-            </button>
-        </div>
-    </div>
-</div>
+<!-- Warning modal removed - students can now skip freely -->
 
 @push('scripts')
 <script>
@@ -374,10 +469,6 @@ let youtubeProgressInterval = null;
 let isAutoCompleting = false;
 let hasWatchedEntireVideo = false;
 let video = null;
-let lastValidTime = 0;
-let skipAttempts = 0;
-const maxSkipAttempts = 3;
-const maxSeekAhead = 120;
 let isCompleted = false;
 
 // Performance optimizations
@@ -425,6 +516,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize video player
     video = document.getElementById('lessonVideo');
     initializeVideoPlayer();
+    
+    // Auto-show assignments if mark complete button is disabled
+    const markCompleteBtn = document.getElementById('markCompleteBtn');
+    if (markCompleteBtn && markCompleteBtn.disabled) {
+        // Student has incomplete assignments - show them automatically
+        showAssignments();
+        console.log('Assignments section shown - assignments must be completed first');
+    }
     
     // Optimized progress update - throttled to every 2 seconds
     const throttledProgressUpdate = throttle(function() {
@@ -486,26 +585,9 @@ function initializeVideoPlayer() {
 function setupLocalVideo() {
     const throttledTimeUpdate = throttle(function() {
         const currentTime = video.currentTime;
-        const skipDistance = currentTime - lastValidTime;
         
         if (video.duration && !isNaN(video.duration) && video.duration > 0) {
             updateVideoProgress(currentTime, video.duration);
-        }
-        
-        // Skip validation
-        if (skipDistance > maxSeekAhead && !hasWatchedEntireVideo) {
-            skipAttempts++;
-            if (skipAttempts >= maxSkipAttempts) {
-                video.currentTime = lastValidTime;
-                showWarningModal('You have attempted to skip multiple times. Please watch the course content in order.');
-                skipAttempts = 0;
-            } else {
-                video.currentTime = lastValidTime;
-                showWarningModal(`Please do not skip video content. ${maxSkipAttempts - skipAttempts} warnings remaining.`);
-            }
-        } else if (skipDistance <= maxSeekAhead || hasWatchedEntireVideo) {
-            lastValidTime = currentTime;
-            skipAttempts = Math.max(0, skipAttempts - 1);
         }
         
         // Throttled progress save
@@ -518,7 +600,6 @@ function setupLocalVideo() {
             updateVideoProgress(video.currentTime, video.duration);
             document.getElementById('totalTime').textContent = formatTime(video.duration);
         }
-        lastValidTime = video.currentTime;
     });
 
     video.addEventListener('timeupdate', throttledTimeUpdate);
@@ -532,7 +613,7 @@ function setupLocalVideo() {
     video.addEventListener('ratechange', function() {
         if (video.playbackRate > 2) {
             video.playbackRate = 2;
-            showWarningModal('Playback speed cannot exceed 2x.');
+            // Maximum playback speed is 2x
         }
     });
     
@@ -545,53 +626,22 @@ function setupLocalVideo() {
         }
     });
 
-    // Mouse seeking control - limit to 3 minutes forward skip
-    let isUserSeeking = false;
-    let seekStartTime = 0;
-    
+    // Students can now freely skip through the video without restrictions
     video.addEventListener('seeking', function() {
-        isUserSeeking = true;
-        const currentTime = video.currentTime;
-        const skipDistance = currentTime - lastValidTime;
-        const maxMouseSeek = 180; // 3 minutes in seconds
-        
-        console.log('User seeking:', { currentTime, lastValidTime, skipDistance });
-        
-        // Allow backward seeking anytime
-        if (skipDistance < 0) {
-            lastValidTime = currentTime;
-            showSkipNotification('⏪ Rewinding');
-            return;
-        }
-        
-        // Check if skipping forward
-        if (skipDistance > maxMouseSeek && !hasWatchedEntireVideo) {
-            // Limit to 3 minutes forward
-            const allowedTime = lastValidTime + maxMouseSeek;
-            video.currentTime = allowedTime;
-            lastValidTime = allowedTime;
-            showWarningModal('You can only skip forward up to 3 minutes at a time. Please watch the content.');
-            console.log('Limited skip to:', allowedTime);
-        } else if (skipDistance > 0 && skipDistance <= maxMouseSeek) {
-            // Allow skip within 3-minute limit
-            lastValidTime = currentTime;
-            const minutes = Math.floor(skipDistance / 60);
-            const seconds = Math.floor(skipDistance % 60);
-            const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
-            showSkipNotification('⏩ Forward ' + timeStr);
-        } else if (hasWatchedEntireVideo) {
-            // Allow any skip if video already completed
-            lastValidTime = currentTime;
-        }
+        console.log('User is seeking to:', video.currentTime);
+        // No restrictions - allow free seeking
     });
     
     video.addEventListener('seeked', function() {
-        if (isUserSeeking) {
-            isUserSeeking = false;
-            console.log('Seek completed at:', video.currentTime);
-            saveProgress(video.currentTime);
-        }
+        console.log('Seek completed at:', video.currentTime);
+        saveProgress(video.currentTime);
     });
+    
+    // Make sure controls are enabled
+    video.controls = true;
+    video.removeAttribute('controlsList'); // Remove any control restrictions
+    
+    console.log('Video controls enabled - free seeking allowed');
 
     // Add keyboard controls for 5-minute skipping
     document.addEventListener('keydown', function(e) {
@@ -606,22 +656,15 @@ function setupLocalVideo() {
                 e.preventDefault();
                 const newTimeBackward = Math.max(0, video.currentTime - 300);
                 video.currentTime = newTimeBackward;
-                lastValidTime = newTimeBackward;
                 showSkipNotification('⏪ Skipped backward 5 minutes');
                 break;
             
             case 'ArrowRight':
-                // Skip forward 5 minutes (300 seconds)
+                // Skip forward 5 minutes (300 seconds) - no restrictions
                 e.preventDefault();
-                if (hasWatchedEntireVideo || video.currentTime >= video.duration - 300) {
-                    // Allow skipping if already watched or near the end
-                    const newTimeForward = Math.min(video.duration, video.currentTime + 300);
-                    video.currentTime = newTimeForward;
-                    lastValidTime = newTimeForward;
-                    showSkipNotification('⏩ Skipped forward 5 minutes');
-                } else {
-                    showWarningModal('Please watch the content before skipping forward.');
-                }
+                const newTimeForward = Math.min(video.duration, video.currentTime + 300);
+                video.currentTime = newTimeForward;
+                showSkipNotification('⏩ Skipped forward 5 minutes');
                 break;
             
             case 'ArrowUp':
@@ -740,13 +783,10 @@ function onYoutubePlaybackRateChange(event) {
         const rate = youtubePlayer.getPlaybackRate();
         if (rate > 2) {
             youtubePlayer.setPlaybackRate(2);
-            showWarningModal('Playback speed cannot exceed 2x.');
+            // Maximum playback speed is 2x
         }
     }
     
-    if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-        lastValidTime = youtubePlayer.getCurrentTime();
-    }
 }
 
 const updateYoutubeProgress = throttle(function() {
@@ -756,24 +796,8 @@ const updateYoutubeProgress = throttle(function() {
 
     try {
         const currentTime = youtubePlayer.getCurrentTime();
-        const skipDistance = currentTime - lastValidTime;
-        
-        if (skipDistance > maxSeekAhead && !hasWatchedEntireVideo) {
-            skipAttempts++;
-            if (skipAttempts >= maxSkipAttempts) {
-                youtubePlayer.seekTo(lastValidTime, true);
-                showWarningModal('You have attempted to skip multiple times. Please watch the course content in order.');
-                skipAttempts = 0;
-            } else {
-                youtubePlayer.seekTo(lastValidTime, true);
-                showWarningModal(`Please do not skip video content. ${maxSkipAttempts - skipAttempts} warnings remaining.`);
-            }
-        } else if (skipDistance <= maxSeekAhead || hasWatchedEntireVideo) {
-            lastValidTime = currentTime;
-            skipAttempts = Math.max(0, skipAttempts - 1);
-        }
-
         const duration = youtubePlayer.getDuration();
+        
         if (!isNaN(currentTime) && !isNaN(duration) && duration > 0) {
             updateVideoProgress(currentTime, duration);
             debouncedSaveProgress(currentTime);
@@ -917,6 +941,14 @@ function updateProgressDisplay(isCompleted) {
 
 function markAsComplete() {
     if (isAutoCompleting) return;
+    
+    // Check if button is disabled (assignments not complete)
+    const markCompleteBtn = document.getElementById('markCompleteBtn');
+    if (markCompleteBtn && markCompleteBtn.disabled) {
+        alert('Please complete all assignments before marking this lesson as complete.');
+        return;
+    }
+    
     isAutoCompleting = true;
 
     let currentProgress = 0;
@@ -978,33 +1010,7 @@ function markAsComplete() {
     });
 }
 
-function showWarningModal(message = 'You cannot skip video content.') {
-    const modal = document.getElementById('warningModal');
-    if (modal) {
-        const messageElement = modal.querySelector('p.text-gray-600');
-        if (messageElement) {
-            messageElement.textContent = message;
-        }
-        modal.style.display = 'flex';
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                hideWarningModal();
-            }
-        });
-    }
-}
-
-function hideWarningModal() {
-    const modal = document.getElementById('warningModal');
-    if (modal) {
-        modal.style.display = 'none';
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    }
-}
+// Warning modal functions removed - students can now skip freely
 
 // Show skip notification (for keyboard shortcuts)
 function showSkipNotification(message) {

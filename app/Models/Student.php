@@ -43,4 +43,12 @@ class Student extends Model
     {
         return $this->hasMany(Enrollment::class, 'user_id', 'user_id');
     }
+
+    /**
+     * Get all assignment submissions for this student
+     */
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(AssignmentSubmission::class, 'student_id', 'id');
+    }
 }

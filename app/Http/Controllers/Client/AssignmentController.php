@@ -26,13 +26,18 @@ class AssignmentController extends Controller
             'file' => 'nullable|file|max:10240', // 10MB max
         ]);
 
+        // Get student ID from authenticated user
+        $student = Auth::user()->student;
+
         $submission = AssignmentSubmission::updateOrCreate(
             [
                 'user_id' => Auth::id(),
+                'student_id' => $student ? $student->id : null,
                 'assignment_id' => $assignment->id,
             ],
             [
                 'submission_text' => $request->content,
+                'status' => 'submitted',
                 'submitted_at' => now(),
             ]
         );

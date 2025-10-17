@@ -27,44 +27,44 @@
 
     .notification-card {
         background: white;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-        border-left: 4px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        transition: all 0.2s ease;
+        border-left: 3px solid #e5e7eb;
     }
 
     .notification-card.unread {
-        background: #f0f9ff;
+        background: #f8fafc;
         border-left-color: #3b82f6;
     }
 
     .notification-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-        transform: translateY(-2px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .notification-header {
         display: flex;
         justify-content: space-between;
         align-items: start;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
     }
 
     .notification-icon {
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        margin-right: 1rem;
+        font-size: 0.9rem;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
     }
 
     .notification-icon.enrolled {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: #10b981;
         color: white;
     }
 
@@ -73,25 +73,26 @@
     }
 
     .notification-title {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         font-weight: 600;
         color: #1f2937;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.25rem;
     }
 
     .notification-message {
         color: #6b7280;
-        margin-bottom: 0.75rem;
-        line-height: 1.6;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+        font-size: 0.875rem;
     }
 
     .notification-details {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #e5e7eb;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #f3f4f6;
     }
 
     .detail-item {
@@ -101,39 +102,46 @@
     }
 
     .detail-item i {
-        color: #6b7280;
-        width: 20px;
+        color: #9ca3af;
+        width: 16px;
+        font-size: 0.875rem;
     }
 
     .detail-label {
-        font-size: 0.875rem;
-        color: #6b7280;
+        font-size: 0.75rem;
+        color: #9ca3af;
     }
 
     .detail-value {
         font-weight: 600;
         color: #1f2937;
+        font-size: 0.875rem;
     }
 
     .notification-time {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: #9ca3af;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem;
+        flex-shrink: 0;
+    }
+
+    .notification-time i {
+        font-size: 0.7rem;
     }
 
     .notification-actions {
         display: flex;
         gap: 0.5rem;
-        margin-top: 1rem;
+        margin-top: 0.75rem;
     }
 
     .btn-action {
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        font-size: 0.875rem;
-        font-weight: 600;
+        padding: 0.375rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
         text-decoration: none;
         transition: all 0.2s ease;
         border: none;
@@ -141,13 +149,12 @@
     }
 
     .btn-view-course {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #667eea;
         color: white;
     }
 
     .btn-view-course:hover {
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        transform: translateY(-2px);
+        background: #5568d3;
         color: white;
     }
 
@@ -188,27 +195,31 @@
     }
 
     .badge-amount {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: #10b981;
         color: white;
-        padding: 0.375rem 0.875rem;
-        border-radius: 6px;
-        font-weight: 700;
-        font-size: 1rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.875rem;
     }
 
     .payment-status {
         display: inline-flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 0.875rem;
-        border-radius: 6px;
-        font-size: 0.875rem;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
         font-weight: 600;
     }
 
     .payment-status.completed {
         background: #d1fae5;
         color: #065f46;
+    }
+
+    .payment-status i {
+        font-size: 0.7rem;
     }
 </style>
 @endpush
@@ -251,10 +262,10 @@
                         </div>
                         <div class="notification-content">
                             <div class="notification-title">
-                                🎉 New Student Enrollment!
+                                New Student Enrollment
                             </div>
                             <div class="notification-message">
-                                <strong>{{ $notification->data['student_name'] ?? 'A student' }}</strong> has enrolled in your course <strong>{{ $notification->data['course_title'] ?? 'N/A' }}</strong>
+                                <strong>{{ $notification->data['student_name'] ?? 'A student' }}</strong> enrolled in <strong>{{ $notification->data['course_title'] ?? 'N/A' }}</strong>
                             </div>
 
                             <!-- Notification Details -->

@@ -29,7 +29,7 @@
                 <div class="col-md-8">
                     <div class="d-flex align-items-center mb-2">
                         <div class="lesson-order-badge bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-3" 
-                             style="width: 40px; height: 40px;">
+                             style="width: 45px; height: 45px; font-size: 18px; font-weight: 600; flex-shrink: 0;">
                             {{ $lesson->order }}
                         </div>
                         <div>
@@ -64,6 +64,10 @@
                     </h5>
                 </div>
                 <div class="card-body">
+                    @php
+                        $displayUrl = $lesson->getDisplayVideoUrl();
+                    @endphp
+                    
                     @if(filter_var($lesson->video_url, FILTER_VALIDATE_URL))
                         @if(str_contains($lesson->video_url, 'youtube.com') || str_contains($lesson->video_url, 'youtu.be'))
                             <!-- YouTube embed -->
@@ -101,10 +105,20 @@
                         @endif
                     @else
                         <!-- Local video file -->
-                        <video controls class="w-100" style="max-height: 500px;">
-                            <source src="{{ $lesson->video_url }}" type="video/mp4">
+                        <video controls class="w-100" style="max-height: 500px;" controlsList="nodownload">
+                            <source src="{{ $displayUrl }}" type="video/mp4">
+                            <source src="{{ $displayUrl }}" type="video/webm">
+                            <source src="{{ $displayUrl }}" type="video/ogg">
                             Your browser does not support the video tag.
                         </video>
+                        
+                        @if(!file_exists(public_path('storage/' . $lesson->video_url)))
+                            <div class="alert alert-warning mt-2">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Video file not found!</strong> The video may have been moved or deleted.
+                                <br><small class="text-muted">Path: {{ $lesson->video_url }}</small>
+                            </div>
+                        @endif
                     @endif
                     
                     @if($lesson->duration)
@@ -189,6 +203,10 @@
                                     </div>
                                 </div>
                                 <div class="btn-group" role="group">
+                                    <a href="{{ route('teacher.assignments.submissions', $assignment) }}" 
+                                       class="btn btn-success btn-sm" title="View Submissions">
+                                        <i class="fas fa-users"></i> Submissions
+                                    </a>
                                     <a href="{{ route('teacher.assignments.show', [$course, $lesson, $assignment]) }}" 
                                        class="btn btn-outline-primary btn-sm" title="View Assignment">
                                         <i class="fas fa-eye"></i>

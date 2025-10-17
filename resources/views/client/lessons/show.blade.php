@@ -82,8 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!video) return;
     
     let maxWatchedTime = 0;
-    let lastValidTime = 0;
-    const SKIP_LIMIT = 20; // Maximum seconds allowed to skip ahead
     
     // Make maxWatchedTime globally accessible
     window.maxWatchedTime = 0;
@@ -96,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update max watched time if student is watching continuously
         if (currentTime > maxWatchedTime) {
             maxWatchedTime = currentTime;
-            lastValidTime = currentTime;
             window.maxWatchedTime = maxWatchedTime; // Update global variable
         }
         
@@ -131,63 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Prevent skipping ahead more than allowed limit
-    video.addEventListener('seeking', function() {
-        const seekTime = video.currentTime;
-        const allowedMaxTime = maxWatchedTime + SKIP_LIMIT;
-        
-        // If trying to skip ahead more than allowed
-        if (seekTime > allowedMaxTime) {
-            // Reset to the last valid position
-            video.currentTime = lastValidTime;
-            
-            // Show warning message
-            showSkipWarning();
-        } else {
-            // Update last valid time for backward seeks within allowed range
-            lastValidTime = video.currentTime;
-        }
-    });
-    
-    // Handle seeking completion
-    video.addEventListener('seeked', function() {
-        const currentTime = video.currentTime;
-        
-        // Ensure we don't exceed the allowed skip limit
-        if (currentTime > maxWatchedTime + SKIP_LIMIT) {
-            video.currentTime = lastValidTime;
-        }
-    });
-    
-    // Show warning message function
-    function showSkipWarning() {
-        // Remove existing warnings
-        const existingWarning = document.querySelector('.skip-warning');
-        if (existingWarning) {
-            existingWarning.remove();
-        }
-        
-        // Create warning message
-        const warning = document.createElement('div');
-        warning.className = 'skip-warning fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-        warning.innerHTML = `
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"/>
-                </svg>
-                <span>Cannot skip more than ${SKIP_LIMIT} seconds ahead</span>
-            </div>
-        `;
-        
-        document.body.appendChild(warning);
-        
-        // Auto remove warning after 3 seconds
-        setTimeout(() => {
-            if (warning.parentNode) {
-                warning.remove();
-            }
-        }, 3000);
-    }
+    // Students can now freely skip through the video without restrictions
     
     // Track progress for lesson completion
     video.addEventListener('timeupdate', function() {

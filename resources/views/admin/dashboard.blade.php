@@ -2172,6 +2172,12 @@ function exportMetrics() {
 }
 
 function viewDetailedAnalytics() {
+    // Get current metric values
+    const teacherEngagement = document.querySelector('.teacher-engagement .percentage')?.textContent || '0%';
+    const coursePublication = document.querySelector('.course-publication .percentage')?.textContent || '0%';
+    const studentEnrollment = document.querySelector('.student-enrollment .percentage')?.textContent || '0%';
+    const platformGrowth = Math.abs(parseInt(document.querySelector('.platform-growth .percentage')?.textContent || '0')) + '%';
+    
     // Show modal with detailed analytics
     const modalHtml = `
         <div class="modal fade" id="detailedAnalyticsModal" tabindex="-1" aria-hidden="true">
@@ -2196,25 +2202,25 @@ function viewDetailedAnalytics() {
                                     <div class="metric-detail-item">
                                         <span class="metric-name">Teacher Engagement Rate</span>
                                         <div class="metric-bar">
-                                            <div class="metric-fill" style="width: ${document.querySelector('.teacher-engagement .percentage')?.textContent || '0%'}"></div>
+                                            <div class="metric-fill" style="width: ` + teacherEngagement + `"></div>
                                         </div>
                                     </div>
                                     <div class="metric-detail-item">
                                         <span class="metric-name">Course Publication Rate</span>
                                         <div class="metric-bar">
-                                            <div class="metric-fill" style="width: ${document.querySelector('.course-publication .percentage')?.textContent || '0%'}"></div>
+                                            <div class="metric-fill" style="width: ` + coursePublication + `"></div>
                                         </div>
                                     </div>
                                     <div class="metric-detail-item">
                                         <span class="metric-name">Student Enrollment Rate</span>
                                         <div class="metric-bar">
-                                            <div class="metric-fill" style="width: ${document.querySelector('.student-enrollment .percentage')?.textContent || '0%'}"></div>
+                                            <div class="metric-fill" style="width: ` + studentEnrollment + `"></div>
                                         </div>
                                     </div>
                                     <div class="metric-detail-item">
                                         <span class="metric-name">Platform Growth Rate</span>
                                         <div class="metric-bar">
-                                            <div class="metric-fill" style="width: ${Math.abs(parseInt(document.querySelector('.platform-growth .percentage')?.textContent || '0'))}%"></div>
+                                            <div class="metric-fill" style="width: ` + platformGrowth + `"></div>
                                         </div>
                                     </div>
                                 </div>

@@ -763,11 +763,14 @@
                                 <tr>
                                     <td>
                                         <div class="student-info">
-                                            @if(isset($student->avatar) && $student->avatar && @file_exists(public_path($student->avatar)))
+                                            @php
+                                                $defaultAvatar = asset('images/default-avatar.svg');
+                                            @endphp
+                                            @if(isset($student->avatar) && $student->avatar && file_exists(public_path($student->avatar)))
                                                 <img src="{{ asset($student->avatar) }}" 
                                                      alt="{{ $student->name }}" 
                                                      class="student-avatar"
-                                                     onerror="this.onerror=null; this.src='{{ asset('images/default-avatar.svg') }}'">
+                                                     onerror="this.onerror=null; this.src='{{ $defaultAvatar }}'">
                                             @else
                                                 <div class="student-avatar-placeholder">
                                                     {{ strtoupper(substr($student->name, 0, 2)) }}

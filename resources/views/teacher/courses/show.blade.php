@@ -66,8 +66,7 @@
                                         class="btn btn-{{ $course->status === 'published' ? 'warning' : 'success' }} btn-action"
                                         data-bs-toggle="tooltip" 
                                         data-bs-placement="top"
-                                        title="{{ $course->status === 'published' ? 'Hide course from students' : 'Make course available to students' }}"
-                                        onclick="return confirm(@if($course->status === 'published')'Unpublish this course?'@else'Publish this course?'@endif)">
+                                        title="{{ $course->status === 'published' ? 'Hide course from students' : 'Make course available to students' }}">
                                     <i class="fas fa-{{ $course->status === 'published' ? 'eye-slash' : 'eye' }}"></i>
                                     <span class="btn-text">{{ $course->status === 'published' ? 'Unpublish' : 'Publish' }}</span>
                                 </button>
@@ -1953,4 +1952,24 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 </style>
+@endpush
+
+@php
+    $confirmMessage = $course->status === 'published' ? 'Unpublish this course?' : 'Publish this course?';
+    $toggleRouteUrl = route('teacher.courses.toggle-status', $course);
+@endphp
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusForm = document.querySelector('form[action="{{ $toggleRouteUrl }}"]');
+    if (statusForm) {
+        statusForm.addEventListener('submit', function(e) {
+            if (!confirm('{{ $confirmMessage }}')) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
 @endpush

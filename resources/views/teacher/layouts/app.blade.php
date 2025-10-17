@@ -14,6 +14,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" media="print" onload="this.media='all'">
     
+    <!-- Tailwind CSS for content pages -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         .sidebar {
             min-height: 100vh;
@@ -123,6 +126,13 @@
                                href="{{ route('teacher.courses.index') }}">
                                 <i class="fas fa-book me-2"></i>
                                 My Courses
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ request()->routeIs('teacher.assignments.*') || request()->routeIs('teacher.submissions.*') ? 'active' : '' }}" 
+                               href="{{ route('teacher.assignments.index') }}">
+                                <i class="fas fa-tasks me-2"></i>
+                                Assignments
                             </a>
                         </li>
                         
