@@ -708,6 +708,33 @@
     gap: 0.5rem;
 }
 
+/* Pagination Info Alignment Fix */
+.pagination-info,
+.dataTables_info,
+p:has(.fas.fa-info-circle) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.pagination-info i,
+.dataTables_info i {
+    flex-shrink: 0;
+}
+
+/* Table pagination container */
+.table-pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
 /* Responsive Design */
 @media (max-width: 991px) {
     .header-actions {

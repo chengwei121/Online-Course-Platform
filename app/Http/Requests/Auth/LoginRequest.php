@@ -55,9 +55,6 @@ class LoginRequest extends FormRequest
             // User doesn't exist - fail fast without hitting database again
             RateLimiter::hit($this->throttleKey());
             
-            // Add small delay to prevent timing attacks
-            usleep(250000); // 250ms delay
-            
             throw ValidationException::withMessages([
                 'email' => 'These credentials do not match our records.',
             ]);
@@ -69,9 +66,6 @@ class LoginRequest extends FormRequest
             
             // Clear user exists cache on failed password (might be deleted user)
             Cache::forget($userExistsKey);
-            
-            // Add small delay to prevent brute force attacks
-            usleep(500000); // 500ms delay
 
             throw ValidationException::withMessages([
                 'email' => 'These credentials do not match our records.',
