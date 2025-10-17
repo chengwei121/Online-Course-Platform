@@ -62,7 +62,7 @@ Route::get('/', function () {
                 ->limit(8)
                 ->get(),
             
-            'testimonials' => CourseReview::with(['user:id,name,avatar', 'course:id,title'])
+            'testimonials' => CourseReview::with(['user:id,name', 'course:id,title'])
                 ->select('id', 'user_id', 'course_id', 'rating', 'comment', 'created_at')
                 ->whereIn('rating', [4, 5])
                 ->whereNotNull('comment')
