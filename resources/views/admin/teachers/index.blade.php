@@ -224,18 +224,29 @@
                                            title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('admin.teachers.destroy', $teacher) }}" 
-                                              method="POST" 
-                                              class="d-inline"
-                                              onsubmit="return confirm('Are you sure you want to delete this teacher? This action cannot be undone.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" 
-                                                    class="btn btn-danger btn-sm"
-                                                    title="Delete">
+                                        @if($teacher->courses_count > 0)
+                                            <button type="button" 
+                                                    class="btn btn-danger btn-sm" 
+                                                    disabled
+                                                    title="Cannot delete teacher with existing courses"
+                                                    data-bs-toggle="tooltip"
+                                                    style="opacity: 0.5; cursor: not-allowed;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
-                                        </form>
+                                        @else
+                                            <form action="{{ route('admin.teachers.destroy', $teacher) }}" 
+                                                  method="POST" 
+                                                  class="d-inline"
+                                                  onsubmit="return confirm('Are you sure you want to delete this teacher? This action cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="btn btn-danger btn-sm"
+                                                        title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -267,3 +278,15 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Initialize Bootstrap tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+@endpush

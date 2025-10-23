@@ -24,7 +24,7 @@
                 <i class="fas fa-history me-1"></i>View Activities
             </a>
             <a href="{{ route('admin.clients.enrollments', $client) }}" class="btn btn-success">
-                <i class="fas fa-graduation-cap me-1"></i>View Enrollments
+                <i class="fas fa-credit-card me-1"></i>View Payment
             </a>
             <a href="{{ route('admin.clients.edit', $client) }}" class="btn btn-warning">
                 <i class="fas fa-edit me-1"></i>Edit Profile

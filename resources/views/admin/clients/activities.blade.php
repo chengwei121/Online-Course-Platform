@@ -24,7 +24,7 @@
                 <i class="fas fa-user me-2"></i> View Profile
             </a>
             <a href="{{ route('admin.clients.enrollments', $client) }}" class="btn btn-success px-4 py-2">
-                <i class="fas fa-graduation-cap me-2"></i> View Enrollments
+                <i class="fas fa-credit-card me-2"></i> View Payment
             </a>
         </div>
     </div>

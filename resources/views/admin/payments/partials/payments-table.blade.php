@@ -3,37 +3,37 @@
     <table class="table table-hover align-middle mb-0 table-sm">
         <thead>
             <tr>
-                <th class="py-2 px-3 text-center" style="width: 12%;">ID</th>
-                <th class="py-2 px-3 text-center" style="width: 20%;">Student</th>
-                <th class="py-2 px-3 text-center" style="width: 25%;">Course</th>
+                <th class="py-2 px-3 text-center" style="width: 8%;">ID</th>
+                <th class="py-2 px-3" style="width: 20%;">Student</th>
+                <th class="py-2 px-3" style="width: 25%;">Course</th>
                 <th class="py-2 px-3 text-center" style="width: 12%;">Amount</th>
                 <th class="py-2 px-3 text-center" style="width: 10%;">Status</th>
-                <th class="py-2 px-3 text-center" style="width: 13%;">Date</th>
-                <th class="py-2 px-3 text-center" style="width: 8%;">Actions</th>
+                <th class="py-2 px-3 text-center" style="width: 12%;">Date</th>
+                <th class="py-2 px-3 text-center" style="width: 13%;">Actions</th>
             </tr>
         </thead>
         <tbody>
             @foreach($payments as $payment)
             <tr class="payment-row border-bottom" data-payment-id="{{ $payment->id }}">
-                <td class="py-2 px-2">
+                <td class="py-2 px-3 text-center">
                     <div class="fw-bold text-primary">#{{ $payment->id }}</div>
                 </td>
-                <td class="py-2 px-2">
+                <td class="py-2 px-3">
                     <div>
                         <div class="fw-semibold text-dark small">{{ Str::limit($payment->user->name, 20) }}</div>
                         <small class="text-muted">{{ Str::limit($payment->user->email, 25) }}</small>
                     </div>
                 </td>
-                <td class="py-2 px-2">
+                <td class="py-2 px-3">
                     <div>
                         <div class="fw-semibold text-dark small">{{ Str::limit($payment->course->title, 30) }}</div>
                         <small class="text-muted">{{ Str::limit($payment->course->instructor->name, 20) }}</small>
                     </div>
                 </td>
-                <td class="py-2 px-2">
+                <td class="py-2 px-3 text-center">
                     <div class="fw-bold text-success">RM{{ number_format($payment->amount_paid, 0) }}</div>
                 </td>
-                <td class="py-2 px-2">
+                <td class="py-2 px-3 text-center">
                     @if($payment->payment_status == 'completed')
                         <span class="badge bg-success text-white px-2 py-1 small">
                             <i class="fas fa-check fa-xs me-1"></i>Done
@@ -48,14 +48,14 @@
                         </span>
                     @endif
                 </td>
-                <td class="py-2 px-2">
+                <td class="py-2 px-3 text-center">
                     <div>
                         <div class="fw-semibold text-dark small">{{ $payment->enrolled_at->format('M d') }}</div>
                         <small class="text-muted">{{ $payment->enrolled_at->format('Y') }}</small>
                     </div>
                 </td>
-                <td class="py-2 px-2 text-end">
-                    <div class="d-flex justify-content-end gap-1">
+                <td class="py-2 px-3 text-center">
+                    <div class="d-flex justify-content-center gap-1">
                         <!-- View Button -->
                         <a href="{{ route('admin.payments.show', $payment) }}" 
                            class="btn btn-sm btn-outline-primary compact-btn" 

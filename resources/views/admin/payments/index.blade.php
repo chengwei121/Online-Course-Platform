@@ -116,9 +116,9 @@
     <!-- Enhanced Table with Header and Footer -->
     <div class="card border-0 shadow-lg">
         <!-- Card Header -->
-        <div class="card-header bg-secondary text-white py-4 px-4">
-            <div class="row align-items-center">
-                <div class="col-lg-4 col-md-12">
+        <div class="card-header bg-secondary text-white py-3 px-4">
+            <div class="row align-items-center g-3">
+                <div class="col-lg-3 col-md-12">
                     <div class="header-content">
                         <h4 class="mb-1 fw-bold text-white">
                             <i class="fas fa-credit-card me-2 text-light"></i>Payment Management
@@ -129,7 +129,7 @@
                     </div>
                 </div>
                 
-                <div class="col-lg-4 col-md-12">
+                <div class="col-lg-6 col-md-12">
                     <div class="search-container mt-lg-0 mt-3">
                         <form method="GET" action="{{ route('admin.payments.index') }}" class="position-relative" id="headerSearchForm">
                             <input type="search" 
@@ -152,32 +152,12 @@
                     </div>
                 </div>
                 
-                <div class="col-lg-4 col-md-12">
+                <div class="col-lg-3 col-md-12">
                     <div class="header-actions d-flex justify-content-lg-end justify-content-start align-items-center gap-2 mt-lg-0 mt-3">
-                        <button type="button" class="btn btn-light btn-sm modern-btn print-btn" title="Print Records">
-                            <i class="fas fa-print me-1"></i>
-                            <span class="d-none d-md-inline">Print</span>
-                        </button>
                         <button type="button" class="btn btn-outline-light btn-sm modern-btn filter-btn" title="Filter Data">
                             <i class="fas fa-filter me-1"></i>
                             <span class="d-none d-md-inline">Filter</span>
                         </button>
-                        <button type="button" class="btn btn-outline-light btn-sm modern-btn export-btn" title="Export Excel">
-                            <i class="fas fa-file-excel me-1"></i>
-                            <span class="d-none d-lg-inline">Excel</span>
-                        </button>
-                        <div class="dropdown">
-                            <button type="button" class="btn btn-outline-light btn-sm modern-btn dropdown-toggle" data-bs-toggle="dropdown" title="More Options">
-                                <i class="fas fa-ellipsis-h"></i>
-                            </button>
-                        <ul class="dropdown-menu dropdown-menu-end modern-dropdown">
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i>Download PDF</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-share me-2"></i>Share Report</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-chart-bar me-2"></i>Analytics</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>Settings</a></li>
-                        </ul>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -875,8 +855,6 @@ p:has(.fas.fa-info-circle) {
 @endpush
 
 @push('scripts')
-<!-- SheetJS library for Excel export -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- jsPDF library for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
@@ -897,20 +875,6 @@ document.addEventListener('DOMContentLoaded', function() {
             searchTimeout = setTimeout(() => {
                 this.closest('form').submit();
             }, 500);
-        });
-    }
-
-    // Print button functionality
-    const printBtn = document.querySelector('.print-btn');
-    if (printBtn) {
-        printBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const elementsToHide = document.querySelectorAll('.header-actions, .btn, .dropdown');
-            elementsToHide.forEach(el => el.style.display = 'none');
-            window.print();
-            setTimeout(() => {
-                elementsToHide.forEach(el => el.style.display = '');
-            }, 100);
         });
     }
 
@@ -1022,418 +986,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }, 10);
         });
-    }
-
-    // Export button functionality
-    const exportBtn = document.querySelector('.export-btn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const originalText = exportBtn.innerHTML;
-            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Exporting...';
-            exportBtn.disabled = true;
-            
-            // Generate Excel file
-            exportToExcel().then(() => {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-            }).catch(() => {
-                exportBtn.innerHTML = originalText;
-                exportBtn.disabled = false;
-                alert('Export failed. Please try again.');
-            });
-        });
-    }
-    
-    // Excel export function
-    function exportToExcel() {
-        return new Promise((resolve, reject) => {
-            try {
-                // Create workbook
-                const wb = XLSX.utils.book_new();
-                
-                // Create main data worksheet
-                createPaymentsWorksheet(wb);
-                
-                // Create summary worksheet
-                createSummaryWorksheet(wb);
-                
-                // Create charts worksheet
-                createChartsWorksheet(wb);
-                
-                // Generate filename with current date and time
-                const now = new Date();
-                const dateStr = now.toISOString().split('T')[0];
-                const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '');
-                const filename = `Online_Course_Payments_Report_${dateStr}_${timeStr}.xlsx`;
-                
-                // Download file
-                XLSX.writeFile(wb, filename);
-                
-                // Show success message
-                setTimeout(() => {
-                    showSuccessToast('Professional Excel report downloaded successfully!', 'fas fa-file-excel');
-                }, 500);
-                
-                resolve();
-                
-            } catch (error) {
-                console.error('Export error:', error);
-                reject(error);
-            }
-        });
-    }
-    
-    // Create main payments data worksheet
-    function createPaymentsWorksheet(wb) {
-        const table = document.querySelector('.table');
-        if (!table) return;
-        
-        // Get current date for header
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-        
-        // Create header rows
-        const headerData = [
-            ['ONLINE COURSE PLATFORM - PAYMENT REPORT'], // Company title
-            ['Generated on: ' + dateStr], // Date
-            [''], // Empty row
-            ['PAYMENT TRANSACTIONS'], // Section title
-            [''] // Empty row
-        ];
-        
-        // Get table headers
-        const headers = [];
-        const headerCells = table.querySelectorAll('thead th');
-        headerCells.forEach(cell => {
-            const text = cell.textContent.trim();
-            if (text && text !== 'Actions') {
-                headers.push(text);
-            }
-        });
-        
-        // Add enhanced headers with descriptions
-        const enhancedHeaders = [
-            'Payment ID', 'Customer Name', 'Course Title', 'Amount (MYR)', 
-            'Payment Method', 'Status', 'Transaction ID', 'Payment Date', 'Processing Fee', 'Net Amount'
-        ];
-        headerData.push(enhancedHeaders);
-        
-        // Get data rows with enhanced information
-        const rows = table.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            const rowData = [];
-            const cells = row.querySelectorAll('td');
-            
-            cells.forEach((cell, index) => {
-                if (index < cells.length - 1) {
-                    let text = cell.textContent.trim();
-                    
-                    // Clean up status badges
-                    if (cell.querySelector('.badge')) {
-                        text = cell.querySelector('.badge').textContent.trim();
-                    }
-                    
-                    // Clean up currency formatting
-                    if (text.includes('$')) {
-                        text = text.replace(/[^0-9.,]/g, '');
-                    }
-                    
-                    rowData.push(text);
-                }
-            });
-            
-            if (rowData.length > 0) {
-                // Add calculated columns
-                const amount = parseFloat(rowData[3]) || 0;
-                const processingFee = amount * 0.029 + 0.30; // Typical PayPal fee
-                const netAmount = amount - processingFee;
-                
-                rowData.push(processingFee.toFixed(2), netAmount.toFixed(2));
-                headerData.push(rowData);
-            }
-        });
-        
-        // Create worksheet
-        const ws = XLSX.utils.aoa_to_sheet(headerData);
-        
-        // Set column widths
-        ws['!cols'] = [
-            { wch: 12 }, // Payment ID
-            { wch: 25 }, // Customer Name
-            { wch: 35 }, // Course Title
-            { wch: 15 }, // Amount
-            { wch: 18 }, // Payment Method
-            { wch: 12 }, // Status
-            { wch: 25 }, // Transaction ID
-            { wch: 18 }, // Payment Date
-            { wch: 15 }, // Processing Fee
-            { wch: 15 }  // Net Amount
-        ];
-        
-        // Style the worksheet
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        
-        // Company title styling (Row 1)
-        if (ws['A1']) {
-            ws['A1'].s = {
-                font: { bold: true, sz: 16, color: { rgb: "FFFFFF" } },
-                fill: { fgColor: { rgb: "2563EB" } },
-                alignment: { horizontal: "center", vertical: "center" }
-            };
-        }
-        
-        // Merge company title across columns
-        ws['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: enhancedHeaders.length - 1 } }, // Company title
-            { s: { r: 1, c: 0 }, e: { r: 1, c: enhancedHeaders.length - 1 } }, // Date
-            { s: { r: 3, c: 0 }, e: { r: 3, c: enhancedHeaders.length - 1 } }  // Section title
-        ];
-        
-        // Date styling (Row 2)
-        if (ws['A2']) {
-            ws['A2'].s = {
-                font: { italic: true, sz: 11, color: { rgb: "666666" } },
-                alignment: { horizontal: "center" }
-            };
-        }
-        
-        // Section title styling (Row 4)
-        if (ws['A4']) {
-            ws['A4'].s = {
-                font: { bold: true, sz: 14, color: { rgb: "1F2937" } },
-                fill: { fgColor: { rgb: "F3F4F6" } },
-                alignment: { horizontal: "center", vertical: "center" }
-            };
-        }
-        
-        // Header row styling (Row 6)
-        for (let col = 0; col < enhancedHeaders.length; col++) {
-            const cellAddress = XLSX.utils.encode_cell({ r: 5, c: col });
-            if (ws[cellAddress]) {
-                ws[cellAddress].s = {
-                    font: { bold: true, sz: 11, color: { rgb: "FFFFFF" } },
-                    fill: { fgColor: { rgb: "374151" } },
-                    alignment: { horizontal: "center", vertical: "center" },
-                    border: {
-                        top: { style: "thin", color: { rgb: "000000" } },
-                        bottom: { style: "thin", color: { rgb: "000000" } },
-                        left: { style: "thin", color: { rgb: "000000" } },
-                        right: { style: "thin", color: { rgb: "000000" } }
-                    }
-                };
-            }
-        }
-        
-        // Data rows styling
-        for (let row = 6; row <= range.e.r; row++) {
-            for (let col = 0; col <= range.e.c; col++) {
-                const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-                if (ws[cellAddress]) {
-                    const isEvenRow = (row - 6) % 2 === 0;
-                    ws[cellAddress].s = {
-                        alignment: { horizontal: col === 0 ? "center" : "left", vertical: "center" },
-                        fill: { fgColor: { rgb: isEvenRow ? "FFFFFF" : "F9FAFB" } },
-                        border: {
-                            top: { style: "thin", color: { rgb: "E5E7EB" } },
-                            bottom: { style: "thin", color: { rgb: "E5E7EB" } },
-                            left: { style: "thin", color: { rgb: "E5E7EB" } },
-                            right: { style: "thin", color: { rgb: "E5E7EB" } }
-                        }
-                    };
-                    
-                    // Special styling for status column
-                    if (col === 5 && ws[cellAddress].v) {
-                        const status = ws[cellAddress].v.toLowerCase();
-                        if (status.includes('completed')) {
-                            ws[cellAddress].s.fill = { fgColor: { rgb: "DCFCE7" } };
-                            ws[cellAddress].s.font = { color: { rgb: "166534" }, bold: true };
-                        } else if (status.includes('pending')) {
-                            ws[cellAddress].s.fill = { fgColor: { rgb: "FEF3C7" } };
-                            ws[cellAddress].s.font = { color: { rgb: "D97706" }, bold: true };
-                        } else if (status.includes('failed')) {
-                            ws[cellAddress].s.fill = { fgColor: { rgb: "FEE2E2" } };
-                            ws[cellAddress].s.font = { color: { rgb: "DC2626" }, bold: true };
-                        }
-                    }
-                    
-                    // Currency formatting for amount columns
-                    if (col === 3 || col === 8 || col === 9) {
-                        ws[cellAddress].s.numFmt = '"$"#,##0.00';
-                    }
-                }
-            }
-        }
-        
-        XLSX.utils.book_append_sheet(wb, ws, "Payment Transactions");
-    }
-    
-    // Create summary worksheet
-    function createSummaryWorksheet(wb) {
-        const stats = getStatsData();
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-        
-        const summaryData = [
-            ['PAYMENT SUMMARY DASHBOARD'],
-            ['Report Date: ' + dateStr],
-            [''],
-            ['KEY METRICS'],
-            [''],
-            ['Metric', 'Value', 'Description']
-        ];
-        
-        // Add statistics with descriptions
-        stats.forEach(stat => {
-            let description = '';
-            const metric = stat[0].toLowerCase();
-            
-            if (metric.includes('revenue')) {
-                description = 'Total revenue generated from all payments';
-            } else if (metric.includes('payment')) {
-                description = 'Total number of payment transactions';
-            } else if (metric.includes('pending')) {
-                description = 'Payments awaiting processing';
-            } else if (metric.includes('failed')) {
-                description = 'Failed payment transactions';
-            }
-            
-            summaryData.push([stat[0], stat[1], description]);
-        });
-        
-        // Add additional analytics
-        summaryData.push([''], ['PAYMENT ANALYTICS'], ['']);
-        summaryData.push(['Average Payment Value', calculateAveragePayment(), 'Mean value per transaction']);
-        summaryData.push(['Success Rate', calculateSuccessRate(), 'Percentage of successful payments']);
-        summaryData.push(['Most Used Payment Method', getMostUsedPaymentMethod(), 'Primary payment method']);
-        
-        const ws = XLSX.utils.aoa_to_sheet(summaryData);
-        
-        // Set column widths
-        ws['!cols'] = [
-            { wch: 25 }, // Metric
-            { wch: 20 }, // Value
-            { wch: 40 }  // Description
-        ];
-        
-        // Apply styling similar to main sheet
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        
-        // Title and header styling
-        if (ws['A1']) {
-            ws['A1'].s = {
-                font: { bold: true, sz: 16, color: { rgb: "FFFFFF" } },
-                fill: { fgColor: { rgb: "059669" } },
-                alignment: { horizontal: "center", vertical: "center" }
-            };
-        }
-        
-        ws['!merges'] = [
-            { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } },
-            { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } },
-            { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } }
-        ];
-        
-        XLSX.utils.book_append_sheet(wb, ws, "Summary Dashboard");
-    }
-    
-    // Create charts and analytics worksheet
-    function createChartsWorksheet(wb) {
-        const chartData = [
-            ['PAYMENT ANALYTICS & INSIGHTS'],
-            [''],
-            ['PAYMENT STATUS DISTRIBUTION'],
-            ['Status', 'Count', 'Percentage'],
-        ];
-        
-        // Calculate status distribution
-        const statusCounts = calculateStatusDistribution();
-        Object.entries(statusCounts).forEach(([status, count]) => {
-            const percentage = ((count / Object.values(statusCounts).reduce((a, b) => a + b, 0)) * 100).toFixed(1);
-            chartData.push([status, count, percentage + '%']);
-        });
-        
-        chartData.push([''], ['MONTHLY TRENDS'], ['']);
-        chartData.push(['This analysis shows payment patterns and trends']);
-        chartData.push(['']);
-        chartData.push(['RECOMMENDATIONS'], ['']);
-        chartData.push(['• Monitor failed payments and follow up with customers']);
-        chartData.push(['• Consider offering multiple payment methods']);
-        chartData.push(['• Implement payment reminders for pending transactions']);
-        chartData.push(['• Analyze peak payment times for resource planning']);
-        
-        const ws = XLSX.utils.aoa_to_sheet(chartData);
-        
-        ws['!cols'] = [
-            { wch: 30 },
-            { wch: 15 },
-            { wch: 15 }
-        ];
-        
-        XLSX.utils.book_append_sheet(wb, ws, "Analytics & Charts");
-    }
-    
-    // Helper functions for analytics
-    function calculateAveragePayment() {
-        const amounts = [];
-        document.querySelectorAll('.table tbody tr').forEach(row => {
-            const amountCell = row.cells[3];
-            if (amountCell) {
-                const amount = parseFloat(amountCell.textContent.replace(/[^0-9.,]/g, ''));
-                if (!isNaN(amount)) amounts.push(amount);
-            }
-        });
-        const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
-        return '$' + (avg || 0).toFixed(2);
-    }
-    
-    function calculateSuccessRate() {
-        let total = 0, completed = 0;
-        document.querySelectorAll('.table tbody tr').forEach(row => {
-            total++;
-            const statusCell = row.cells[5];
-            if (statusCell && statusCell.textContent.toLowerCase().includes('completed')) {
-                completed++;
-            }
-        });
-        return ((completed / total) * 100).toFixed(1) + '%';
-    }
-    
-    function getMostUsedPaymentMethod() {
-        const methods = {};
-        document.querySelectorAll('.table tbody tr').forEach(row => {
-            const methodCell = row.cells[4];
-            if (methodCell) {
-                const method = methodCell.textContent.trim();
-                methods[method] = (methods[method] || 0) + 1;
-            }
-        });
-        return Object.keys(methods).reduce((a, b) => methods[a] > methods[b] ? a : b, 'N/A');
-    }
-    
-    function calculateStatusDistribution() {
-        const statuses = {};
-        document.querySelectorAll('.table tbody tr').forEach(row => {
-            const statusCell = row.cells[5];
-            if (statusCell) {
-                let status = statusCell.textContent.trim();
-                if (statusCell.querySelector('.badge')) {
-                    status = statusCell.querySelector('.badge').textContent.trim();
-                }
-                statuses[status] = (statuses[status] || 0) + 1;
-            }
-        });
-        return statuses;
     }
 
     // Dropdown menu items

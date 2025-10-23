@@ -23,7 +23,7 @@
         <div class="col-xl-4 col-lg-5">
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-user me-2"></i>Profile
                     </h6>
                 </div>
@@ -104,7 +104,7 @@
             <!-- Quick Actions Card -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-bolt me-2"></i>Quick Actions
                     </h6>
                 </div>
@@ -142,7 +142,7 @@
             <!-- Account Information Card -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-id-card me-2"></i>Account Information
                     </h6>
                 </div>
@@ -229,7 +229,7 @@
             <!-- Activity Timestamps Card -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-history me-2"></i>Activity Timestamps
                     </h6>
                 </div>
@@ -287,46 +287,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Account Statistics Card -->
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-chart-line me-2"></i>Account Statistics
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-4 mb-3">
-                            <div class="stat-card p-3 border rounded">
-                                <i class="fas fa-calendar-alt fa-2x text-primary mb-2"></i>
-                                <h6 class="text-muted small mb-1">Account Age</h6>
-                                <h4 class="text-dark mb-0">{{ $admin->created_at->diffInDays(now()) }} Days</h4>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="stat-card p-3 border rounded">
-                                <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
-                                <h6 class="text-muted small mb-1">Verification Status</h6>
-                                <h4 class="text-dark mb-0">
-                                    @if($admin->email_verified_at)
-                                        <span class="text-success">Verified</span>
-                                    @else
-                                        <span class="text-warning">Pending</span>
-                                    @endif
-                                </h4>
-                            </div>
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <div class="stat-card p-3 border rounded">
-                                <i class="fas fa-user-shield fa-2x text-info mb-2"></i>
-                                <h6 class="text-muted small mb-1">Role Type</h6>
-                                <h4 class="text-dark mb-0">{{ ucfirst($admin->role) }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -359,7 +319,7 @@
 
 .card-header {
     border-radius: 10px 10px 0 0 !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #4a5568;
     color: white;
 }
 

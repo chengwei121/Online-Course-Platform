@@ -18,7 +18,7 @@
             <!-- Administrator Profile Card -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-user-shield me-2"></i>Administrator Information
                     </h6>
                 </div>
@@ -175,7 +175,7 @@
             <!-- Account Information Card -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
+                    <h6 class="m-0 font-weight-bold text-white">
                         <i class="fas fa-info-circle me-2"></i>Account Information
                     </h6>
                 </div>
@@ -300,7 +300,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
 
 .card-header {
     border-radius: 10px 10px 0 0 !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #4a5568;
     color: white;
 }
 

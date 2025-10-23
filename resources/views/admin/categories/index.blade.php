@@ -13,14 +13,6 @@
                 <i class="fas fa-sync-alt me-1"></i>
                 Refresh
             </button>
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="fas fa-download me-1"></i>
-                Export
-            </button>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#" onclick="exportCategories('pdf')"><i class="fas fa-file-pdf me-2"></i>PDF Report</a></li>
-                <li><a class="dropdown-item" href="#" onclick="exportCategories('excel')"><i class="fas fa-file-excel me-2"></i>Excel Export</a></li>
-            </ul>
         </div>
         <a href="{{ route('admin.categories.create') }}" class="btn btn-sm btn-primary">
             <i class="fas fa-plus me-1"></i>
@@ -368,11 +360,6 @@ function searchCategories() {
 function clearSearch() {
     document.getElementById('searchInput').value = '';
     window.location.href = `{{ route('admin.categories.index') }}`;
-}
-
-function exportCategories(format) {
-    // Implement export functionality
-    alert(`Export as ${format.toUpperCase()} - Feature coming soon!`);
 }
 
 // Enter key search
