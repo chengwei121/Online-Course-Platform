@@ -4,6 +4,55 @@
 
 @push('styles')
 <style>
+    /* Video/Media Control Buttons Fix */
+    .control-btn, 
+    button[class*="control"],
+    button[class*="player"] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 8px;
+        border: none;
+        background: #3B82F6;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    .control-btn:hover,
+    button[class*="control"]:hover,
+    button[class*="player"]:hover {
+        background: #2563EB;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .control-btn:active,
+    button[class*="control"]:active,
+    button[class*="player"]:active {
+        transform: translateY(0);
+    }
+    
+    .control-btn.secondary {
+        background: #6B7280;
+    }
+    
+    .control-btn.secondary:hover {
+        background: #4B5563;
+    }
+    
+    .control-btn i,
+    button[class*="control"] i,
+    button[class*="player"] i {
+        font-size: inherit;
+        line-height: 1;
+    }
+
     .hero-gradient {
         background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
     }
