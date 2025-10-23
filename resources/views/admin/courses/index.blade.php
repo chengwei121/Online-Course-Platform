@@ -635,6 +635,77 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* Action buttons styling */
+td .d-flex.gap-2 {
+    display: flex !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+td .btn-sm {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+    border-radius: 0.375rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    border: none !important;
+    transition: all 0.2s ease !important;
+}
+
+td .btn-sm i {
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+}
+
+td .btn-primary {
+    background-color: #4e73df !important;
+    color: white !important;
+}
+
+td .btn-primary:hover {
+    background-color: #2e59d9 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(78, 115, 223, 0.4) !important;
+}
+
+td .btn-secondary {
+    background-color: #858796 !important;
+    color: white !important;
+}
+
+td .btn-secondary:hover {
+    background-color: #60616f !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(133, 135, 150, 0.4) !important;
+}
+
+td .btn-success {
+    background-color: #1cc88a !important;
+    color: white !important;
+}
+
+td .btn-success:hover {
+    background-color: #17a673 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(28, 200, 138, 0.4) !important;
+}
+
+td .btn-danger {
+    background-color: #e74a3b !important;
+    color: white !important;
+}
+
+td .btn-danger:hover {
+    background-color: #be2617 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(231, 74, 59, 0.4) !important;
+}
+
 /* Course thumbnail improvements */
 .table img {
     transition: transform 0.2s ease;
