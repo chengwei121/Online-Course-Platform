@@ -18,7 +18,7 @@
                 Edit Category
             </a>
         </div>
-        @if($category->courses->count() == 0)
+        @if($stats['total_courses'] == 0)
         <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCategory()">
             <i class="fas fa-trash me-1"></i>
             Delete Category
@@ -40,7 +40,7 @@
                                 Total Courses
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $category->courses->count() }}
+                                {{ $stats['total_courses'] }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -60,7 +60,7 @@
                                 Published Courses
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $category->courses->where('status', 'published')->count() }}
+                                {{ $stats['published_courses'] }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -80,7 +80,7 @@
                                 Total Instructors
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $category->courses->pluck('teacher_id')->unique()->count() }}
+                                {{ $stats['total_instructors'] }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -100,7 +100,7 @@
                                 Total Enrollments
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $category->courses->sum(function($course) { return $course->enrollments->count(); }) }}
+                                {{ $stats['total_enrollments'] }}
                             </div>
                         </div>
                         <div class="col-auto">
@@ -178,9 +178,9 @@
         <div class="card-header modern-grey-header text-white d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold">
                 <i class="fas fa-book me-2"></i>
-                Courses in this Category ({{ $category->courses->count() }})
+                Courses in this Category ({{ $stats['total_courses'] }})
             </h6>
-            @if($category->courses->count() > 0)
+            @if($stats['total_courses'] > 0)
             <div class="btn-group">
                 <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
                     <i class="fas fa-filter me-1"></i>
@@ -195,7 +195,7 @@
             @endif
         </div>
         <div class="card-body">
-            @if($category->courses->count() > 0)
+            @if($stats['total_courses'] > 0)
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead class="table-light">
@@ -209,7 +209,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($category->courses as $course)
+                        @foreach($courses as $course)
                         <tr data-status="{{ $course->status }}">
                             <td>
                                 <div class="d-flex align-items-center">
@@ -243,7 +243,7 @@
                             </td>
                             <td>
                                 <span class="badge bg-primary rounded-pill">
-                                    {{ $course->enrollments->count() }}
+                                    {{ $course->enrollments_count ?? 0 }}
                                 </span>
                             </td>
                             <td>
@@ -263,6 +263,18 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            @if($courses->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-3 px-3 pb-3">
+                <div class="text-muted small">
+                    Showing {{ $courses->firstItem() }} to {{ $courses->lastItem() }} of {{ $courses->total() }} courses
+                </div>
+                <div>
+                    {{ $courses->links() }}
+                </div>
+            </div>
+            @endif
             @else
             <div class="text-center py-5">
                 <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
@@ -279,7 +291,7 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-@if($category->courses->count() == 0)
+@if($stats['total_courses'] == 0)
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">

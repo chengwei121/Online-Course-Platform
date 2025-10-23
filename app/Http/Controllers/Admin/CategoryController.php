@@ -76,11 +76,26 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        $category->load(['courses' => function($query) {
-            $query->with('instructor')->orderBy('created_at', 'desc');
-        }]);
+        // Optimize: Only load necessary fields and limit eager loading
+        $category->loadCount('courses');
         
-        return view('admin.categories.show', compact('category'));
+        // Load courses with pagination for better performance
+        $courses = $category->courses()
+            ->with(['instructor:id,name,profile_picture', 'enrollments:id,course_id'])
+            ->withCount('enrollments')
+            ->select('id', 'title', 'slug', 'description', 'price', 'thumbnail', 'status', 'teacher_id', 'category_id', 'created_at')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+        
+        // Get statistics
+        $stats = [
+            'total_courses' => $category->courses()->count(),
+            'published_courses' => $category->courses()->where('status', 'published')->count(),
+            'total_enrollments' => $category->courses()->withCount('enrollments')->get()->sum('enrollments_count'),
+            'total_instructors' => $category->courses()->distinct('teacher_id')->count('teacher_id'),
+        ];
+        
+        return view('admin.categories.show', compact('category', 'courses', 'stats'));
     }
 
     /**
