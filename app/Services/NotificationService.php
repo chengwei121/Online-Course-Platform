@@ -179,7 +179,7 @@ class NotificationService
      */
     public function getUnreadCount(User $user): int
     {
-        return $user->notifications()->unread()->count();
+        return $user->customNotifications()->unread()->count();
     }
 
     /**
@@ -187,7 +187,7 @@ class NotificationService
      */
     public function getRecentNotifications(User $user, int $limit = 10): Collection
     {
-        return $user->notifications()
+        return $user->customNotifications()
             ->with('sender')
             ->latest()
             ->limit($limit)
@@ -199,7 +199,7 @@ class NotificationService
      */
     public function markAsRead(int $notificationId, User $user): bool
     {
-        $notification = $user->notifications()->find($notificationId);
+        $notification = $user->customNotifications()->find($notificationId);
         if ($notification) {
             $notification->markAsRead();
             return true;
@@ -212,7 +212,7 @@ class NotificationService
      */
     public function markAllAsRead(User $user): int
     {
-        return $user->notifications()->unread()->update([
+        return $user->customNotifications()->unread()->update([
             'is_read' => true,
             'read_at' => now()
         ]);

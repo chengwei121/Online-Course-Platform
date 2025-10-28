@@ -927,10 +927,15 @@
                     @auth
                         <!-- Notifications -->
                         <div class="relative hidden sm:block">
-                            <button class="p-2 rounded-xl hover:bg-gray-100 relative group">
+                            <a href="{{ route('client.notifications.index') }}" class="p-2 rounded-xl hover:bg-gray-100 relative group block">
                                 <i class="fas fa-bell text-gray-600 group-hover:text-primary"></i>
-                                <span class="notification-badge">2</span>
-                            </button>
+                                @php
+                                    $unreadCount = auth()->user()->customNotifications()->unread()->count();
+                                @endphp
+                                @if($unreadCount > 0)
+                                    <span class="notification-badge">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
                         </div>
 
                         <!-- User Menu -->
@@ -1030,24 +1035,23 @@
                                                 </div>
                                                 <span class="text-sm font-medium text-gray-700">My Reviews</span>
                                             </a>
-                                            <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <a href="{{ route('client.enrollments.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                                                    <i class="fas fa-user-circle text-sm"></i>
+                                                    <i class="fas fa-graduation-cap text-sm"></i>
                                                 </div>
-                                                <span class="text-sm font-medium text-gray-700">Profile Settings</span>
+                                                <span class="text-sm font-medium text-gray-700">My Courses</span>
                                             </a>
-                                            <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <a href="{{ route('client.notifications.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
                                                     <i class="fas fa-bell text-sm"></i>
                                                 </div>
                                                 <span class="text-sm font-medium text-gray-700">Notifications</span>
-                                                <span class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">3</span>
-                                            </a>
-                                            <a href="#" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                                                    <i class="fas fa-cog text-sm"></i>
-                                                </div>
-                                                <span class="text-sm font-medium text-gray-700">Settings</span>
+                                                @php
+                                                    $unreadCount = auth()->user()->customNotifications()->unread()->count();
+                                                @endphp
+                                                @if($unreadCount > 0)
+                                                    <span class="ml-auto px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-600">{{ $unreadCount }}</span>
+                                                @endif
                                             </a>
                                         </div>
                                     </div>
@@ -1134,10 +1138,15 @@
                             <div class="text-base font-medium text-gray-800">{{ auth()->user()->name }}</div>
                             <div class="text-sm font-medium text-gray-500">{{ auth()->user()->email }}</div>
                         </div>
-                        <button class="ml-auto flex-shrink-0 p-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                        <a href="{{ route('client.notifications.index') }}" class="ml-auto flex-shrink-0 p-2 rounded-lg text-gray-500 hover:bg-gray-100 relative">
                             <i class="fas fa-bell w-6 h-6"></i>
-                            <span class="notification-badge">2</span>
-                        </button>
+                            @php
+                                $unreadCount = auth()->user()->customNotifications()->unread()->count();
+                            @endphp
+                            @if($unreadCount > 0)
+                                <span class="notification-badge">{{ $unreadCount }}</span>
+                            @endif
+                        </a>
                     </div>
                     <div class="mt-3 space-y-1 px-4 sm:px-6">
                         @if(auth()->user()->isAdmin())
@@ -1147,10 +1156,15 @@
                                 Admin Panel
                             </a>
                         @endif
-                        <a href="#"
+                        <a href="{{ route('client.enrollments.index') }}"
                            class="block py-2 px-3 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition">
-                            <i class="fas fa-cog mr-2"></i>
-                            Settings
+                            <i class="fas fa-graduation-cap mr-2"></i>
+                            My Courses
+                        </a>
+                        <a href="{{ route('client.notifications.index') }}"
+                           class="block py-2 px-3 text-base font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition">
+                            <i class="fas fa-bell mr-2"></i>
+                            Notifications
                         </a>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -1184,37 +1198,6 @@
     <!-- Main Content -->
     <main class="page-transition">
         <div class="container-fluid p-0">
-            @if(session('success'))
-                <div class="alert bg-green-50 border-l-4 border-green-500 mb-6" 
-                     x-data="{ show: true }" 
-                     x-show="show"
-                     x-init="setTimeout(() => show = false, 5000)">
-                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
-                    <div class="flex-1">
-                        <h3 class="text-green-800 font-medium">Success</h3>
-                        <p class="text-green-700 text-sm">{{ session('success') }}</p>
-                    </div>
-                    <button @click="show = false" class="text-green-500 hover:text-green-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-            @endif
-
-            @if(session('error'))
-                <div class="alert bg-red-50 border-l-4 border-red-500 mb-6"
-                     x-data="{ show: true }" 
-                     x-show="show"
-                     x-init="setTimeout(() => show = false, 5000)">
-                    <i class="fas fa-exclamation-circle text-red-500 text-xl"></i>
-                    <div class="flex-1">
-                        <h3 class="text-red-800 font-medium">Error</h3>
-                        <p class="text-red-700 text-sm">{{ session('error') }}</p>
-                    </div>
-                    <button @click="show = false" class="text-red-500 hover:text-red-700">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            @endif
-
             @yield('content')
         </div>
     </main>

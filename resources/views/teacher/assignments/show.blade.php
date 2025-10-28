@@ -134,18 +134,23 @@
                                 </div>
                                 <div>
                                     <small class="text-muted d-block">Due Date</small>
-                                    <strong>{{ $assignment->due_date->format('M d, Y h:i A') }}</strong>
-                                    @php
-                                        $now = now();
-                                        $dueDate = $assignment->due_date;
-                                        $diff = $now->diffInDays($dueDate, false);
-                                    @endphp
-                                    @if($diff < 0)
-                                        <small class="text-danger d-block">Overdue</small>
-                                    @elseif($diff == 0)
-                                        <small class="text-warning d-block">Due today</small>
+                                    @if($assignment->due_date)
+                                        <strong>{{ $assignment->due_date->format('M d, Y h:i A') }}</strong>
+                                        @php
+                                            $now = now();
+                                            $dueDate = $assignment->due_date;
+                                            $diff = $now->diffInDays($dueDate, false);
+                                        @endphp
+                                        @if($diff < 0)
+                                            <small class="text-danger d-block">Overdue</small>
+                                        @elseif($diff == 0)
+                                            <small class="text-warning d-block">Due today</small>
+                                        @else
+                                            <small class="text-muted d-block">{{ $diff }} day(s) remaining</small>
+                                        @endif
                                     @else
-                                        <small class="text-muted d-block">{{ $diff }} day(s) remaining</small>
+                                        <strong>No deadline</strong>
+                                        <small class="text-muted d-block">Students can submit anytime</small>
                                     @endif
                                 </div>
                             </div>

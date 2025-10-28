@@ -14,9 +14,11 @@
         min-height: 300px;
     }
     
+    /* Progress bar - visible and clear */
     .progress-bar-container {
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(8px);
+        background: #ffffff !important;
+        display: block !important;
+        visibility: visible !important;
     }
     
     .prose h1, .prose h2, .prose h3 { margin-top: 1.5rem; margin-bottom: 1rem; }
@@ -104,7 +106,7 @@
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden gpu-accelerated">
                         <!-- Optimized Video Player -->
                         @if($lesson->video_url)
-                            <div class="video-container relative w-full max-w-4xl mx-auto bg-black">
+                            <div class="video-container relative w-full bg-black">
                                 <div class="relative w-full aspect-[16/9]">
                                     
                                     @if(Str::startsWith($lesson->video_url, ['http://', 'https://']))
@@ -119,6 +121,7 @@
                                                 $embedUrl = $videoId ? "https://www.youtube.com/embed/{$videoId}?enablejsapi=1&origin=" . request()->getSchemeAndHttpHost() : $lesson->video_url;
                                             @endphp
                                             <iframe 
+                                                id="lessonVideo"
                                                 src="{{ $embedUrl }}" 
                                                 class="absolute top-0 left-0 w-full h-full"
                                                 frameborder="0" 
@@ -131,6 +134,7 @@
                                                 $embedUrl = "https://www.youtube.com/embed/{$videoId}?enablejsapi=1&origin=" . request()->getSchemeAndHttpHost();
                                             @endphp
                                             <iframe 
+                                                id="lessonVideo"
                                                 src="{{ $embedUrl }}" 
                                                 class="absolute top-0 left-0 w-full h-full"
                                                 frameborder="0" 
@@ -139,6 +143,7 @@
                                             </iframe>
                                         @else
                                             <iframe 
+                                                id="lessonVideo"
                                                 src="{{ $lesson->video_url }}" 
                                                 class="absolute top-0 left-0 w-full h-full"
                                                 frameborder="0" 
@@ -166,8 +171,8 @@
                                 </div>
                             </div>
 
-                            <!-- Optimized Progress Bar -->
-                            <div class="progress-bar-container bg-gray-50 px-6 py-4 border-b border-gray-100">
+                            <!-- Optimized Progress Bar - Outside video container for visibility -->
+                            <div class="progress-bar-container" style="background: #ffffff; padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: block; visibility: visible;">
                                 <div class="relative">
                                     <div class="flex mb-2 items-center justify-between">
                                         <span class="text-xs font-semibold inline-block py-1 px-2.5 uppercase rounded-full text-indigo-600 bg-indigo-100">
@@ -175,10 +180,10 @@
                                         </span>
                                         <span class="text-xs font-semibold inline-block text-indigo-600" id="progressPercentage">0%</span>
                                     </div>
-                                    <div class="overflow-hidden h-2 mb-2 text-xs flex rounded-full bg-indigo-100">
+                                    <div class="overflow-hidden h-3 mb-2 text-xs flex rounded-full bg-indigo-100">
                                         <div id="progressBar" style="width:0%" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-indigo-600 transition-all duration-300 rounded-full"></div>
                                     </div>
-                                    <div class="flex justify-between text-xs text-gray-500">
+                                    <div class="flex justify-between text-xs text-gray-600">
                                         <span id="currentTime">0:00</span>
                                         <span id="totalTime">0:00</span>
                                     </div>
@@ -234,7 +239,7 @@
                                     if ($hasAssignments) {
                                         foreach ($lesson->assignments as $assignment) {
                                             $submission = $submissions->where('assignment_id', $assignment->id)->first();
-                                            if (!$submission || $submission->status !== 'submitted') {
+                                            if (!$submission || !in_array($submission->status, ['submitted', 'graded'])) {
                                                 $allAssignmentsComplete = false;
                                                 $incompleteCount++;
                                             }
@@ -294,9 +299,9 @@
                                 @endif
                             @endif
 
-                            <!-- Lazy-loaded Assignments Section -->
-                            @if(!$course->is_free && $lesson->assignments && $lesson->assignments->count() > 0)
-                                <div id="assignmentsSection" class="border-t border-gray-200 mt-8 pt-8" style="display: none;">
+                            <!-- Assignments Section - Now visible for all courses -->
+                            @if($lesson->assignments && $lesson->assignments->count() > 0)
+                                <div id="assignmentsSection" class="border-t border-gray-200 mt-8 pt-8" style="display: block;">
                                     <h2 class="text-xl font-semibold text-gray-900 mb-6">Assignments</h2>
                                     <div class="space-y-4">
                                         @foreach($lesson->assignments as $assignment)
@@ -339,11 +344,23 @@
                                                     @endphp
                                                     
                                                     @if($submission)
-                                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold {{ $submission->status === 'submitted' ? 'bg-green-100 text-green-800' : ($submission->status === 'graded' ? 'bg-blue-100 text-blue-800' : 'bg-yellow-100 text-yellow-800') }}">
-                                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                            </svg>
-                                                            {{ ucfirst($submission->status) }}
+                                                        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold {{ $submission->status === 'submitted' && is_null($submission->score) ? 'bg-yellow-100 text-yellow-800' : ($submission->status === 'graded' || !is_null($submission->score) ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800') }}">
+                                                            @if($submission->status === 'submitted' && is_null($submission->score))
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                </svg>
+                                                                Pending Review
+                                                            @elseif($submission->status === 'graded' || !is_null($submission->score))
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                </svg>
+                                                                Graded
+                                                            @else
+                                                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                </svg>
+                                                                {{ ucfirst($submission->status) }}
+                                                            @endif
                                                         </span>
                                                     @endif
                                                 </div>
@@ -359,7 +376,12 @@
                                                         <svg class="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                                         </svg>
-                                                        <span class="font-medium">Due:</span>&nbsp;{{ $assignment->due_date->format('M d, Y') }}
+                                                        <span class="font-medium">Due:</span>&nbsp;
+                                                        @if($assignment->due_date)
+                                                            {{ $assignment->due_date->format('M d, Y') }}
+                                                        @else
+                                                            No deadline
+                                                        @endif
                                                     </div>
                                                     
                                                     @if(!$submission)
@@ -369,6 +391,14 @@
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                                                             </svg>
                                                             Start Assignment
+                                                        </a>
+                                                    @elseif($submission->status === 'submitted' && is_null($submission->score))
+                                                        <a href="{{ route('client.assignments.show', $assignment->id) }}" 
+                                                           class="w-full sm:w-auto inline-flex items-center justify-center px-5 py-2.5 border border-yellow-300 text-sm font-medium rounded-lg text-yellow-700 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-all duration-200">
+                                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                            </svg>
+                                                            Edit Submission
                                                         </a>
                                                     @else
                                                         <a href="{{ route('client.assignments.show', $assignment->id) }}" 
@@ -525,24 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Assignments section shown - assignments must be completed first');
     }
     
-    // Optimized progress update - throttled to every 2 seconds
-    const throttledProgressUpdate = throttle(function() {
-        if (video && video.currentTime > 0) {
-            const currentTime = video.currentTime;
-            let duration = video.duration || lessonDuration;
-            
-            if (duration && duration > 0) {
-                updateVideoProgress(currentTime, duration);
-            } else {
-                const currentTimeElement = document.getElementById('currentTime');
-                if (currentTimeElement) {
-                    currentTimeElement.textContent = formatTime(currentTime);
-                }
-            }
-        }
-    }, 2000);
-    
-    setInterval(throttledProgressUpdate, 2000);
+    console.log('✅ Initialization complete - video player ready');
 });
 
 function setInitialProgress(videoProgress, lessonDuration) {
@@ -575,10 +588,22 @@ function setInitialProgress(videoProgress, lessonDuration) {
 }
 
 function initializeVideoPlayer() {
-    if (video) {
+    video = document.getElementById('lessonVideo');
+    
+    if (!video) {
+        console.log('No video element found with id: lessonVideo');
+        return;
+    }
+    
+    // Check if it's an iframe (YouTube) or video element (local)
+    if (video.tagName === 'IFRAME') {
+        console.log('YouTube iframe detected, setting up YouTube player');
+        setupYoutubeVideo();
+    } else if (video.tagName === 'VIDEO') {
+        console.log('Local video element detected, setting up local video player');
         setupLocalVideo();
     } else {
-        setupYoutubeVideo();
+        console.log('Unknown video element type:', video.tagName);
     }
 }
 
@@ -634,7 +659,7 @@ function setupLocalVideo() {
     
     video.addEventListener('seeked', function() {
         console.log('Seek completed at:', video.currentTime);
-        saveProgress(video.currentTime);
+        debouncedSaveProgress(video.currentTime);
     });
     
     // Make sure controls are enabled
@@ -717,55 +742,92 @@ function setupLocalVideo() {
 }
 
 function setupYoutubeVideo() {
-    const iframe = document.querySelector('iframe');
-    if (!iframe || !iframe.src.includes('youtube.com')) return;
+    const iframe = document.getElementById('lessonVideo');
+    if (!iframe || iframe.tagName !== 'IFRAME') {
+        console.log('No YouTube iframe found with id lessonVideo');
+        return;
+    }
 
-    if (!window.YT) {
+    console.log('Setting up YouTube player for iframe:', iframe.src);
+
+    // Load YouTube API if not already loaded
+    if (!window.YT || !window.YT.Player) {
+        console.log('Loading YouTube IFrame API...');
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
-        tag.onload = () => {
-            if (window.YT && window.YT.Player) {
-                initYouTubePlayer(iframe);
-            }
+        
+        // Set up callback for when API loads
+        window.onYouTubeIframeAPIReady = function() {
+            console.log('YouTube IFrame API Ready - creating player');
+            createYouTubePlayer();
         };
+        
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     } else {
-        initYouTubePlayer(iframe);
+        console.log('YouTube API already loaded - creating player');
+        createYouTubePlayer();
     }
 }
 
-function initYouTubePlayer(iframe) {
-    iframe.id = 'youtubePlayer';
+function createYouTubePlayer() {
+    console.log('Creating YouTube player instance with id: lessonVideo');
     
-    window.onYouTubeIframeAPIReady = function() {
-        youtubePlayer = new YT.Player('youtubePlayer', {
+    try {
+        youtubePlayer = new YT.Player('lessonVideo', {
             events: {
                 'onReady': onYoutubeReady,
                 'onStateChange': onYoutubeStateChange,
                 'onPlaybackRateChange': onYoutubePlaybackRateChange
             }
         });
-    };
+        console.log('YouTube player created successfully');
+    } catch (error) {
+        console.error('Error creating YouTube player:', error);
+    }
 }
 
 function onYoutubeReady(event) {
+    console.log('YouTube player ready');
+    
     const container = document.querySelector('[data-video-progress]');
     const videoProgress = parseInt(container.dataset.videoProgress) || 0;
+    const duration = event.target.getDuration();
     
-    if (videoProgress > 0) {
+    console.log('YouTube video duration:', duration);
+    console.log('Saved progress:', videoProgress);
+    
+    if (videoProgress > 0 && duration > 0) {
         event.target.seekTo(videoProgress, true);
+        console.log('Seeking to saved progress:', videoProgress);
+    }
+    
+    // Set total time immediately
+    const totalTimeElement = document.getElementById('totalTime');
+    if (totalTimeElement && duration > 0) {
+        totalTimeElement.textContent = formatTime(duration);
     }
 
     if (youtubeProgressInterval) {
         clearInterval(youtubeProgressInterval);
     }
-    youtubeProgressInterval = setInterval(updateYoutubeProgress, 2000); // Reduced frequency
+    
+    // Start progress tracking - every 1 second for better responsiveness
+    youtubeProgressInterval = setInterval(updateYoutubeProgress, 1000);
+    console.log('YouTube progress tracking started');
+    
     event.target.setPlaybackRate(1);
 }
 
 function onYoutubeStateChange(event) {
-    if (event.data === YT.PlayerState.ENDED) {
+    console.log('YouTube state changed:', event.data);
+    
+    if (event.data === YT.PlayerState.PLAYING) {
+        console.log('YouTube video playing');
+    } else if (event.data === YT.PlayerState.PAUSED) {
+        console.log('YouTube video paused');
+    } else if (event.data === YT.PlayerState.ENDED) {
+        console.log('YouTube video ended');
         hasWatchedEntireVideo = true;
         if (youtubePlayer && typeof youtubePlayer.getDuration === 'function') {
             const duration = youtubePlayer.getDuration();
@@ -789,8 +851,9 @@ function onYoutubePlaybackRateChange(event) {
     
 }
 
-const updateYoutubeProgress = throttle(function() {
+function updateYoutubeProgress() {
     if (!youtubePlayer || typeof youtubePlayer.getCurrentTime !== 'function') {
+        console.log('YouTube player not ready for progress update');
         return;
     }
 
@@ -801,14 +864,19 @@ const updateYoutubeProgress = throttle(function() {
         if (!isNaN(currentTime) && !isNaN(duration) && duration > 0) {
             updateVideoProgress(currentTime, duration);
             debouncedSaveProgress(currentTime);
+        } else {
+            console.log('Invalid YouTube time values:', { currentTime, duration });
         }
     } catch (error) {
         console.error('Error updating YouTube progress:', error);
     }
-}, 2000);
+}
 
 function updateVideoProgress(currentTime, duration) {
-    if (isCompleted) return;
+    if (isCompleted) {
+        console.log('Lesson already completed, skipping progress update');
+        return;
+    }
     
     if (typeof currentTime !== 'number' || isNaN(currentTime)) currentTime = 0;
     if (typeof duration !== 'number' || isNaN(duration) || duration <= 0) {
@@ -819,11 +887,17 @@ function updateVideoProgress(currentTime, duration) {
         } else {
             const currentTimeElement = document.getElementById('currentTime');
             if (currentTimeElement) currentTimeElement.textContent = formatTime(currentTime);
+            console.log('Duration not available, only updating current time');
             return;
         }
     }
     
     const percentage = Math.min((currentTime / duration) * 100, 100);
+    console.log('Updating video progress:', { 
+        currentTime: currentTime.toFixed(2), 
+        duration: duration.toFixed(2), 
+        percentage: percentage.toFixed(2) + '%' 
+    });
     
     // Batch DOM updates
     requestAnimationFrame(() => {
@@ -832,7 +906,10 @@ function updateVideoProgress(currentTime, duration) {
         const currentTimeElement = document.getElementById('currentTime');
         const totalTimeElement = document.getElementById('totalTime');
         
-        if (progressBar) progressBar.style.width = `${percentage}%`;
+        if (progressBar) {
+            progressBar.style.width = `${percentage}%`;
+            console.log('Progress bar updated to:', percentage.toFixed(2) + '%');
+        }
         if (progressPercentage) progressPercentage.textContent = `${Math.round(percentage)}%`;
         if (currentTimeElement) currentTimeElement.textContent = formatTime(currentTime);
         if (totalTimeElement) totalTimeElement.textContent = formatTime(duration);
@@ -841,6 +918,7 @@ function updateVideoProgress(currentTime, duration) {
     if (percentage >= 95) {
         hasWatchedEntireVideo = true;
         showAssignments();
+        console.log('Video 95% watched - assignments shown, hasWatchedEntireVideo:', hasWatchedEntireVideo);
     }
 }
 
@@ -854,12 +932,16 @@ function formatTime(seconds) {
 // Debounced save progress to reduce server requests
 const debouncedSaveProgress = debounce(function(currentTime) {
     if (isCompleted || typeof currentTime !== 'number' || isNaN(currentTime) || currentTime < 0) {
+        console.log('Skipping progress save:', { isCompleted, currentTime });
         return;
     }
 
+    const progressValue = Math.floor(currentTime);
+    console.log('Saving progress to server:', progressValue);
+
     const formData = new FormData();
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-    formData.append('video_progress', Math.floor(currentTime));
+    formData.append('video_progress', progressValue);
 
     fetch('{{ route("client.lessons.progress", ["course" => $course->slug, "lesson" => $lesson->id]) }}', {
         method: 'POST',
@@ -872,16 +954,21 @@ const debouncedSaveProgress = debounce(function(currentTime) {
         credentials: 'same-origin'
     })
     .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Progress saved successfully:', data);
+        } else {
+            console.error('Failed to save progress:', data);
+        }
+    })
     .catch(error => console.error('Error saving progress:', error));
 }, 3000);
 
 function showAssignments() {
-    const isFree = document.querySelector('[data-course-is-free]').dataset.courseIsFree === 'true';
-    if (!isFree) {
-        const assignmentsSection = document.getElementById('assignmentsSection');
-        if (assignmentsSection) {
-            assignmentsSection.style.display = 'block';
-        }
+    // Show assignments for all courses (free or paid)
+    const assignmentsSection = document.getElementById('assignmentsSection');
+    if (assignmentsSection) {
+        assignmentsSection.style.display = 'block';
     }
 }
 
@@ -966,18 +1053,29 @@ function markAsComplete() {
         console.error('Error getting current time:', error);
     }
 
+    // Strict validation - must watch at least 90% of the video
     if (duration <= 0) {
-        currentProgress = Math.max(60, currentProgress);
-    } else {
-        const progressPercentage = (currentProgress / duration) * 100;
-        if (progressPercentage < 70 && !hasWatchedEntireVideo && currentProgress < 60) {
-            alert('You must watch more of the video before marking it as complete. Please watch at least 70% or 60 seconds minimum.');
-            isAutoCompleting = false;
-            return;
-        }
+        alert('Please wait for the video to load completely before marking as complete.');
+        isAutoCompleting = false;
+        return;
     }
     
-    const finalProgress = Math.max(60, currentProgress);
+    const progressPercentage = (currentProgress / duration) * 100;
+    console.log('Completion check:', { currentProgress, duration, progressPercentage, hasWatchedEntireVideo });
+    
+    // Require 90% completion OR watched entire video
+    if (progressPercentage < 90 && !hasWatchedEntireVideo) {
+        const remaining = Math.ceil((duration * 0.9) - currentProgress);
+        const remainingMinutes = Math.floor(remaining / 60);
+        const remainingSeconds = remaining % 60;
+        alert(`You must watch at least 90% of the video before marking it as complete.\n\nYou need to watch ${remainingMinutes}:${remainingSeconds.toString().padStart(2, '0')} more.`);
+        isAutoCompleting = false;
+        return;
+    }
+    
+    const finalProgress = Math.max(currentProgress, Math.floor(duration * 0.9));
+    
+    console.log('Marking as complete with progress:', finalProgress, 'of', duration);
     
     const formData = new FormData();
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
@@ -1055,6 +1153,40 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Debug helper function - call this from browser console
+window.checkVideoStatus = function() {
+    console.log('=== VIDEO STATUS DEBUG ===');
+    console.log('Video element:', video);
+    console.log('YouTube player:', youtubePlayer);
+    console.log('Is completed:', isCompleted);
+    console.log('Has watched entire video:', hasWatchedEntireVideo);
+    
+    if (video) {
+        console.log('Local video:');
+        console.log('  Current time:', video.currentTime);
+        console.log('  Duration:', video.duration);
+        console.log('  Paused:', video.paused);
+    }
+    
+    if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
+        try {
+            console.log('YouTube video:');
+            console.log('  Current time:', youtubePlayer.getCurrentTime());
+            console.log('  Duration:', youtubePlayer.getDuration());
+            console.log('  State:', youtubePlayer.getPlayerState());
+            console.log('  Progress interval running:', youtubeProgressInterval !== null);
+        } catch (e) {
+            console.log('  Error getting YouTube info:', e);
+        }
+    }
+    
+    console.log('Progress bar width:', document.getElementById('progressBar')?.style.width);
+    console.log('Progress percentage:', document.getElementById('progressPercentage')?.textContent);
+    console.log('=========================');
+};
+
+console.log('💡 Type checkVideoStatus() in console to debug video status');
 </script>
 @endpush
 

@@ -25,7 +25,7 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         
-        $query = $user->notifications()->with('sender');
+        $query = $user->customNotifications()->with('sender');
         
         // Filter by type if specified
         if ($request->has('type') && $request->type) {
@@ -44,7 +44,7 @@ class NotificationController extends Controller
         $notifications = $query->latest()->paginate(15);
         
         // Get notification types for filter
-        $notificationTypes = $user->notifications()
+        $notificationTypes = $user->customNotifications()
             ->select('type')
             ->groupBy('type')
             ->pluck('type');

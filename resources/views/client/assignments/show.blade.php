@@ -3,37 +3,36 @@
 @section('title', $assignment->title)
 
 @section('content')
-<!-- Toast Notification -->
 @if(session('success'))
-<div id="toast-success" class="fixed top-20 right-4 z-50 flex items-center w-full max-w-md p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-lg border-l-4 border-green-500 animate-slide-in">
-    <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-        </svg>
+<div class="fixed top-24 right-6 z-50 max-w-md">
+    <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4 shadow-lg animate-slide-in">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm font-medium text-green-800">{{ session('success') }}</p>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-green-400 hover:text-green-600">
+                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                </svg>
+            </button>
+        </div>
     </div>
-    <div class="ml-3 text-sm font-medium text-gray-900">{{ session('success') }}</div>
-    <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="document.getElementById('toast-success').remove()">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-    </button>
 </div>
-@endif
-
-@if(session('error'))
-<div id="toast-error" class="fixed top-20 right-4 z-50 flex items-center w-full max-w-md p-4 mb-4 text-gray-500 bg-white rounded-lg shadow-lg border-l-4 border-red-500 animate-slide-in">
-    <div class="inline-flex items-center justify-center flex-shrink-0 w-8 h-8 text-red-500 bg-red-100 rounded-lg">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-    </div>
-    <div class="ml-3 text-sm font-medium text-gray-900">{{ session('error') }}</div>
-    <button type="button" class="ml-auto -mx-1.5 -my-1.5 bg-white text-gray-400 hover:text-gray-900 rounded-lg focus:ring-2 focus:ring-gray-300 p-1.5 hover:bg-gray-100 inline-flex h-8 w-8" onclick="document.getElementById('toast-error').remove()">
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-        </svg>
-    </button>
-</div>
+<script>
+    setTimeout(() => {
+        const alert = document.querySelector('.animate-slide-in');
+        if (alert) {
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(() => alert.parentElement.remove(), 500);
+        }
+    }, 5000);
+</script>
 @endif
 
 <div class="max-w-4xl mx-auto py-8 px-4 mt-20">
@@ -58,7 +57,12 @@
                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span class="font-medium">Due:</span> {{ $assignment->due_date->format('M d, Y') }}
+                    <span class="font-medium">Due:</span> 
+                    @if($assignment->due_date)
+                        {{ $assignment->due_date->format('M d, Y') }}
+                    @else
+                        No deadline
+                    @endif
                 </div>
                 
                 <div class="flex items-center text-gray-600">
@@ -91,10 +95,15 @@
                 @if($submission)
                     <div class="flex items-center">
                         <span class="px-2 py-0.5 rounded-full text-xs font-medium
-                            {{ $submission->status === 'submitted' ? 'bg-blue-100 text-blue-800' : '' }}
+                            {{ $submission->status === 'submitted' && is_null($submission->score) ? 'bg-yellow-100 text-yellow-800' : '' }}
+                            {{ $submission->status === 'submitted' && !is_null($submission->score) ? 'bg-blue-100 text-blue-800' : '' }}
                             {{ $submission->status === 'graded' ? 'bg-green-100 text-green-800' : '' }}
                             {{ $submission->status === 'draft' ? 'bg-gray-100 text-gray-800' : '' }}">
-                            {{ ucfirst($submission->status) }}
+                            @if($submission->status === 'submitted' && is_null($submission->score))
+                                Pending Review
+                            @else
+                                {{ ucfirst($submission->status) }}
+                            @endif
                         </span>
                     </div>
                 @endif
@@ -120,7 +129,34 @@
             <!-- Submission Form -->
             @if(!$submission || is_null($submission->score))
                 <div class="border-t border-gray-200 pt-4">
-                    <h2 class="text-base font-semibold text-gray-900 mb-3">Your Submission</h2>
+                    @if($submission && $submission->status === 'submitted')
+                        <!-- Pending Status Alert -->
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 mb-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                                    </svg>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-yellow-800">
+                                        Your assignment has been submitted and is waiting for teacher review.
+                                    </p>
+                                    <p class="mt-1 text-sm text-yellow-700">
+                                        You can still edit your submission until the teacher grades it.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                    
+                    <h2 class="text-base font-semibold text-gray-900 mb-3">
+                        @if($submission && $submission->status === 'submitted')
+                            Edit Your Submission
+                        @else
+                            Your Submission
+                        @endif
+                    </h2>
                     <form action="{{ route('client.assignments.submit', $assignment) }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="space-y-4">
@@ -153,10 +189,9 @@
                                 @if($submission && $submission->submission_file)
                                     <p class="mt-2 text-sm text-gray-500">
                                         Current file: 
-                                        <a href="{{ asset('storage/' . $submission->submission_file) }}" 
-                                           class="text-indigo-600 hover:text-indigo-700 font-medium underline"
-                                           target="_blank">
-                                            View Attachment
+                                        <a href="{{ route('client.assignments.download', $submission->id) }}" 
+                                           class="text-indigo-600 hover:text-indigo-700 font-medium underline">
+                                            Download Attachment
                                         </a>
                                     </p>
                                 @endif
@@ -168,7 +203,17 @@
                             <div class="flex justify-end pt-2">
                                 <button type="submit" 
                                         class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-semibold rounded-lg shadow-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
-                                    {{ $submission ? 'Update Submission' : 'Submit Assignment' }}
+                                    @if($submission && $submission->status === 'submitted')
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Update Submission
+                                    @else
+                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        Submit Assignment
+                                    @endif
                                 </button>
                             </div>
                         </div>
@@ -183,13 +228,12 @@
                             <h3 class="text-sm font-semibold text-gray-700 mb-2">Your Work</h3>
                             <p class="mt-2 text-gray-600 text-sm">{{ $submission->submission_text }}</p>
                             @if($submission->submission_file)
-                                <a href="{{ asset('storage/' . $submission->submission_file) }}" 
-                                   class="mt-2 inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700 underline"
-                                   target="_blank">
+                                <a href="{{ route('client.assignments.download', $submission->id) }}" 
+                                   class="mt-2 inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700 underline">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                                     </svg>
-                                    View Attachment
+                                    Download Attachment
                                 </a>
                             @endif
                         </div>
@@ -213,30 +257,6 @@
         </div>
     </div>
 </div>
-
-<!-- Auto-hide toast after 5 seconds -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toastSuccess = document.getElementById('toast-success');
-        const toastError = document.getElementById('toast-error');
-        
-        if (toastSuccess) {
-            setTimeout(() => {
-                toastSuccess.style.transition = 'opacity 0.5s ease-out';
-                toastSuccess.style.opacity = '0';
-                setTimeout(() => toastSuccess.remove(), 500);
-            }, 5000);
-        }
-        
-        if (toastError) {
-            setTimeout(() => {
-                toastError.style.transition = 'opacity 0.5s ease-out';
-                toastError.style.opacity = '0';
-                setTimeout(() => toastError.remove(), 500);
-            }, 5000);
-        }
-    });
-</script>
 
 <style>
     @keyframes slide-in {

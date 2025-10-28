@@ -258,10 +258,8 @@ class CourseController extends Controller
                 ->get();
         }
 
-        // Use optimized view if available
-        $viewName = view()->exists('client.courses.learn_optimized') ? 'client.courses.learn_optimized' : 'client.courses.learn';
-        
-        return view($viewName, compact('course', 'lesson', 'progress', 'submissions', 'isCourseCompleted', 'hasReviewed'));
+        // Use the optimized learning view
+        return view('client.courses.learn_optimized', compact('course', 'lesson', 'progress', 'submissions', 'isCourseCompleted', 'hasReviewed'));
     }
 
     public function uploadVideo(Request $request, Course $course, Lesson $lesson)
@@ -353,19 +351,49 @@ class CourseController extends Controller
 
             // If marking as complete
             if ($request->boolean('completed')) {
-                // For completion, we'll be more flexible about the requirements
-                // Check if they've made reasonable progress (at least 60 seconds or 80% of reported progress)
-                $hasMinimumProgress = $progress->video_progress >= 60; // At least 1 minute
+                // First, check if lesson has any assignments
+                $hasAssignments = $lesson->assignments()->count() > 0;
+                
+                if ($hasAssignments) {
+                    // Check if all assignments are submitted
+                    $assignmentIds = $lesson->assignments()->pluck('id');
+                    $submittedCount = \App\Models\AssignmentSubmission::where('user_id', $user->id)
+                        ->whereIn('assignment_id', $assignmentIds)
+                        ->whereIn('status', ['submitted', 'graded'])
+                        ->count();
+                    
+                    if ($submittedCount < $assignmentIds->count()) {
+                        Log::warning('Cannot complete lesson - assignments not submitted', [
+                            'user_id' => $user->id,
+                            'lesson_id' => $lesson->id,
+                            'total_assignments' => $assignmentIds->count(),
+                            'submitted_count' => $submittedCount
+                        ]);
+                        
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'You must complete all assignments before marking this lesson as complete.'
+                        ], 400);
+                    }
+                }
+                
+                // For completion, require at least 90% of video watched OR entire lesson duration
+                // This ensures students actually watch the content
+                $lessonDurationSeconds = $lesson->duration * 60; // Convert minutes to seconds
+                $minimumRequired = $lessonDurationSeconds > 0 ? $lessonDurationSeconds * 0.9 : 60;
+                $hasMinimumProgress = $progress->video_progress >= $minimumRequired;
                 
                 Log::info('Checking completion requirements', [
                     'user_id' => $user->id,
                     'lesson_id' => $lesson->id,
                     'current_progress' => $progress->video_progress,
+                    'lesson_duration_seconds' => $lessonDurationSeconds,
+                    'minimum_required' => $minimumRequired,
                     'has_minimum_progress' => $hasMinimumProgress,
-                    'lesson_duration' => $lesson->duration
+                    'has_assignments' => $hasAssignments
                 ]);
 
-                // Allow completion if they have minimum progress
+                // Allow completion if they have minimum progress (90% of video)
                 if ($hasMinimumProgress) {
                     $progress->completed = true;
                     $progress->completed_at = now();
@@ -387,16 +415,21 @@ class CourseController extends Controller
                         ]
                     ]);
                 } else {
+                    $percentageWatched = $lessonDurationSeconds > 0 
+                        ? round(($progress->video_progress / $lessonDurationSeconds) * 100, 1)
+                        : 0;
+                    
                     Log::warning('Insufficient progress for completion', [
                         'user_id' => $user->id,
                         'lesson_id' => $lesson->id,
                         'current_progress' => $progress->video_progress,
-                        'required_minimum' => 60
+                        'required_minimum' => $minimumRequired,
+                        'percentage_watched' => $percentageWatched
                     ]);
                     
                     return response()->json([
                         'success' => false,
-                        'message' => 'You must watch at least 1 minute of the video before marking it as complete.'
+                        'message' => "You must watch at least 90% of the video before marking it as complete. You've watched {$percentageWatched}%."
                     ], 400);
                 }
             }

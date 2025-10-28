@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
 use App\Models\Student;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class TeacherAssignmentController extends Controller
 {
@@ -181,7 +183,7 @@ class TeacherAssignmentController extends Controller
     public function updateGrade(Request $request, AssignmentSubmission $submission)
     {
         $validated = $request->validate([
-            'score' => 'required|numeric|min:0|max:100',
+            'score' => 'required|integer|min:0|max:100',
             'feedback' => 'required|string|min:10',
             'private_notes' => 'nullable|string',
         ]);
@@ -196,8 +198,63 @@ class TeacherAssignmentController extends Controller
             'graded_at' => now(),
         ]);
 
+        // Create notification for the student
+        Notification::create([
+            'user_id' => $submission->user_id,
+            'sender_id' => Auth::id(),
+            'type' => 'grade',
+            'title' => 'Assignment Graded',
+            'message' => 'Your assignment "' . $submission->assignment->title . '" has been graded. You scored ' . $validated['score'] . '/100.',
+            'action_url' => route('client.assignments.show', $submission->assignment_id),
+            'data' => [
+                'assignment_id' => $submission->assignment_id,
+                'submission_id' => $submission->id,
+                'score' => $validated['score'],
+                'assignment_title' => $submission->assignment->title,
+            ],
+            'priority' => 'normal',
+            'is_read' => false,
+        ]);
+
         return redirect()
             ->route('teacher.assignments.submissions', $submission->assignment)
             ->with('success', 'Submission graded successfully!');
+    }
+
+    /**
+     * Download a submission file
+     */
+    public function downloadSubmission($submissionId)
+    {
+        $submission = AssignmentSubmission::with('assignment.lesson.course.teacher', 'student.user')
+            ->findOrFail($submissionId);
+        
+        // Authorization: Check if the authenticated teacher owns this course
+        if ($submission->assignment->lesson->course->teacher->user_id !== Auth::id()) {
+            abort(403, 'You are not authorized to download this file.');
+        }
+
+        if (!$submission->submission_file) {
+            abort(404, 'File not found');
+        }
+
+        // Check if file exists in storage
+        if (!Storage::disk('public')->exists($submission->submission_file)) {
+            abort(404, 'File not found in storage');
+        }
+
+        // Get student name and clean it for filename
+        $studentName = $submission->student->user->name ?? 'student';
+        $studentName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $studentName);
+        
+        // Get extension from the stored file
+        $extension = pathinfo($submission->submission_file, PATHINFO_EXTENSION);
+        
+        // Create clean filename
+        $assignmentTitle = preg_replace('/[^a-zA-Z0-9_-]/', '_', $submission->assignment->title);
+        $downloadName = $studentName . '_' . $assignmentTitle . '.' . $extension;
+        
+        // Use Storage facade for proper file download
+        return Storage::disk('public')->download($submission->submission_file, $downloadName);
     }
 }

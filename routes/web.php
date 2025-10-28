@@ -256,6 +256,7 @@ Route::prefix('teacher')->name('teacher.')->middleware(['auth', App\Http\Middlew
     Route::get('assignments/{assignment}/submissions', [App\Http\Controllers\TeacherAssignmentController::class, 'submissions'])->name('assignments.submissions');
     Route::get('submissions/{submission}/grade', [App\Http\Controllers\TeacherAssignmentController::class, 'gradeForm'])->name('submissions.grade');
     Route::put('submissions/{submission}', [App\Http\Controllers\TeacherAssignmentController::class, 'updateGrade'])->name('submissions.update');
+    Route::get('submissions/download/{submission}', [App\Http\Controllers\TeacherAssignmentController::class, 'downloadSubmission'])->name('submissions.download');
     
     // Students management
     Route::get('students', [App\Http\Controllers\Teacher\StudentsController::class, 'index'])->name('students.index');
@@ -320,6 +321,7 @@ Route::prefix('client')->name('client.')->group(function () {
         Route::get('assignments/{assignment}', [AssignmentController::class, 'show'])->name('assignments.show');
         Route::post('assignments/{assignment}/submit', [AssignmentController::class, 'submit'])->name('assignments.submit');
         Route::get('assignments/{assignment}/submissions', [AssignmentController::class, 'submissions'])->name('assignments.submissions');
+        Route::get('assignments/download/{submission}', [AssignmentController::class, 'download'])->name('assignments.download');
 
         // Lesson routes
         Route::get('/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');

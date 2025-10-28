@@ -205,7 +205,7 @@
                                 <div class="btn-group" role="group">
                                     <a href="{{ route('teacher.assignments.submissions', $assignment) }}" 
                                        class="btn btn-success btn-sm" title="View Submissions">
-                                        <i class="fas fa-users"></i> Submissions
+                                        <i class="fas fa-users me-1"></i>Submissions
                                     </a>
                                     <a href="{{ route('teacher.assignments.show', [$course, $lesson, $assignment]) }}" 
                                        class="btn btn-outline-primary btn-sm" title="View Assignment">
