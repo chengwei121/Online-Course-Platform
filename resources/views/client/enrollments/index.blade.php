@@ -166,106 +166,111 @@
                          data-course-type="{{ $enrollment->course->is_free ? 'free' : 'premium' }}"
                          data-course-status="{{ $courseStatus }}">
                         <!-- Course Thumbnail -->
-                        <div class="relative h-48">
+                        <div class="relative h-40">
                             <img src="{{ $enrollment->course->thumbnail }}" 
                                  alt="{{ $enrollment->course->title }}"
                                  class="w-full h-full object-cover"
                                  onerror="this.src='https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80'">
                             <!-- Progress Indicator -->
-                            <div class="absolute top-4 right-4">
-                                <svg class="progress-ring w-12 h-12">
-                                    <circle class="text-white/30" 
-                                            stroke-width="3" 
-                                            stroke="currentColor" 
-                                            fill="transparent" 
-                                            r="18" 
-                                            cx="24" 
-                                            cy="24"/>
-                                    <circle class="text-white progress-circle" 
-                                            stroke-width="3" 
-                                            stroke="currentColor" 
-                                            fill="transparent" 
-                                            r="18" 
-                                            cx="24" 
-                                            cy="24" 
-                                            stroke-dasharray="113.097" 
-                                            stroke-dashoffset="113.097"
-                                            data-progress="{{ $progressPercentage }}"/>
-                                </svg>
-                                <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
-                                    {{ $progressPercentage }}%
+                            <div class="absolute top-3 right-3">
+                                <div class="relative">
+                                    <svg class="progress-ring w-14 h-14">
+                                        <circle class="text-white/20" 
+                                                stroke-width="3" 
+                                                stroke="currentColor" 
+                                                fill="transparent" 
+                                                r="22" 
+                                                cx="28" 
+                                                cy="28"/>
+                                        <circle class="text-white progress-circle" 
+                                                stroke-width="3" 
+                                                stroke="currentColor" 
+                                                fill="transparent" 
+                                                r="22" 
+                                                cx="28" 
+                                                cy="28" 
+                                                stroke-dasharray="138.23" 
+                                                stroke-dashoffset="138.23"
+                                                data-progress="{{ $progressPercentage }}"/>
+                                    </svg>
+                                    <!-- Dark background circle for better visibility -->
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <div class="w-9 h-9 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                            <span class="text-xs font-bold text-white drop-shadow-md">{{ $progressPercentage }}%</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Course Content -->
-                        <div class="p-6">
-                            <div class="flex items-center flex-wrap gap-2 mb-4">
-                                <span class="px-3 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                        <div class="p-4">
+                            <div class="flex items-center flex-wrap gap-2 mb-3">
+                                <span class="px-2.5 py-0.5 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full">
                                     {{ $enrollment->course->category->name }}
                                 </span>
                                 @if($enrollment->course->is_free)
-                                    <span class="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                                    <span class="px-2.5 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
                                         Free
                                     </span>
                                 @else
-                                    <span class="px-3 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
+                                    <span class="px-2.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
                                         Premium
                                     </span>
                                 @endif
                             </div>
                             
-                            <h3 class="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
+                            <h3 class="text-base font-semibold text-gray-900 mb-2 line-clamp-2">
                                 {{ $enrollment->course->title }}
                             </h3>
                             
-                            <div class="flex items-center mb-4">
+                            <div class="flex items-center mb-3">
                                 <img src="https://ui-avatars.com/api/?name={{ urlencode($enrollment->course->instructor->name) }}&background=random" 
                                      alt="{{ $enrollment->course->instructor->name }}"
-                                     class="w-8 h-8 rounded-full">
-                                <span class="ml-3 text-sm text-gray-600 font-medium">
+                                     class="w-7 h-7 rounded-full">
+                                <span class="ml-2 text-xs text-gray-600 font-medium">
                                     {{ $enrollment->course->instructor->name }}
                                 </span>
                             </div>
 
-                            <div class="text-xs text-gray-500 mb-4">
+                            <div class="text-xs text-gray-500 mb-3">
                                 Enrolled {{ $enrollment->enrolled_at->diffForHumans() }}
                             </div>
 
                             <!-- Course Progress -->
-                            <div class="mb-6">
-                                <div class="flex justify-between text-sm mb-2">
+                            <div class="mb-4">
+                                <div class="flex justify-between text-xs mb-1.5">
                                     <span class="text-gray-600 font-medium">Progress</span>
                                     <span class="text-gray-900 font-semibold">{{ $completedLessons }}/{{ $totalLessons }} lessons</span>
                                 </div>
-                                <div class="h-2.5 bg-gray-200 rounded-full">
-                                    <div class="h-2.5 {{ $courseStatus === 'completed' ? 'bg-green-500' : 'bg-indigo-500' }} rounded-full progress-bar transition-all duration-500" data-progress="{{ $progressPercentage }}"></div>
+                                <div class="h-2 bg-gray-200 rounded-full">
+                                    <div class="h-2 {{ $courseStatus === 'completed' ? 'bg-green-500' : 'bg-indigo-500' }} rounded-full progress-bar transition-all duration-500" data-progress="{{ $progressPercentage }}"></div>
                                 </div>
                             </div>
 
                             <!-- Completion Status Badge -->
                             @if($courseStatus === 'completed')
-                                <div class="mb-4">
-                                    <div class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 border border-green-200">
-                                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <div class="mb-3">
+                                    <div class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
                                         Course Completed!
                                     </div>
                                 </div>
                             @elseif($courseStatus === 'in_progress')
-                                <div class="mb-4">
-                                    <div class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="mb-3">
+                                    <div class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
                                         In Progress
                                     </div>
                                 </div>
                             @else
-                                <div class="mb-4">
-                                    <div class="inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium bg-gray-50 text-gray-700 border border-gray-200">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="mb-3">
+                                    <div class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                                        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                                         </svg>
                                         Not Started
@@ -275,27 +280,27 @@
 
                             <!-- Action Button -->
                             <a href="{{ route('client.courses.learn', $enrollment->course->slug) }}" 
-                               class="group block w-full text-center px-4 py-3 {{ $courseStatus === 'completed' ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700' }} text-white font-medium rounded-lg transition-all duration-200 ease-in-out shadow-sm">
+                               class="group block w-full text-center px-3 py-2.5 {{ $courseStatus === 'completed' ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700' }} text-white text-sm font-medium rounded-lg transition-all duration-200 ease-in-out shadow-sm">
                                 <span class="inline-flex items-center justify-center">
                                     @if($courseStatus === 'completed')
-                                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
                                         </svg>
                                         <span>Review Course</span>
                                     @elseif($courseStatus === 'in_progress')
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
                                         <span>Continue Learning</span>
                                     @else
-                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                                         </svg>
                                         <span>Start Learning</span>
                                     @endif
-                                    <svg class="w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-3.5 h-3.5 ml-1.5 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                                     </svg>
                                 </span>
@@ -457,11 +462,11 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Update progress circles with animation
+    // Update progress circles with animation (new radius = 22, circumference = 2 * PI * r = 138.23)
     document.querySelectorAll('.progress-circle').forEach(circle => {
         const progress = circle.dataset.progress;
         setTimeout(() => {
-            circle.style.strokeDashoffset = 113.097 * (1 - (progress / 100));
+            circle.style.strokeDashoffset = 138.23 * (1 - (progress / 100));
         }, 500);
     });
 
