@@ -981,32 +981,6 @@
 
                                     <!-- Menu Items -->
                                     <div class="p-2">
-                                        <div class="grid grid-cols-2 gap-2 mb-3">
-                                            <a href="{{ route('client.enrollments.index') }}" 
-                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600 mb-1">
-                                                    <i class="fas fa-bookmark text-sm"></i>
-                                                </div>
-                                                <span class="text-xs font-medium text-gray-700">My Learning</span>
-                                            </a>
-                                            <a href="{{ route('client.payments.index') }}" 
-                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-green-100 text-green-600 mb-1">
-                                                    <i class="fas fa-credit-card text-sm"></i>
-                                                </div>
-                                                <span class="text-xs font-medium text-gray-700">My Payments</span>
-                                            </a>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2 mb-3">
-                                            <a href="{{ route('client.reviews.index') }}" 
-                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-100 text-yellow-600 mb-1">
-                                                    <i class="fas fa-star text-sm"></i>
-                                                </div>
-                                                <span class="text-xs font-medium text-gray-700">My Reviews</span>
-                                            </a>
-                                        </div>
-
                                         <div class="space-y-1">
                                             @if(auth()->user()->isAdmin())
                                                 <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-purple-50 transition-colors">
@@ -1016,6 +990,12 @@
                                                     <span class="text-sm font-medium text-purple-700">Admin Panel</span>
                                                 </a>
                                             @endif
+                                            <a href="{{ route('client.enrollments.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                                                <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                                                    <i class="fas fa-bookmark text-sm"></i>
+                                                </div>
+                                                <span class="text-sm font-medium text-gray-700">My Learning</span>
+                                            </a>
                                             <a href="{{ route('client.payments.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-green-100 text-green-600">
                                                     <i class="fas fa-credit-card text-sm"></i>
@@ -1027,12 +1007,6 @@
                                                     <i class="fas fa-star text-sm"></i>
                                                 </div>
                                                 <span class="text-sm font-medium text-gray-700">My Reviews</span>
-                                            </a>
-                                            <a href="{{ route('client.enrollments.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
-                                                    <i class="fas fa-graduation-cap text-sm"></i>
-                                                </div>
-                                                <span class="text-sm font-medium text-gray-700">My Courses</span>
                                             </a>
                                             <a href="{{ route('client.notifications.index') }}" class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors">
                                                 <div class="w-7 h-7 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600">
