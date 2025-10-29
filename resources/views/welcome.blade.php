@@ -210,16 +210,6 @@
                                     Flexible learning schedule
                                 </span>
                             </li>
-                            <li class="flex items-start space-x-4 group">
-                                <div class="flex-shrink-0 h-6 w-6 rounded-full bg-indigo-500/20 flex items-center justify-center mt-1">
-                                    <svg class="h-4 w-4 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <span class="text-base text-white/90 group-hover:text-white transition-colors duration-200">
-                                    Certificate upon completion
-                                </span>
-                            </li>
                         </ul>
                     </div>
                 </div>
@@ -529,7 +519,7 @@
                             Track Progress
                         </h3>
                         <p class="text-gray-600 leading-relaxed">
-                            Monitor your learning progress and earn certificates upon course completion.
+                            Monitor your learning progress and achievement badges as you complete courses.
                         </p>
 
                         <!-- Feature List -->
@@ -550,7 +540,7 @@
                                 <svg class="w-5 h-5 mr-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
-                                Course Certificates
+                                Course Reviews
                             </li>
                         </ul>
                     </div>

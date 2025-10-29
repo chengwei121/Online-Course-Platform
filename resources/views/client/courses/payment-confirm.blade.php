@@ -266,7 +266,7 @@
                                         <div class="col-6">
                                             <div class="d-flex align-items-center">
                                                 <i class="fas fa-check-circle text-success me-2"></i>
-                                                <small>Certificate</small>
+                                                <small>Progress Tracking</small>
                                             </div>
                                         </div>
                                     </div>

@@ -1005,13 +1005,6 @@
                                                 </div>
                                                 <span class="text-xs font-medium text-gray-700">My Reviews</span>
                                             </a>
-                                            <a href="#" 
-                                               class="flex flex-col items-center p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                                                <div class="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-600 mb-1">
-                                                    <i class="fas fa-certificate text-sm"></i>
-                                                </div>
-                                                <span class="text-xs font-medium text-gray-700">Certificates</span>
-                                            </a>
                                         </div>
 
                                         <div class="space-y-1">
