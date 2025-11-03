@@ -198,7 +198,50 @@ class TeacherAssignmentController extends Controller
             'graded_at' => now(),
         ]);
 
-        // Create notification for the student
+        // Check if all assignments in this lesson are now graded
+        $lesson = $submission->assignment->lesson;
+        $course = $lesson->course;
+        $student = \App\Models\User::find($submission->user_id);
+        
+        if ($lesson && $course && $student) {
+            // Get all assignment IDs for this lesson
+            $assignmentIds = $lesson->assignments()->pluck('id');
+            
+            // Check if all assignments are graded for this student
+            $allGradedCount = \App\Models\AssignmentSubmission::where('user_id', $student->id)
+                ->whereIn('assignment_id', $assignmentIds)
+                ->where('status', 'graded')
+                ->count();
+            
+            if ($allGradedCount === $assignmentIds->count()) {
+                // All assignments graded - update enrollment to completed
+                $enrollment = $student->enrollments()->where('course_id', $course->id)->first();
+                
+                if ($enrollment && $enrollment->course_status === 'pending_approval') {
+                    $enrollment->course_status = 'completed';
+                    $enrollment->completed_at = now();
+                    $enrollment->save();
+                    
+                    // Notify student that course is completed
+                    Notification::create([
+                        'user_id' => $student->id,
+                        'sender_id' => Auth::id(),
+                        'type' => 'course_completion',
+                        'title' => 'Course Completed!',
+                        'message' => 'Congratulations! You have successfully completed the course "' . $course->title . '". All your assignments have been graded and approved.',
+                        'action_url' => route('client.courses.show', $course->slug),
+                        'data' => [
+                            'course_id' => $course->id,
+                            'course_title' => $course->title,
+                        ],
+                        'priority' => 'high',
+                        'is_read' => false,
+                    ]);
+                }
+            }
+        }
+
+        // Create notification for the student about the grade
         Notification::create([
             'user_id' => $submission->user_id,
             'sender_id' => Auth::id(),

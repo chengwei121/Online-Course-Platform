@@ -351,36 +351,9 @@ class CourseController extends Controller
 
             // If marking as complete
             if ($request->boolean('completed')) {
-                // First, check if lesson has any assignments
-                $hasAssignments = $lesson->assignments()->count() > 0;
-                
-                if ($hasAssignments) {
-                    // Check if all assignments are submitted
-                    $assignmentIds = $lesson->assignments()->pluck('id');
-                    $submittedCount = \App\Models\AssignmentSubmission::where('user_id', $user->id)
-                        ->whereIn('assignment_id', $assignmentIds)
-                        ->whereIn('status', ['submitted', 'graded'])
-                        ->count();
-                    
-                    if ($submittedCount < $assignmentIds->count()) {
-                        Log::warning('Cannot complete lesson - assignments not submitted', [
-                            'user_id' => $user->id,
-                            'lesson_id' => $lesson->id,
-                            'total_assignments' => $assignmentIds->count(),
-                            'submitted_count' => $submittedCount
-                        ]);
-                        
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'You must complete all assignments before marking this lesson as complete.'
-                        ], 400);
-                    }
-                }
-                
-                // For completion, require at least 90% of video watched OR entire lesson duration
-                // This ensures students actually watch the content
+                // For completion, require 100% of video watched (entire lesson)
                 $lessonDurationSeconds = $lesson->duration * 60; // Convert minutes to seconds
-                $minimumRequired = $lessonDurationSeconds > 0 ? $lessonDurationSeconds * 0.9 : 60;
+                $minimumRequired = $lessonDurationSeconds > 0 ? $lessonDurationSeconds * 0.95 : 60; // 95% for buffer
                 $hasMinimumProgress = $progress->video_progress >= $minimumRequired;
                 
                 Log::info('Checking completion requirements', [
@@ -389,15 +362,59 @@ class CourseController extends Controller
                     'current_progress' => $progress->video_progress,
                     'lesson_duration_seconds' => $lessonDurationSeconds,
                     'minimum_required' => $minimumRequired,
-                    'has_minimum_progress' => $hasMinimumProgress,
-                    'has_assignments' => $hasAssignments
+                    'has_minimum_progress' => $hasMinimumProgress
                 ]);
 
-                // Allow completion if they have minimum progress (90% of video)
+                // Allow video completion if they watched 95%+
                 if ($hasMinimumProgress) {
                     $progress->completed = true;
                     $progress->completed_at = now();
                     $progress->save();
+
+                    // Check if lesson has assignments
+                    $hasAssignments = $lesson->assignments()->count() > 0;
+                    
+                    if ($hasAssignments) {
+                        // Check if all assignments are submitted and graded/approved
+                        $assignmentIds = $lesson->assignments()->pluck('id');
+                        $allSubmissionsGraded = \App\Models\AssignmentSubmission::where('user_id', $user->id)
+                            ->whereIn('assignment_id', $assignmentIds)
+                            ->where('status', 'graded')
+                            ->count() === $assignmentIds->count();
+                        
+                        if ($allSubmissionsGraded) {
+                            // All assignments graded - mark course as completed
+                            $enrollment->course_status = 'completed';
+                            $enrollment->completed_at = now();
+                            $enrollment->save();
+                            
+                            Log::info('Course marked as completed', [
+                                'user_id' => $user->id,
+                                'course_id' => $course->id,
+                                'lesson_id' => $lesson->id
+                            ]);
+                        } else {
+                            // Assignments exist but not all graded - mark as pending approval
+                            $enrollment->course_status = 'pending_approval';
+                            $enrollment->save();
+                            
+                            Log::info('Course status set to pending approval', [
+                                'user_id' => $user->id,
+                                'course_id' => $course->id
+                            ]);
+                        }
+                    } else {
+                        // No assignments - course can be completed immediately
+                        $enrollment->course_status = 'completed';
+                        $enrollment->completed_at = now();
+                        $enrollment->save();
+                        
+                        Log::info('Course marked as completed (no assignments)', [
+                            'user_id' => $user->id,
+                            'course_id' => $course->id,
+                            'lesson_id' => $lesson->id
+                        ]);
+                    }
 
                     Log::info('Lesson marked as complete', [
                         'user_id' => $user->id,
@@ -411,7 +428,9 @@ class CourseController extends Controller
                         'data' => [
                             'video_progress' => $progress->video_progress,
                             'completed' => true,
-                            'completed_at' => $progress->completed_at
+                            'completed_at' => $progress->completed_at,
+                            'has_assignments' => $hasAssignments,
+                            'course_status' => $enrollment->course_status
                         ]
                     ]);
                 } else {
@@ -429,7 +448,7 @@ class CourseController extends Controller
                     
                     return response()->json([
                         'success' => false,
-                        'message' => "You must watch at least 90% of the video before marking it as complete. You've watched {$percentageWatched}%."
+                        'message' => "You must watch 100% of the video before marking it as complete. You've watched {$percentageWatched}%."
                     ], 400);
                 }
             }

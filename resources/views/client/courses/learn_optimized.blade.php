@@ -192,6 +192,41 @@
 
                         <!-- Optimized Lesson Content -->
                         <div class="p-6 lg:p-8">
+                            <!-- Course Status Banner -->
+                            @php
+                                $enrollment = Auth::user()->enrollments()->where('course_id', $course->id)->first();
+                                $courseStatus = $enrollment ? $enrollment->course_status : 'in_progress';
+                            @endphp
+                            
+                            @if($courseStatus === 'completed')
+                                <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-green-800 font-semibold">Course Status: Completed 🎉</span>
+                                    </div>
+                                </div>
+                            @elseif($courseStatus === 'pending_approval')
+                                <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-yellow-800 font-semibold">Course Status: Pending Instructor Approval</span>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                    <div class="flex items-center">
+                                        <svg class="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span class="text-blue-800 font-semibold">Course Status: In Progress</span>
+                                    </div>
+                                </div>
+                            @endif
+                            
                             <!-- Lesson Header -->
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                                 <h1 class="text-xl lg:text-2xl font-bold text-gray-900 lesson-title">{{ $lesson->title }}</h1>
@@ -229,79 +264,45 @@
                                     </div>
                                 </div>
                             @else
+                                <button type="button" 
+                                        id="markCompleteBtn"
+                                        onclick="markAsComplete()"
+                                        class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 gpu-accelerated">
+                                    <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Mark Video as Complete
+                                </button>
+                                
                                 @php
-                                    // Check if all assignments are submitted
-                                    $hasAssignments = !$course->is_free && $lesson->assignments && $lesson->assignments->count() > 0;
-                                    $allAssignmentsComplete = true;
-                                    $incompleteCount = 0;
-                                    
-                                    if ($hasAssignments) {
-                                        foreach ($lesson->assignments as $assignment) {
-                                            $submission = $submissions->where('assignment_id', $assignment->id)->first();
-                                            if (!$submission || !in_array($submission->status, ['submitted', 'graded'])) {
-                                                $allAssignmentsComplete = false;
-                                                $incompleteCount++;
-                                            }
-                                        }
-                                    }
-                                    
-                                    $canComplete = !$hasAssignments || $allAssignmentsComplete;
+                                    $hasAssignments = $lesson->assignments && $lesson->assignments->count() > 0;
                                 @endphp
                                 
-                                @if(!$canComplete)
-                                    <!-- Disabled button with tooltip -->
-                                    <div class="relative group">
-                                        <button type="button" 
-                                                id="markCompleteBtn"
-                                                disabled
-                                                class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-gray-300 rounded-lg text-base font-semibold text-gray-400 bg-gray-100 cursor-not-allowed transition-colors duration-200">
-                                            <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                                            </svg>
-                                            Mark as Complete (Locked)
-                                        </button>
-                                        <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                                            <div class="bg-gray-900 text-white text-sm rounded-lg py-2 px-4 whitespace-nowrap">
-                                                Complete {{ $incompleteCount }} assignment{{ $incompleteCount > 1 ? 's' : '' }} first
-                                                <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
-                                                    <div class="border-8 border-transparent border-t-gray-900"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Warning message -->
-                                    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                @if($hasAssignments)
+                                    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                         <div class="flex items-start">
-                                            <svg class="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
                                             <div>
-                                                <h4 class="text-sm font-semibold text-yellow-800 mb-1">Complete Assignments Required</h4>
-                                                <p class="text-sm text-yellow-700">
-                                                    You must submit {{ $incompleteCount }} assignment{{ $incompleteCount > 1 ? 's' : '' }} before marking this lesson as complete.
-                                                    Scroll down to view and complete the assignments.
+                                                <h4 class="text-sm font-semibold text-blue-800 mb-1">Next Step: Complete Assignments</h4>
+                                                <p class="text-sm text-blue-700">
+                                                    After completing the video, you'll need to submit the assignments below. The instructor will review them before marking your course as complete.
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
-                                @else
-                                    <button type="button" 
-                                            id="markCompleteBtn"
-                                            onclick="markAsComplete()"
-                                            class="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 border border-transparent rounded-lg text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 gpu-accelerated">
-                                        <svg class="w-5 h-5 mr-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                        Mark as Complete
-                                    </button>
                                 @endif
                             @endif
 
-                            <!-- Assignments Section - Now visible for all courses -->
+                            <!-- Assignments Section - Hidden until video is completed -->
                             @if($lesson->assignments && $lesson->assignments->count() > 0)
-                                <div id="assignmentsSection" class="border-t border-gray-200 mt-8 pt-8" style="display: block;">
-                                    <h2 class="text-xl font-semibold text-gray-900 mb-6">Assignments</h2>
+                                <div id="assignmentsSection" class="border-t border-gray-200 mt-8 pt-8" style="display: {{ $isCompleted ? 'block' : 'none' }};">
+                                    <h2 class="text-xl font-semibold text-gray-900 mb-6">Assignments
+                                        @if(!$isCompleted)
+                                            <span class="text-sm font-normal text-gray-500">(Complete video first)</span>
+                                        @endif
+                                    </h2>
                                     <div class="space-y-4">
                                         @foreach($lesson->assignments as $assignment)
                                             <div class="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow duration-200">
