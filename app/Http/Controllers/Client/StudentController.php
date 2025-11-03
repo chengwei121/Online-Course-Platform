@@ -26,7 +26,7 @@ class StudentController extends Controller
             ->get();
 
         // Calculate total amount spent
-        $totalSpent = $enrollments->where('payment_status', 'completed')->sum('amount');
+        $totalSpent = $enrollments->where('payment_status', 'completed')->sum('amount_paid');
         
         // Count courses by status
         $completedCourses = $enrollments->where('payment_status', 'completed')->count();
@@ -38,6 +38,23 @@ class StudentController extends Controller
             'completedCourses', 
             'pendingPayments'
         ));
+    }
+
+    /**
+     * Download payment slip/receipt
+     */
+    public function downloadPaymentSlip($enrollmentId)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        $enrollment = Enrollment::with(['course.instructor', 'user'])
+            ->where('id', $enrollmentId)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        // Return HTML view for now (can be converted to PDF later)
+        return view('client.students.payment-slip', compact('enrollment'));
     }
 
     /**

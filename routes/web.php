@@ -16,6 +16,7 @@ use App\Models\CourseReview;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\VideoStreamController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,11 @@ use Illuminate\Support\Facades\Auth;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+// Video streaming route with byte-range support for seeking
+Route::get('/video/stream/{path}', [VideoStreamController::class, 'stream'])
+    ->where('path', '.*')
+    ->name('video.stream');
+
 // Cache clearing route
 Route::get('/clear-cache', function() {
     Artisan::call('optimize:clear');
@@ -297,6 +303,7 @@ Route::prefix('client')->name('client.')->group(function () {
 
         // Student Dashboard Routes
         Route::get('my-payments', [App\Http\Controllers\Client\StudentController::class, 'payments'])->name('payments.index');
+        Route::get('payments/download-slip/{enrollment}', [App\Http\Controllers\Client\StudentController::class, 'downloadPaymentSlip'])->name('payments.download-slip');
         Route::get('my-reviews', [App\Http\Controllers\Client\StudentController::class, 'reviews'])->name('reviews.index');
 
         // Notification Routes

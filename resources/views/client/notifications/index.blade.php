@@ -106,7 +106,7 @@
         @if($notifications->count() > 0)
             <div class="space-y-2">
                 @foreach($notifications as $notification)
-                    <div class="group bg-white rounded-lg shadow-sm border {{ !$notification->is_read ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100' }} hover:shadow-md transition-all duration-200 overflow-hidden">
+                    <div class="group bg-white rounded-lg shadow-sm border {{ !$notification->is_read ? 'border-blue-200 bg-blue-50/30' : 'border-gray-100' }} hover:shadow-md transition-all duration-200">
                         <div class="p-3">
                             <div class="flex gap-3">
                                 <!-- Icon -->
@@ -177,17 +177,17 @@
                                                     <i class="fas fa-ellipsis-v text-sm"></i>
                                                 </button>
                                                 
-                                                <div x-show="open" 
-                                                     x-transition:enter="transition ease-out duration-100"
-                                                     x-transition:enter-start="transform opacity-0 scale-95"
-                                                     x-transition:enter-end="transform opacity-100 scale-100"
-                                                     x-transition:leave="transition ease-in duration-75"
-                                                     x-transition:leave-start="transform opacity-100 scale-100"
-                                                     x-transition:leave-end="transform opacity-0 scale-95"
-                                                     class="absolute right-0 mt-1 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10"
-                                                     style="display: none;">
-                                                    
-                                                    @if(!$notification->is_read)
+                                                @if(!$notification->is_read)
+                                                    <div x-show="open" 
+                                                         x-transition:enter="transition ease-out duration-100"
+                                                         x-transition:enter-start="transform opacity-0 scale-95"
+                                                         x-transition:enter-end="transform opacity-100 scale-100"
+                                                         x-transition:leave="transition ease-in duration-75"
+                                                         x-transition:leave-start="transform opacity-100 scale-100"
+                                                         x-transition:leave-end="transform opacity-0 scale-95"
+                                                         class="absolute right-0 bottom-full mb-1 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50"
+                                                         style="display: none;">
+                                                        
                                                         <form action="{{ route('client.notifications.read', $notification) }}" method="POST">
                                                             @csrf
                                                             <button type="submit" class="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-blue-50 transition-colors flex items-center gap-2">
@@ -195,17 +195,8 @@
                                                                 Mark as Read
                                                             </button>
                                                         </form>
-                                                    @endif
-                                                    
-                                                    <form action="{{ route('client.notifications.destroy', $notification) }}" method="POST" onsubmit="return confirm('Delete this notification?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="w-full text-left px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2">
-                                                            <i class="fas fa-trash"></i>
-                                                            Delete
-                                                        </button>
-                                                    </form>
-                                                </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     </div>

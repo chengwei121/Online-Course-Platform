@@ -5,14 +5,23 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\AssignmentSubmission;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
 
 class AssignmentController extends Controller
 {
+    private $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function show(Assignment $assignment)
     {
         $submission = AssignmentSubmission::where('user_id', Auth::id())
@@ -78,6 +87,43 @@ class AssignmentController extends Controller
             'time' => ($dbEndTime - $dbStartTime) . 's',
             'submission_id' => $submission->id
         ]);
+
+        // Notify the teacher about the new submission
+        try {
+            $course = $assignment->lesson->course;
+            if ($course && $course->teacher && $course->teacher->user) {
+                $teacher = $course->teacher->user;
+                
+                // Create custom notification
+                $this->notificationService->createNotification(
+                    $teacher,
+                    'assignment_submission',
+                    'New Assignment Submission',
+                    "{$user->name} has submitted the assignment: {$assignment->title}",
+                    null,
+                    [
+                        'student_id' => $user->id,
+                        'student_name' => $user->name,
+                        'student_email' => $user->email,
+                        'assignment_id' => $assignment->id,
+                        'assignment_title' => $assignment->title,
+                        'course_id' => $course->id,
+                        'course_title' => $course->title,
+                        'submission_id' => $submission->id,
+                        'submitted_at' => $submission->submitted_at->toDateTimeString(),
+                    ],
+                    route('teacher.submissions.grade', $submission->id),
+                    'high'
+                );
+                
+                // Send email to teacher
+                Mail::to($teacher->email)->queue(new \App\Mail\TeacherAssignmentSubmissionNotification($user, $assignment, $submission, $course));
+                
+                Log::info("Teacher notified about assignment submission: {$assignment->title}");
+            }
+        } catch (\Exception $notifyError) {
+            Log::error("Failed to notify teacher about assignment submission: " . $notifyError->getMessage());
+        }
 
         // Log all queries executed
         $queries = DB::getQueryLog();

@@ -6,14 +6,12 @@
 <style>
     /* Payment Confirmation Specific Styles */
     main {
-        height: calc(100vh - 80px); /* Adjust for header height */
-        overflow: hidden;
+        min-height: 100vh;
+        overflow-y: auto;
     }
     
     .container-fluid {
-        height: 100%;
-        display: flex;
-        align-items: center;
+        width: 100%;
     }
     
     .step-circle {
@@ -143,10 +141,10 @@
 @endpush
 
 @section('content')
-<div class="container px-4 py-4" style="margin-top: 100px;">
+<div class="container px-4 py-5" style="margin-top: 80px; margin-bottom: 40px;">
     <!-- Header -->
     <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
+        <div class="col-lg-10 col-md-11">
             <!-- Payment Confirmation Card -->
             <div class="card">
                 <div class="card-header bg-primary text-white">
@@ -156,10 +154,10 @@
                     </h5>
                 </div>
                 
-                <div class="card-body p-5">
+                <div class="card-body p-4">
                     @if(session('payment_success'))
                         <!-- Success Message -->
-                        <div class="alert alert-success alert-dismissible fade show mb-5" role="alert">
+                        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
                             <div class="d-flex align-items-center">
                                 <i class="fas fa-check-circle fa-2x text-success me-3"></i>
                                 <div class="flex-grow-1">
@@ -171,25 +169,25 @@
                         </div>
                         
                         <!-- Course Access Section -->
-                        <div class="text-center my-5 py-4">
-                            <div class="bg-light rounded-3 p-5 shadow-sm">
-                                <div class="mb-4">
+                        <div class="text-center my-4 py-3">
+                            <div class="bg-light rounded-3 p-4 shadow-sm">
+                                <div class="mb-3">
                                     <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" 
-                                         style="width: 80px; height: 80px;">
-                                        <i class="fas fa-graduation-cap fa-3x text-primary"></i>
+                                         style="width: 60px; height: 60px;">
+                                        <i class="fas fa-graduation-cap fa-2x text-primary"></i>
                                     </div>
                                 </div>
-                                <h4 class="text-primary mb-3 fw-bold">Welcome to Your Course!</h4>
-                                <p class="text-muted mb-4 fs-5">You now have lifetime access to all course materials</p>
+                                <h5 class="text-primary mb-2 fw-bold">Welcome to Your Course!</h5>
+                                <p class="text-muted mb-3">You now have lifetime access to all course materials</p>
                                 <a href="{{ route('client.courses.show', $course->slug) }}" 
-                                   class="btn btn-primary btn-lg px-5 py-3 shadow-sm">
+                                   class="btn btn-primary px-4 py-2 shadow-sm">
                                     <i class="fas fa-play-circle me-2"></i>Start Learning Now
                                 </a>
                             </div>
                         </div>
                         
                         <!-- Divider -->
-                        <hr class="my-5">
+                        <hr class="my-4">
                     @endif
                     
                     <!-- Course Information -->

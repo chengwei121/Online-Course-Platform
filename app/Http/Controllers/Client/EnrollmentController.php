@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Services\NotificationService;
 use App\Notifications\StudentEnrolledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class EnrollmentController extends Controller
 {
+    private $notificationService;
+
     /**
      * Create a new controller instance.
      */
-    public function __construct()
+    public function __construct(NotificationService $notificationService)
     {
+        $this->notificationService = $notificationService;
         $this->middleware('auth');
     }
 
@@ -52,8 +57,52 @@ class EnrollmentController extends Controller
 
         // Notify the teacher about new enrollment
         if ($course->teacher && $course->teacher->user) {
-            $course->teacher->user->notify(new StudentEnrolledNotification(Auth::user(), $course, $enrollment));
+            $teacher = $course->teacher->user;
+            $student = Auth::user();
+            
+            // Create custom notification for teacher
+            $this->notificationService->createNotification(
+                $teacher,
+                'enrollment',
+                'New Student Enrollment',
+                "{$student->name} has enrolled in your free course: {$course->title}",
+                null,
+                [
+                    'student_id' => $student->id,
+                    'student_name' => $student->name,
+                    'student_email' => $student->email,
+                    'course_id' => $course->id,
+                    'course_title' => $course->title,
+                    'enrollment_id' => $enrollment->id,
+                    'payment_status' => 'completed',
+                    'amount_paid' => 0,
+                ],
+                route('teacher.courses.show', $course->id),
+                'high'
+            );
+            
+            // Send email to teacher
+            Mail::to($teacher->email)->queue(new \App\Mail\TeacherEnrollmentNotification($student, $course, $enrollment));
         }
+
+        // Notify the student about successful enrollment
+        $student = Auth::user();
+        $this->notificationService->createNotification(
+            $student,
+            'enrollment_success',
+            'Successfully Enrolled in Course',
+            "You have successfully enrolled in {$course->title}. Start learning now!",
+            null,
+            [
+                'course_id' => $course->id,
+                'course_title' => $course->title,
+                'enrollment_id' => $enrollment->id,
+                'amount_paid' => 0,
+                'instructor_name' => $course->instructor->name ?? 'Unknown',
+            ],
+            route('client.courses.learn', $course->slug),
+            'normal'
+        );
 
         return redirect()->route('client.courses.learn', $course->slug)
             ->with('success', 'Successfully enrolled in the free course. Start learning now!');

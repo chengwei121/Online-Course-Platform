@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Services\PayPalService;
 use App\Services\PaymentOptimizationService;
+use App\Services\NotificationService;
 use App\Mail\PaymentReceiptMail;
 use App\Notifications\StudentEnrolledNotification;
 use Illuminate\Http\Request;
@@ -18,11 +19,17 @@ class PayPalController extends Controller
 {
     private $paypalService;
     private $paymentOptimizationService;
+    private $notificationService;
 
-    public function __construct(PayPalService $paypalService, PaymentOptimizationService $paymentOptimizationService)
+    public function __construct(
+        PayPalService $paypalService, 
+        PaymentOptimizationService $paymentOptimizationService,
+        NotificationService $notificationService
+    )
     {
         $this->paypalService = $paypalService;
         $this->paymentOptimizationService = $paymentOptimizationService;
+        $this->notificationService = $notificationService;
         $this->middleware('auth');
     }
 
@@ -180,12 +187,61 @@ class PayPalController extends Controller
                     // Notify the teacher about new enrollment
                     try {
                         if ($course->teacher && $course->teacher->user) {
-                            $course->teacher->user->notify(new StudentEnrolledNotification($user, $course, $enrollment));
+                            $teacher = $course->teacher->user;
+                            
+                            // Create custom notification for teacher
+                            $this->notificationService->createNotification(
+                                $teacher,
+                                'enrollment',
+                                'New Student Enrollment',
+                                "{$user->name} has enrolled in your course: {$course->title}",
+                                null,
+                                [
+                                    'student_id' => $user->id,
+                                    'student_name' => $user->name,
+                                    'student_email' => $user->email,
+                                    'course_id' => $course->id,
+                                    'course_title' => $course->title,
+                                    'enrollment_id' => $enrollment->id,
+                                    'payment_status' => $enrollment->payment_status,
+                                    'amount_paid' => $enrollment->amount_paid,
+                                ],
+                                route('teacher.courses.show', $course->id),
+                                'high'
+                            );
+                            
+                            // Send email to teacher
+                            Mail::to($teacher->email)->queue(new \App\Mail\TeacherEnrollmentNotification($user, $course, $enrollment));
+                            
                             Log::info("Teacher notified about new enrollment for course: {$course->title}");
                         }
                     } catch (\Exception $notifyError) {
                         // Log notification error but don't fail the payment process
                         Log::error("Failed to notify teacher: " . $notifyError->getMessage());
+                    }
+
+                    // Notify the student about successful enrollment
+                    try {
+                        $this->notificationService->createNotification(
+                            $user,
+                            'enrollment_success',
+                            'Successfully Enrolled in Course',
+                            "You have successfully enrolled in {$course->title}. Start learning now!",
+                            null,
+                            [
+                                'course_id' => $course->id,
+                                'course_title' => $course->title,
+                                'enrollment_id' => $enrollment->id,
+                                'amount_paid' => $enrollment->amount_paid,
+                                'instructor_name' => $course->instructor->name ?? 'Unknown',
+                            ],
+                            route('client.courses.learn', $course->slug),
+                            'normal'
+                        );
+                        
+                        Log::info("Student notified about successful enrollment for course: {$course->title}");
+                    } catch (\Exception $notifyError) {
+                        Log::error("Failed to notify student: " . $notifyError->getMessage());
                     }
 
                     // Clear session data

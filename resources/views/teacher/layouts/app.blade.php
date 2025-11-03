@@ -154,9 +154,12 @@
                                href="{{ route('teacher.notifications.index') }}">
                                 <i class="fas fa-bell me-2"></i>
                                 Notifications
-                                @if(auth()->user()->unreadNotifications->count() > 0)
+                                @php
+                                    $unreadCount = auth()->user()->customNotifications()->where('is_read', false)->count();
+                                @endphp
+                                @if($unreadCount > 0)
                                     <span class="badge bg-danger rounded-pill ms-2">
-                                        {{ auth()->user()->unreadNotifications->count() }}
+                                        {{ $unreadCount }}
                                     </span>
                                 @endif
                             </a>

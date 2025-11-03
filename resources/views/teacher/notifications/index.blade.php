@@ -254,18 +254,22 @@
     <!-- Notifications List -->
     @if($notifications->count() > 0)
         @foreach($notifications as $notification)
+            @php
+                $isEnrollment = $notification->type === 'enrollment';
+                $isAssignment = $notification->type === 'assignment_submission';
+            @endphp
             <div class="notification-card {{ is_null($notification->read_at) ? 'unread' : '' }}">
                 <div class="notification-header">
                     <div class="d-flex align-items-start w-100">
-                        <div class="notification-icon enrolled">
-                            <i class="fas fa-user-graduate"></i>
+                        <div class="notification-icon {{ $isAssignment ? 'assignment' : 'enrolled' }}" style="{{ $isAssignment ? 'background: #f59e0b;' : '' }}">
+                            <i class="fas {{ $isAssignment ? 'fa-file-alt' : 'fa-user-graduate' }}"></i>
                         </div>
                         <div class="notification-content">
                             <div class="notification-title">
-                                New Student Enrollment
+                                {{ $notification->title }}
                             </div>
                             <div class="notification-message">
-                                <strong>{{ $notification->data['student_name'] ?? 'A student' }}</strong> enrolled in <strong>{{ $notification->data['course_title'] ?? 'N/A' }}</strong>
+                                {{ $notification->message }}
                             </div>
 
                             <!-- Notification Details -->
@@ -291,42 +295,68 @@
                                         <div class="detail-value">{{ $notification->data['course_title'] ?? 'N/A' }}</div>
                                     </div>
                                 </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-dollar-sign"></i>
-                                    <div>
-                                        <div class="detail-label">Amount Paid</div>
-                                        <div class="detail-value">
-                                            <span class="badge-amount">RM {{ number_format($notification->data['amount_paid'] ?? 0, 2) }}</span>
+                                
+                                @if($isEnrollment)
+                                    <div class="detail-item">
+                                        <i class="fas fa-dollar-sign"></i>
+                                        <div>
+                                            <div class="detail-label">Amount Paid</div>
+                                            <div class="detail-value">
+                                                <span class="badge-amount">RM {{ number_format($notification->data['amount_paid'] ?? 0, 2) }}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-check-circle"></i>
-                                    <div>
-                                        <div class="detail-label">Payment Status</div>
-                                        <div class="detail-value">
-                                            <span class="payment-status completed">
-                                                <i class="fas fa-check"></i>
-                                                {{ ucfirst($notification->data['payment_status'] ?? 'completed') }}
-                                            </span>
+                                    <div class="detail-item">
+                                        <i class="fas fa-check-circle"></i>
+                                        <div>
+                                            <div class="detail-label">Payment Status</div>
+                                            <div class="detail-value">
+                                                <span class="payment-status completed">
+                                                    <i class="fas fa-check"></i>
+                                                    {{ ucfirst($notification->data['payment_status'] ?? 'completed') }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-calendar"></i>
-                                    <div>
-                                        <div class="detail-label">Enrolled At</div>
-                                        <div class="detail-value">{{ \Carbon\Carbon::parse($notification->data['enrolled_at'] ?? now())->format('M d, Y h:i A') }}</div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar"></i>
+                                        <div>
+                                            <div class="detail-label">Enrolled At</div>
+                                            <div class="detail-value">{{ \Carbon\Carbon::parse($notification->data['enrolled_at'] ?? now())->format('M d, Y h:i A') }}</div>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
+                                
+                                @if($isAssignment)
+                                    <div class="detail-item">
+                                        <i class="fas fa-tasks"></i>
+                                        <div>
+                                            <div class="detail-label">Assignment</div>
+                                            <div class="detail-value">{{ $notification->data['assignment_title'] ?? 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="detail-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <div>
+                                            <div class="detail-label">Submitted At</div>
+                                            <div class="detail-value">{{ \Carbon\Carbon::parse($notification->data['submitted_at'] ?? now())->format('M d, Y h:i A') }}</div>
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
 
                             <!-- Actions -->
                             <div class="notification-actions">
-                                @if(isset($notification->data['course_id']))
-                                <a href="{{ route('teacher.courses.show', $notification->data['course_id']) }}" class="btn-action btn-view-course">
-                                    <i class="fas fa-eye me-2"></i>View Course
-                                </a>
+                                @if($isAssignment && isset($notification->data['submission_id']))
+                                    <a href="{{ route('teacher.submissions.grade', $notification->data['submission_id']) }}" class="btn-action btn-view-course" style="background: #f59e0b;">
+                                        <i class="fas fa-graduation-cap me-2"></i>Grade Submission
+                                    </a>
+                                @endif
+                                
+                                @if($isEnrollment && isset($notification->data['course_id']))
+                                    <a href="{{ route('teacher.courses.show', $notification->data['course_id']) }}" class="btn-action btn-view-course">
+                                        <i class="fas fa-eye me-2"></i>View Course
+                                    </a>
                                 @endif
                                 
                                 <form method="POST" action="{{ route('teacher.notifications.destroy', $notification->id) }}" style="display: inline;">

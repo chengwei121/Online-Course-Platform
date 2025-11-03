@@ -158,9 +158,8 @@
                                             class="absolute top-0 left-0 w-full h-full object-contain" 
                                             controls 
                                             playsinline
-                                            preload="metadata"
-                                            crossorigin="anonymous"
-                                            disablePictureInPicture="false">
+                                            preload="auto"
+                                            crossorigin="anonymous">
                                             <source src="{{ $lesson->getDisplayVideoUrl() }}" type="video/mp4">
                                             <p class="text-white text-center p-4">
                                                 Your browser does not support the video tag. 
@@ -552,10 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (markCompleteBtn && markCompleteBtn.disabled) {
         // Student has incomplete assignments - show them automatically
         showAssignments();
-        console.log('Assignments section shown - assignments must be completed first');
     }
-    
-    console.log('✅ Initialization complete - video player ready');
 });
 
 function setInitialProgress(videoProgress, lessonDuration) {
@@ -591,19 +587,14 @@ function initializeVideoPlayer() {
     video = document.getElementById('lessonVideo');
     
     if (!video) {
-        console.log('No video element found with id: lessonVideo');
         return;
     }
     
     // Check if it's an iframe (YouTube) or video element (local)
     if (video.tagName === 'IFRAME') {
-        console.log('YouTube iframe detected, setting up YouTube player');
         setupYoutubeVideo();
     } else if (video.tagName === 'VIDEO') {
-        console.log('Local video element detected, setting up local video player');
         setupLocalVideo();
-    } else {
-        console.log('Unknown video element type:', video.tagName);
     }
 }
 
@@ -635,38 +626,35 @@ function setupLocalVideo() {
         showAssignments();
     });
 
-    video.addEventListener('ratechange', function() {
-        if (video.playbackRate > 2) {
-            video.playbackRate = 2;
-            // Maximum playback speed is 2x
-        }
-    });
+    // Allow any playback speed - no restrictions
     
     // Initialize progress from database
-    video.addEventListener('loadstart', function() {
+    video.addEventListener('loadeddata', function() {
         const container = document.querySelector('[data-video-progress]');
         const videoProgress = parseInt(container.dataset.videoProgress) || 0;
-        if (videoProgress > 0) {
+        if (videoProgress > 0 && video.duration && !isNaN(video.duration)) {
             video.currentTime = videoProgress;
         }
     });
 
-    // Students can now freely skip through the video without restrictions
+    // Allow free seeking - no restrictions
     video.addEventListener('seeking', function() {
-        console.log('User is seeking to:', video.currentTime);
-        // No restrictions - allow free seeking
+        // No restrictions - completely free seeking allowed
     });
     
     video.addEventListener('seeked', function() {
-        console.log('Seek completed at:', video.currentTime);
         debouncedSaveProgress(video.currentTime);
+        
+        // Update progress display immediately
+        if (video.duration && !isNaN(video.duration) && video.duration > 0) {
+            updateVideoProgress(video.currentTime, video.duration);
+        }
     });
     
-    // Make sure controls are enabled
+    // Make sure controls are enabled and seeking is allowed
     video.controls = true;
     video.removeAttribute('controlsList'); // Remove any control restrictions
-    
-    console.log('Video controls enabled - free seeking allowed');
+    video.setAttribute('preload', 'auto'); // Ensure full video loads for seeking
 
     // Add keyboard controls for 5-minute skipping
     document.addEventListener('keydown', function(e) {
@@ -723,9 +711,7 @@ function setupLocalVideo() {
                 // Fullscreen toggle
                 e.preventDefault();
                 if (!document.fullscreenElement) {
-                    video.requestFullscreen().catch(err => {
-                        console.log('Fullscreen error:', err);
-                    });
+                    video.requestFullscreen().catch(err => {});
                 } else {
                     document.exitFullscreen();
                 }
@@ -744,35 +730,27 @@ function setupLocalVideo() {
 function setupYoutubeVideo() {
     const iframe = document.getElementById('lessonVideo');
     if (!iframe || iframe.tagName !== 'IFRAME') {
-        console.log('No YouTube iframe found with id lessonVideo');
         return;
     }
 
-    console.log('Setting up YouTube player for iframe:', iframe.src);
-
     // Load YouTube API if not already loaded
     if (!window.YT || !window.YT.Player) {
-        console.log('Loading YouTube IFrame API...');
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         
         // Set up callback for when API loads
         window.onYouTubeIframeAPIReady = function() {
-            console.log('YouTube IFrame API Ready - creating player');
             createYouTubePlayer();
         };
         
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
     } else {
-        console.log('YouTube API already loaded - creating player');
         createYouTubePlayer();
     }
 }
 
 function createYouTubePlayer() {
-    console.log('Creating YouTube player instance with id: lessonVideo');
-    
     try {
         youtubePlayer = new YT.Player('lessonVideo', {
             events: {
@@ -781,25 +759,18 @@ function createYouTubePlayer() {
                 'onPlaybackRateChange': onYoutubePlaybackRateChange
             }
         });
-        console.log('YouTube player created successfully');
     } catch (error) {
-        console.error('Error creating YouTube player:', error);
+        // Silent error handling
     }
 }
 
 function onYoutubeReady(event) {
-    console.log('YouTube player ready');
-    
     const container = document.querySelector('[data-video-progress]');
     const videoProgress = parseInt(container.dataset.videoProgress) || 0;
     const duration = event.target.getDuration();
     
-    console.log('YouTube video duration:', duration);
-    console.log('Saved progress:', videoProgress);
-    
     if (videoProgress > 0 && duration > 0) {
         event.target.seekTo(videoProgress, true);
-        console.log('Seeking to saved progress:', videoProgress);
     }
     
     // Set total time immediately
@@ -814,20 +785,12 @@ function onYoutubeReady(event) {
     
     // Start progress tracking - every 1 second for better responsiveness
     youtubeProgressInterval = setInterval(updateYoutubeProgress, 1000);
-    console.log('YouTube progress tracking started');
     
     event.target.setPlaybackRate(1);
 }
 
 function onYoutubeStateChange(event) {
-    console.log('YouTube state changed:', event.data);
-    
-    if (event.data === YT.PlayerState.PLAYING) {
-        console.log('YouTube video playing');
-    } else if (event.data === YT.PlayerState.PAUSED) {
-        console.log('YouTube video paused');
-    } else if (event.data === YT.PlayerState.ENDED) {
-        console.log('YouTube video ended');
+    if (event.data === YT.PlayerState.ENDED) {
         hasWatchedEntireVideo = true;
         if (youtubePlayer && typeof youtubePlayer.getDuration === 'function') {
             const duration = youtubePlayer.getDuration();
@@ -841,19 +804,11 @@ function onYoutubeStateChange(event) {
 }
 
 function onYoutubePlaybackRateChange(event) {
-    if (youtubePlayer && typeof youtubePlayer.getPlaybackRate === 'function') {
-        const rate = youtubePlayer.getPlaybackRate();
-        if (rate > 2) {
-            youtubePlayer.setPlaybackRate(2);
-            // Maximum playback speed is 2x
-        }
-    }
-    
+    // Allow any playback speed - no restrictions
 }
 
 function updateYoutubeProgress() {
     if (!youtubePlayer || typeof youtubePlayer.getCurrentTime !== 'function') {
-        console.log('YouTube player not ready for progress update');
         return;
     }
 
@@ -864,17 +819,14 @@ function updateYoutubeProgress() {
         if (!isNaN(currentTime) && !isNaN(duration) && duration > 0) {
             updateVideoProgress(currentTime, duration);
             debouncedSaveProgress(currentTime);
-        } else {
-            console.log('Invalid YouTube time values:', { currentTime, duration });
         }
     } catch (error) {
-        console.error('Error updating YouTube progress:', error);
+        // Silent error handling
     }
 }
 
 function updateVideoProgress(currentTime, duration) {
     if (isCompleted) {
-        console.log('Lesson already completed, skipping progress update');
         return;
     }
     
@@ -887,17 +839,11 @@ function updateVideoProgress(currentTime, duration) {
         } else {
             const currentTimeElement = document.getElementById('currentTime');
             if (currentTimeElement) currentTimeElement.textContent = formatTime(currentTime);
-            console.log('Duration not available, only updating current time');
             return;
         }
     }
     
     const percentage = Math.min((currentTime / duration) * 100, 100);
-    console.log('Updating video progress:', { 
-        currentTime: currentTime.toFixed(2), 
-        duration: duration.toFixed(2), 
-        percentage: percentage.toFixed(2) + '%' 
-    });
     
     // Batch DOM updates
     requestAnimationFrame(() => {
@@ -908,7 +854,6 @@ function updateVideoProgress(currentTime, duration) {
         
         if (progressBar) {
             progressBar.style.width = `${percentage}%`;
-            console.log('Progress bar updated to:', percentage.toFixed(2) + '%');
         }
         if (progressPercentage) progressPercentage.textContent = `${Math.round(percentage)}%`;
         if (currentTimeElement) currentTimeElement.textContent = formatTime(currentTime);
@@ -918,7 +863,6 @@ function updateVideoProgress(currentTime, duration) {
     if (percentage >= 95) {
         hasWatchedEntireVideo = true;
         showAssignments();
-        console.log('Video 95% watched - assignments shown, hasWatchedEntireVideo:', hasWatchedEntireVideo);
     }
 }
 
@@ -932,12 +876,10 @@ function formatTime(seconds) {
 // Debounced save progress to reduce server requests
 const debouncedSaveProgress = debounce(function(currentTime) {
     if (isCompleted || typeof currentTime !== 'number' || isNaN(currentTime) || currentTime < 0) {
-        console.log('Skipping progress save:', { isCompleted, currentTime });
         return;
     }
 
     const progressValue = Math.floor(currentTime);
-    console.log('Saving progress to server:', progressValue);
 
     const formData = new FormData();
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
@@ -954,14 +896,8 @@ const debouncedSaveProgress = debounce(function(currentTime) {
         credentials: 'same-origin'
     })
     .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log('Progress saved successfully:', data);
-        } else {
-            console.error('Failed to save progress:', data);
-        }
-    })
-    .catch(error => console.error('Error saving progress:', error));
+    .then(data => {})
+    .catch(error => {});
 }, 3000);
 
 function showAssignments() {
@@ -1050,7 +986,7 @@ function markAsComplete() {
             duration = Math.floor(youtubePlayer.getDuration());
         }
     } catch (error) {
-        console.error('Error getting current time:', error);
+        // Silent error handling
     }
 
     // Strict validation - must watch at least 90% of the video
@@ -1061,7 +997,6 @@ function markAsComplete() {
     }
     
     const progressPercentage = (currentProgress / duration) * 100;
-    console.log('Completion check:', { currentProgress, duration, progressPercentage, hasWatchedEntireVideo });
     
     // Require 90% completion OR watched entire video
     if (progressPercentage < 90 && !hasWatchedEntireVideo) {
@@ -1074,8 +1009,6 @@ function markAsComplete() {
     }
     
     const finalProgress = Math.max(currentProgress, Math.floor(duration * 0.9));
-    
-    console.log('Marking as complete with progress:', finalProgress, 'of', duration);
     
     const formData = new FormData();
     formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
@@ -1102,7 +1035,6 @@ function markAsComplete() {
         }
     })
     .catch(error => {
-        console.error('Error marking lesson as complete:', error);
         alert('Failed to mark lesson as complete. Please try again.');
         isAutoCompleting = false;
     });
@@ -1154,39 +1086,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Debug helper function - call this from browser console
-window.checkVideoStatus = function() {
-    console.log('=== VIDEO STATUS DEBUG ===');
-    console.log('Video element:', video);
-    console.log('YouTube player:', youtubePlayer);
-    console.log('Is completed:', isCompleted);
-    console.log('Has watched entire video:', hasWatchedEntireVideo);
-    
-    if (video) {
-        console.log('Local video:');
-        console.log('  Current time:', video.currentTime);
-        console.log('  Duration:', video.duration);
-        console.log('  Paused:', video.paused);
-    }
-    
-    if (youtubePlayer && typeof youtubePlayer.getCurrentTime === 'function') {
-        try {
-            console.log('YouTube video:');
-            console.log('  Current time:', youtubePlayer.getCurrentTime());
-            console.log('  Duration:', youtubePlayer.getDuration());
-            console.log('  State:', youtubePlayer.getPlayerState());
-            console.log('  Progress interval running:', youtubeProgressInterval !== null);
-        } catch (e) {
-            console.log('  Error getting YouTube info:', e);
-        }
-    }
-    
-    console.log('Progress bar width:', document.getElementById('progressBar')?.style.width);
-    console.log('Progress percentage:', document.getElementById('progressPercentage')?.textContent);
-    console.log('=========================');
-};
-
-console.log('💡 Type checkVideoStatus() in console to debug video status');
+// Debug helper function removed for production
 </script>
 @endpush
 

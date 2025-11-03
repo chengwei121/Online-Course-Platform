@@ -16,11 +16,11 @@ class NotificationsController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
         
-        // Get all notifications (from Notifiable trait)
-        $notifications = $user->notifications()->paginate(15);
+        // Get all notifications (using custom notifications)
+        $notifications = $user->customNotifications()->latest()->paginate(15);
         
-        // Get unread count (from Notifiable trait)
-        $unreadCount = $user->unreadNotifications()->count();
+        // Get unread count (using custom notifications)
+        $unreadCount = $user->customNotifications()->where('is_read', false)->count();
         
         return view('teacher.notifications.index', compact('notifications', 'unreadCount'));
     }
@@ -32,7 +32,7 @@ class NotificationsController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $notification = $user->notifications()->find($id);
+        $notification = $user->customNotifications()->find($id);
         
         if ($notification) {
             $notification->markAsRead();
@@ -49,7 +49,10 @@ class NotificationsController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $user->unreadNotifications->markAsRead();
+        $user->customNotifications()->where('is_read', false)->update([
+            'is_read' => true,
+            'read_at' => now()
+        ]);
         
         return redirect()->back()->with('success', 'All notifications marked as read.');
     }
@@ -61,7 +64,7 @@ class NotificationsController extends Controller
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        $notification = $user->notifications()->find($id);
+        $notification = $user->customNotifications()->find($id);
         
         if ($notification) {
             $notification->delete();

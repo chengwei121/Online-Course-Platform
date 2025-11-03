@@ -80,7 +80,8 @@ class Lesson extends Model
             return $this->video_url;
         }
 
-        // If it's a relative path (uploaded video), create full storage URL
-        return asset('storage/' . $this->video_url);
+        // If it's a relative path (uploaded video), use streaming route for proper seeking support
+        $encodedPath = base64_encode($this->video_url);
+        return route('video.stream', ['path' => $encodedPath]);
     }
 }

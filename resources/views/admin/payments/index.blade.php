@@ -7,14 +7,10 @@
         <div>
             <h1 class="h3 mb-0">Payments</h1>
         </div>
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-3 ms-4">
             <button type="button" class="btn btn-sm btn-dark action-btn" onclick="window.location.reload()" title="Refresh Data">
                 <i class="fas fa-sync-alt me-1"></i>
                 <span class="d-none d-sm-inline">Refresh</span>
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-dark action-btn" title="Export Data">
-                <i class="fas fa-download me-1"></i>
-                <span class="d-none d-sm-inline">Export</span>
             </button>
         </div>
     </div>
@@ -892,22 +888,23 @@ document.addEventListener('DOMContentLoaded', function() {
             dropdown = document.createElement('div');
             dropdown.className = 'filter-dropdown-menu';
             dropdown.style.cssText = `
-                position: absolute;
+                position: fixed;
                 background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
                 border: 1px solid rgba(0,0,0,0.08);
                 border-radius: 12px;
                 box-shadow: 0 20px 40px rgba(0,0,0,0.15), 0 8px 16px rgba(0,0,0,0.1);
                 padding: 8px 0;
                 min-width: 220px;
+                max-width: 250px;
                 z-index: 9999;
                 backdrop-filter: blur(20px);
                 animation: dropdownFadeIn 0.2s ease-out;
             `;
 
-            // Use getBoundingClientRect for accurate positioning
+            // Use getBoundingClientRect for accurate positioning with fixed position
             const rect = filterBtn.getBoundingClientRect();
-            dropdown.style.top = (rect.bottom + window.scrollY + 8) + 'px';
-            dropdown.style.left = (rect.left + window.scrollX) + 'px';
+            dropdown.style.top = (rect.bottom + 8) + 'px';
+            dropdown.style.right = (window.innerWidth - rect.right) + 'px';
 
             dropdown.innerHTML = `
                 <div style="padding: 8px 16px 4px; font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; margin-bottom: 4px;">
