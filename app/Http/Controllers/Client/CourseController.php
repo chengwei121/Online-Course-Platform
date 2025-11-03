@@ -306,39 +306,8 @@ class CourseController extends Controller
             }
 
             // Get current progress
-            $currentProgress = LessonProgress::where('user_id', $user->id)
-                ->where('lesson_id', $lesson->id)
-                ->first();
-
-            // Check skip limit (120 seconds)
-            $requestedProgress = $request->input('video_progress', 0);
-            $maxSkipAhead = 120; // Maximum seconds allowed to skip ahead (2 minutes)
-            
-            if ($currentProgress) {
-                $skipDistance = $requestedProgress - $currentProgress->video_progress;
-                
-                if ($skipDistance > $maxSkipAhead) {
-                    Log::warning('Skip limit exceeded', [
-                        'user_id' => $user->id,
-                        'lesson_id' => $lesson->id,
-                        'current_progress' => $currentProgress->video_progress,
-                        'requested_progress' => $requestedProgress,
-                        'skip_distance' => $skipDistance
-                    ]);
-                    
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'You can only skip up to 30 seconds ahead in the video.',
-                        'data' => [
-                            'video_progress' => $currentProgress->video_progress,
-                            'completed' => $currentProgress->completed,
-                            'completed_at' => $currentProgress->completed_at
-                        ]
-                    ], 400);
-                }
-            }
-
             // Get or create progress record
+            $requestedProgress = $request->input('video_progress', 0);
             $progress = LessonProgress::updateOrCreate(
                 [
                     'user_id' => $user->id,
