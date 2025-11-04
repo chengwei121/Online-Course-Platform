@@ -204,6 +204,12 @@ class LessonController extends Controller
      */
     public function update(Request $request, Course $course, Lesson $lesson)
     {
+        // Increase PHP limits for video uploads at runtime
+        ini_set('upload_max_filesize', '500M');
+        ini_set('post_max_size', '500M');
+        ini_set('max_execution_time', 600); // 10 minutes for large uploads
+        ini_set('memory_limit', '1024M'); // 1GB for processing large files
+        
         // Ensure the course belongs to the authenticated teacher
         if ($course->teacher_id !== Auth::user()->teacher->id) {
             abort(403, 'Unauthorized access to this course.');
@@ -212,6 +218,15 @@ class LessonController extends Controller
         // Ensure the lesson belongs to the course
         if ($lesson->course_id !== $course->id) {
             abort(404, 'Lesson not found in this course.');
+        }
+
+        // Check for upload errors first
+        if ($request->hasFile('video')) {
+            $video = $request->file('video');
+            if ($video->getError() !== UPLOAD_ERR_OK) {
+                $errorMessage = $this->getUploadErrorMessage($video->getError());
+                return back()->withErrors(['video' => $errorMessage])->withInput();
+            }
         }
 
         $request->validate([

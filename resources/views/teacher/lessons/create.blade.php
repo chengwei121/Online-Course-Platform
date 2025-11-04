@@ -96,7 +96,12 @@
                                            accept="video/*"
                                            onchange="displayVideoFileName(this)">
                                     <small class="form-text text-muted">
-                                        Supported formats: MP4, AVI, MOV, WMV, FLV (Max: 500MB)
+                                        <strong>Recommended:</strong> MP4 (Best compatibility & smaller size)<br>
+                                        Also supported: AVI, MOV, WMV, FLV (Max: 500MB)<br>
+                                        <span class="text-warning">
+                                            <i class="fas fa-lightbulb me-1"></i>
+                                            Tip: WMV files are large. Use online converters to convert to MP4 for faster uploads.
+                                        </span>
                                     </small>
                                     <div id="videoFileName" class="mt-2"></div>
                                     @error('video')
@@ -214,6 +219,8 @@
         if (input.files && input.files[0]) {
             const file = input.files[0];
             const fileSize = (file.size / (1024 * 1024)).toFixed(2); // Convert to MB
+            const fileName = file.name;
+            const fileExt = fileName.split('.').pop().toUpperCase();
             
             if (fileSize > 500) {
                 fileNameDiv.innerHTML = `
@@ -224,11 +231,24 @@
                 `;
                 input.value = '';
             } else {
+                // Check if it's WMV and large
+                let warningMsg = '';
+                if (fileExt === 'WMV' && file.size > 100 * 1024 * 1024) { // > 100MB
+                    warningMsg = `
+                        <div class="alert alert-warning mt-2">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> WMV files are large and may take several minutes to upload. 
+                            Consider converting to MP4 for faster uploads and better browser compatibility.
+                        </div>
+                    `;
+                }
+                
                 fileNameDiv.innerHTML = `
                     <div class="alert alert-success">
                         <i class="fas fa-file-video me-2"></i>
                         <strong>Selected:</strong> ${file.name} (${fileSize} MB)
                     </div>
+                    ${warningMsg}
                 `;
             }
         } else {
@@ -258,24 +278,59 @@
 
         // Show loading state on form submit (especially for large video uploads)
         form.addEventListener('submit', function(e) {
-            if (videoFileInput.files.length > 0) {
-                const file = videoFileInput.files[0];
-                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+            const videoFile = videoFileInput.files[0];
+            
+            if (videoFile && videoFile.size > 50 * 1024 * 1024) { // > 50MB
+                // Show loading overlay
+                const overlay = document.createElement('div');
+                overlay.id = 'uploadOverlay';
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 9999;
+                `;
                 
-                if (fileSize > 100) {
-                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Uploading... This may take a while';
-                    submitBtn.disabled = true;
-                    
-                    // Show progress message
-                    const progressDiv = document.createElement('div');
-                    progressDiv.className = 'alert alert-info mt-3';
-                    progressDiv.innerHTML = `
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Uploading large video file (${fileSize} MB)...</strong> 
-                        Please do not close this page. This may take several minutes.
-                    `;
-                    form.appendChild(progressDiv);
-                }
+                const progressBox = document.createElement('div');
+                progressBox.style.cssText = `
+                    background: white;
+                    padding: 30px;
+                    border-radius: 10px;
+                    text-align: center;
+                    min-width: 400px;
+                `;
+                
+                const fileSize = (videoFile.size / (1024 * 1024)).toFixed(2);
+                const estimatedTime = Math.ceil(videoFile.size / (1024 * 1024) / 2); // Rough estimate: 2MB/sec
+                
+                progressBox.innerHTML = `
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Uploading...</span>
+                    </div>
+                    <h4 class="mb-3">Uploading Video...</h4>
+                    <p class="text-muted mb-2">File Size: ${fileSize} MB</p>
+                    <p class="text-muted mb-3">Estimated Time: ${estimatedTime} seconds</p>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" 
+                             style="width: 100%">
+                            Please wait...
+                        </div>
+                    </div>
+                    <p class="text-muted mt-3 small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Do not close this window or navigate away.
+                    </p>
+                `;
+                
+                overlay.appendChild(progressBox);
+                document.body.appendChild(overlay);
             }
         });
     });
