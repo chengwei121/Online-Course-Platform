@@ -1353,7 +1353,69 @@ document.addEventListener('DOMContentLoaded', function() {
         const includeAssignment = document.getElementById('includeAssignment').checked;
         formData.append('include_assignment', includeAssignment);
         
-        // Show loading state
+        // Show loading overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'uploadOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+        
+        const progressBox = document.createElement('div');
+        progressBox.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 400px;
+        `;
+        
+        // Check if video file is large
+        const videoFile = document.getElementById('video_file').files[0];
+        let message = 'Creating lesson...';
+        let timeInfo = '';
+        
+        if (videoFile && videoFile.size > 50 * 1024 * 1024) {
+            const fileSize = (videoFile.size / (1024 * 1024)).toFixed(2);
+            const estimatedTime = Math.ceil(videoFile.size / (1024 * 1024) / 2);
+            message = 'Uploading Video...';
+            timeInfo = `
+                <p class="text-muted mb-2">File Size: ${fileSize} MB</p>
+                <p class="text-muted mb-3">Estimated Time: ${estimatedTime} seconds</p>
+            `;
+        }
+        
+        progressBox.innerHTML = `
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="mb-3">${message}</h4>
+            ${timeInfo}
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" 
+                     style="width: 100%">
+                    Please wait...
+                </div>
+            </div>
+            <p class="text-muted mt-3 small">
+                <i class="fas fa-info-circle me-1"></i>
+                Do not close this window or navigate away.
+            </p>
+        `;
+        
+        overlay.appendChild(progressBox);
+        document.body.appendChild(overlay);
+        
+        // Disable submit button
         submitLessonBtn.disabled = true;
         submitLessonBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
         
@@ -1367,6 +1429,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.json())
         .then(data => {
+            overlay.remove();
             if (data.success) {
                 showSuccess('Lesson created successfully!');
                 setTimeout(() => {
@@ -1375,14 +1438,15 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 showError(data.message || 'Failed to create lesson');
                 submitLessonBtn.disabled = false;
-                submitLessonBtn.innerHTML = '<i class="fas fa-check me-1"></i>Create Lesson';
+                submitLessonBtn.innerHTML = '<i class="fas fa-check me-1"></i>Create';
             }
         })
         .catch(error => {
+            overlay.remove();
             console.error('Error:', error);
             showError('An error occurred while creating the lesson');
             submitLessonBtn.disabled = false;
-            submitLessonBtn.innerHTML = '<i class="fas fa-check me-1"></i>Create Lesson';
+            submitLessonBtn.innerHTML = '<i class="fas fa-check me-1"></i>Create';
         });
     });
     
