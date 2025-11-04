@@ -458,6 +458,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Form submission handler to ensure price is included
     const courseForm = document.getElementById('courseForm');
+    const submitBtn = courseForm.querySelector('button[type="submit"]');
+    
     courseForm.addEventListener('submit', function(e) {
         // Ensure price field is enabled and has a value before submission
         if (isFreeCheckbox.checked) {
@@ -466,6 +468,57 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (!priceInput.value || priceInput.value === '') {
             priceInput.value = '0';
         }
+
+        // Show loading overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'uploadOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        `;
+        
+        const progressBox = document.createElement('div');
+        progressBox.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 400px;
+        `;
+        
+        progressBox.innerHTML = `
+            <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Creating...</span>
+            </div>
+            <h4 class="mb-3">Creating Course...</h4>
+            <p class="text-muted mb-3">Please wait while we create your course</p>
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                     role="progressbar" 
+                     style="width: 100%">
+                    Processing...
+                </div>
+            </div>
+            <p class="text-muted mt-3 small">
+                <i class="fas fa-info-circle me-1"></i>
+                Do not close this window or navigate away.
+            </p>
+        `;
+        
+        overlay.appendChild(progressBox);
+        document.body.appendChild(overlay);
+        
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
     });
 
     // Load courses on page load if category is already selected
