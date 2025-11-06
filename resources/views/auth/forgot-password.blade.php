@@ -16,7 +16,7 @@
 
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f3f4f6;
             min-height: 100vh;
             font-family: 'Figtree', sans-serif;
         }
