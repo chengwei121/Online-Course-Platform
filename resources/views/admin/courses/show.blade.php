@@ -294,9 +294,9 @@
             </div>
 
             <!-- Course Actions -->
-            <div class="card bg-success text-white mb-3">
-                <div class="card-header border-0">
-                    <h5 class="card-title mb-0">
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                    <h5 class="card-title mb-0 text-white">
                         <i class="fas fa-cogs me-2"></i>Course Management
                     </h5>
                 </div>
@@ -305,14 +305,14 @@
                         <form method="POST" action="{{ route('admin.courses.toggle-status', $course) }}">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="btn btn-light w-100">
+                            <button type="submit" class="btn btn-{{ $course->status == 'published' ? 'warning' : 'success' }} w-100 py-3 fw-bold">
                                 <i class="fas fa-{{ $course->status == 'published' ? 'pause' : 'play' }} me-2"></i>
                                 {{ $course->status == 'published' ? 'Unpublish Course' : 'Publish Course' }}
                             </button>
                         </form>
                         
                         @if($course->enrollments->count() == 0)
-                            <button type="button" class="btn btn-outline-light" onclick="confirmDelete()">
+                            <button type="button" class="btn btn-outline-danger w-100 py-2" onclick="confirmDelete()">
                                 <i class="fas fa-trash me-2"></i>Delete Course
                             </button>
                         @endif
