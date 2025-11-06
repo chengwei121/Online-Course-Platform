@@ -116,9 +116,11 @@
                             @if($course->skills_to_learn)
                             <div class="mb-3">
                                 <h6 class="text-muted">Skills You'll Learn</h6>
-                                @foreach($course->skills_to_learn as $skill)
-                                    <span class="badge bg-primary me-1 mb-1">{{ $skill }}</span>
-                                @endforeach
+                                <div class="d-flex flex-wrap gap-1" style="max-height: 100px; overflow-y: auto;">
+                                    @foreach($course->skills_to_learn as $skill)
+                                        <span class="badge bg-primary text-wrap" style="max-width: 200px; white-space: normal;">{{ $skill }}</span>
+                                    @endforeach
+                                </div>
                             </div>
                             @endif
 
