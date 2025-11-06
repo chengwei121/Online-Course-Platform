@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Models\User;
 use App\Services\PayPalService;
 use App\Services\PaymentOptimizationService;
 use App\Services\NotificationService;
@@ -220,6 +221,20 @@ class PayPalController extends Controller
                         Log::error("Failed to notify teacher: " . $notifyError->getMessage());
                     }
 
+                    // Notify admin(s) about new enrollment
+                    try {
+                        $admins = User::where('role', 'admin')->get();
+                        foreach ($admins as $admin) {
+                            $instructor = $course->teacher ? $course->teacher->user : null;
+                            if ($instructor) {
+                                Mail::to($admin->email)->queue(new \App\Mail\AdminEnrollmentNotification($user, $instructor, $course, $enrollment));
+                            }
+                        }
+                        Log::info("Admin(s) notified about new enrollment for course: {$course->title}");
+                    } catch (\Exception $notifyError) {
+                        Log::error("Failed to notify admin: " . $notifyError->getMessage());
+                    }
+
                     // Notify the student about successful enrollment
                     try {
                         $this->notificationService->createNotification(
@@ -238,6 +253,9 @@ class PayPalController extends Controller
                             route('client.courses.learn', $course->slug),
                             'normal'
                         );
+
+                        // Send enrollment confirmation email to student
+                        Mail::to($user->email)->queue(new \App\Mail\StudentEnrollmentConfirmation($user, $course, $enrollment));
                         
                         Log::info("Student notified about successful enrollment for course: {$course->title}");
                     } catch (\Exception $notifyError) {
