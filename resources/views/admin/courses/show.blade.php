@@ -109,7 +109,7 @@
                                 </div>
                                 <div class="col-6">
                                     <h6 class="text-muted">Duration</h6>
-                                    <span>{{ $course->duration ?? 'Not specified' }}</span>
+                                    <span>{{ $course->learning_hours ? $course->learning_hours . ' hours' : 'Not specified' }}</span>
                                 </div>
                             </div>
 
