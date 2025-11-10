@@ -1213,53 +1213,29 @@
                                 All Courses
                             </a>
                         </li>
+                        @auth
                         <li>
-                            <a href="#" class="footer-link">
+                            <a href="{{ route('client.enrollments.index') }}" class="footer-link">
                                 <i class="fas fa-chevron-right"></i>
-                                About Us
+                                My Courses
                             </a>
                         </li>
-                        <li>
-                            <a href="#" class="footer-link">
-                                <i class="fas fa-chevron-right"></i>
-                                Contact
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="footer-link">
-                                <i class="fas fa-chevron-right"></i>
-                                Blog
-                            </a>
-                        </li>
+                        @endauth
                     </ul>
                 </div>
 
-                <!-- Support -->
+                <!-- Contact -->
                 <div>
-                    <h3 class="footer-heading">Support</h3>
+                    <h3 class="footer-heading">Contact Us</h3>
                     <ul class="space-y-2">
-                        <li>
-                            <a href="#" class="footer-link">
-                                <i class="fas fa-chevron-right"></i>
-                                Help Center
-                            </a>
+                        <li class="footer-link">
+                            <i class="fas fa-envelope"></i>
+                            <span class="ml-2">chengweishia@gmail.com</span>
                         </li>
                         <li>
-                            <a href="#" class="footer-link">
-                                <i class="fas fa-chevron-right"></i>
-                                Terms of Service
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="footer-link">
-                                <i class="fas fa-chevron-right"></i>
-                                Privacy Policy
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" class="footer-link">
-                                <i class="fas fa-chevron-right"></i>
-                                FAQ
+                            <a href="{{ url('/feedback-form.html') }}" class="footer-link">
+                                <i class="fas fa-comment-dots"></i>
+                                Send Feedback
                             </a>
                         </li>
                     </ul>
@@ -1271,10 +1247,10 @@
                     <p class="text-gray-500 text-sm">
                         &copy; {{ date('Y') }} LearnHub. All rights reserved.
                     </p>
-                    <div class="mt-4 md:mt-0 flex gap-6">
-                        <a href="#" class="footer-bottom-link">Privacy Policy</a>
-                        <a href="#" class="footer-bottom-link">Terms of Service</a>
-                        <a href="#" class="footer-bottom-link">Cookie Policy</a>
+                    <div class="mt-4 md:mt-0">
+                        <a href="https://github.com/chengwei121/Online-Course-Platform" target="_blank" class="footer-bottom-link">
+                            <i class="fab fa-github"></i> View on GitHub
+                        </a>
                     </div>
                 </div>
             </div>
