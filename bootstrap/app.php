@@ -19,5 +19,24 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Better error handling for authorization exceptions
+        $exceptions->render(function (\Illuminate\Auth\Access\AuthorizationException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'This action is unauthorized.',
+                    'error' => $e->getMessage()
+                ], 403);
+            }
+            
+            return redirect()->back()->with('error', 'You do not have permission to perform this action. Please contact the administrator if you believe this is an error.');
+        });
+        
+        // Better error handling for authentication exceptions
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+            
+            return redirect()->route('login')->with('error', 'Please login to continue.');
+        });
     })->create();

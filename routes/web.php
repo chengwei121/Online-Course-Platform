@@ -39,6 +39,50 @@ Route::get('/clear-cache', function() {
     return "All caches cleared successfully! <br><a href='/client/courses'>Go to courses</a>";
 })->name('clear-cache');
 
+// Debug Authentication Route (Remove after debugging)
+Route::get('/debug-auth', function() {
+    if (!auth()->check()) {
+        return response()->json([
+            'authenticated' => false,
+            'message' => 'User is not logged in',
+            'session_id' => session()->getId(),
+            'session_driver' => config('session.driver'),
+            'redirect_to_login' => route('login'),
+        ]);
+    }
+    
+    $user = auth()->user();
+    
+    return response()->json([
+        'authenticated' => true,
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ],
+        'checks' => [
+            'isAdmin' => method_exists($user, 'isAdmin') ? $user->isAdmin() : false,
+            'isTeacher' => method_exists($user, 'isTeacher') ? $user->isTeacher() : false,
+            'isStudent' => method_exists($user, 'isStudent') ? $user->isStudent() : false,
+            'has_teacher_record' => $user->teacher ? true : false,
+            'teacher_id' => $user->teacher?->id ?? null,
+            'has_student_record' => $user->student ? true : false,
+            'student_id' => $user->student?->id ?? null,
+        ],
+        'session' => [
+            'session_id' => session()->getId(),
+            'session_driver' => config('session.driver'),
+            'auth_guard' => config('auth.defaults.guard'),
+        ],
+        'env' => [
+            'app_env' => app()->environment(),
+            'app_debug' => config('app.debug'),
+            'app_url' => config('app.url'),
+        ]
+    ]);
+})->name('debug.auth');
+
 // Home Route (Welcome Page) - Highly Optimized with aggressive caching
 Route::get('/', function () {
     // Single cache key for entire welcome page - 4 hours
